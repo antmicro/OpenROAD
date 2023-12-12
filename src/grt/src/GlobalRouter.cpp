@@ -2054,33 +2054,37 @@ void GlobalRouter::checkPinPlacement()
   std::map<int, std::vector<odb::Point>> layer_positions_map;
 
   odb::dbTechLayer* tech_layer;
-  for (Pin* port : getAllPorts()) {
-    if (port->getNumLayers() == 0) {
-      logger_->error(GRT,
-                     79,
-                     "Pin {} does not have layer assignment.",
-                     port->getName().c_str());
-    }
-    int layer = port->getConnectionLayer();  // port have only one layer
-
-    tech_layer = routing_layers_[layer];
-    if (layer_positions_map[layer].empty()) {
-      layer_positions_map[layer].push_back(port->getPosition());
-    } else {
-      for (odb::Point& pos : layer_positions_map[layer]) {
-        if (pos == port->getPosition()) {
-          logger_->warn(
-              GRT,
-              31,
-              "At least 2 pins in position ({}, {}), layer {}, port {}.",
-              pos.x(),
-              pos.y(),
-              tech_layer->getName(),
-              port->getName().c_str());
-          invalid = true;
-        }
+  for (auto [ignored, net] : db_net_map_) {
+    for (Pin& pin : net->getPins()) {
+      if (!pin.isPort()) continue;
+      Pin* port = &pin;
+      if (port->getNumLayers() == 0) {
+        logger_->error(GRT,
+                       79,
+                       "Pin {} does not have layer assignment.",
+                       port->getName().c_str());
       }
-      layer_positions_map[layer].push_back(port->getPosition());
+      int layer = port->getConnectionLayer();  // port have only one layer
+
+      tech_layer = routing_layers_[layer];
+      if (layer_positions_map[layer].empty()) {
+        layer_positions_map[layer].push_back(port->getPosition());
+      } else {
+        for (odb::Point& pos : layer_positions_map[layer]) {
+          if (pos == port->getPosition()) {
+            logger_->warn(
+                          GRT,
+                          31,
+                          "At least 2 pins in position ({}, {}), layer {}, port {}.",
+                          pos.x(),
+                          pos.y(),
+                          tech_layer->getName(),
+                          port->getName().c_str());
+            invalid = true;
+          }
+        }
+        layer_positions_map[layer].push_back(port->getPosition());
+      }
     }
   }
 
@@ -2400,19 +2404,6 @@ void GlobalRouter::initAdjustments()
   if (adjustments_.empty()) {
     adjustments_.resize(db_->getTech()->getRoutingLayerCount() + 1, 0);
   }
-}
-
-std::vector<Pin*> GlobalRouter::getAllPorts()
-{
-  std::vector<Pin*> ports;
-  for (auto [ignored, net] : db_net_map_) {
-    for (Pin& pin : net->getPins()) {
-      if (pin.isPort()) {
-        ports.push_back(&pin);
-      }
-    }
-  }
-  return ports;
 }
 
 odb::Point GlobalRouter::getRectMiddle(const odb::Rect& rect)
