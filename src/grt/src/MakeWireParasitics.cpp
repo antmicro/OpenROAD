@@ -327,6 +327,9 @@ void MakeWireParasitics::makeParasiticsToPin(
     float res, cap;
     layerRC(wire_length_dbu, layer, corner, res, cap);
     sta::Units* units = sta_->units();
+    const string res_string = units->resistanceUnit()->asString(res);
+    const string via_res_string = units->resistanceUnit()->asString(via_res);
+    const string cap_string = units->resistanceUnit()->asString(cap);
     debugPrint(
         logger_,
         GRT,
@@ -339,9 +342,9 @@ void MakeWireParasitics::makeParasiticsToPin(
         grouter_->dbuToMicrons(pt.getY()),
         grouter_->dbuToMicrons(wire_length_dbu),
         layer,
-        units->resistanceUnit()->asString(res),
-        units->resistanceUnit()->asString(via_res),
-        units->capacitanceUnit()->asString(cap));
+        res_string,
+        via_res_string,
+        cap_string);
 
     debugPrint(logger_,
                GRT,
@@ -351,9 +354,9 @@ void MakeWireParasitics::makeParasiticsToPin(
                pin.getName(),
                static_cast<int>(dbuToMeters(wire_length_dbu) * 1e+6),
                layer,
-               units->resistanceUnit()->asString(res),
-               units->resistanceUnit()->asString(via_res),
-               units->capacitanceUnit()->asString(cap));
+               res_string,
+               via_res_string,
+               cap_string);
 
     // We could added the via resistor before the segment pi-model
     // but that would require an extra node and the accuracy of all
@@ -435,6 +438,9 @@ void MakeWireParasitics::makePartialParasiticsToPin(
     float res, cap;
     layerRC(wire_length_dbu, layer, corner, res, cap);
     sta::Units* units = sta_->units();
+    const string res_string = units->resistanceUnit()->asString(res);
+    const string via_res_string = units->resistanceUnit()->asString(via_res);
+    const string cap_string = units->resistanceUnit()->asString(cap);
     debugPrint(
         logger_,
         GRT,
@@ -447,9 +453,9 @@ void MakeWireParasitics::makePartialParasiticsToPin(
         grouter_->dbuToMicrons(pt.getY()),
         grouter_->dbuToMicrons(wire_length_dbu),
         layer,
-        units->resistanceUnit()->asString(res),
-        units->resistanceUnit()->asString(via_res),
-        units->capacitanceUnit()->asString(cap));
+        res_string,
+        via_res_string,
+        cap_string);
 
     debugPrint(logger_,
                GRT,
@@ -459,9 +465,9 @@ void MakeWireParasitics::makePartialParasiticsToPin(
                pin.getName(),
                static_cast<int>(dbuToMeters(wire_length_dbu) * 1e+6),
                layer,
-               units->resistanceUnit()->asString(res),
-               units->resistanceUnit()->asString(via_res),
-               units->capacitanceUnit()->asString(cap));
+               res_string,
+               via_res_string,
+               cap_string);
 
     // We could added the via resistor before the segment pi-model
     // but that would require an extra node and the accuracy of all
