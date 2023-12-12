@@ -361,17 +361,17 @@ class HardMacro
   void setX(float x);
   void setY(float y);
   const std::pair<float, float> getLocation() const;
-  float getX() const;
-  float getY() const;
+  inline float getX() const { return x_; }
+  inline float getY() const { return y_; }
   // The position of pins relative to the lower left of the instance
-  float getPinX() const;
-  float getPinY() const;
+  inline float getPinX() const { return x_ + pin_x_; }
+  inline float getPinY() const { return y_ + pin_y_; }
   // The position of pins relative to the origin of the canvas;
-  float getAbsPinX() const;
-  float getAbsPinY() const;
+  inline float getAbsPinX() const { return pin_x_; }
+  inline float getAbsPinY() const { return pin_y_; }
   // width, height (include halo_width)
-  float getWidth() const;
-  float getHeight() const;
+  inline float getWidth() const { return width_; }
+  inline float getHeight() const { return height_; }
 
   // Note that the real X and Y does NOT include halo_width
   void setRealLocation(const std::pair<float, float>& location);
@@ -547,13 +547,19 @@ class SoftMacro
   // for StdCellCluster and MixedCluster
   void setShapes(const std::vector<std::pair<float, float>>& width_list,
                  float area);
-  float getX() const;
-  float getY() const;
-  float getPinX() const;
-  float getPinY() const;
-  const std::pair<float, float> getLocation() const;
-  float getWidth() const;
-  float getHeight() const;
+  inline float getX() const { return x_; }
+  inline float getY() const { return y_; }
+
+  // The position of pins relative to the lower left of the instance
+  inline float getPinX() const { return x_ + 0.5f * width_; }
+  inline float getPinY() const { return y_ + 0.5f * height_; }
+
+  inline const std::pair<float, float> getLocation() const
+  {
+    return std::pair<float, float>(x_, y_);
+  }
+  inline float getWidth() const { return width_; }
+  inline float getHeight() const { return height_; }
   float getArea() const;
   // Num Macros
   bool isMacroCluster() const;
