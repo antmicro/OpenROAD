@@ -301,7 +301,6 @@ class GlobalRouter : public ant::GlobalRouteSource
                                   odb::dbTechLayer* tech_layer);
   int computeNetWirelength(odb::dbNet* db_net);
   void computeWirelength();
-  std::vector<Pin*> getAllPorts();
   void computeTrackConsumption(const Net* net,
                                int& track_consumption,
                                std::vector<int>*& edge_costs_per_layer);
