@@ -56,10 +56,10 @@ using sta::stringPrintTmp;
 using sta::NetConnectedPinIterator;
 
 static void
-connectedPins(const Net *net,
-              Network *network,
+connectedPins(Logger& logger, const Net *net,
+              Network *network,sta::dbNetwork* db_network,
               // Return value.
-              PinSeq &pins);
+              Vector<PinLoc> &pins);
 
 SteinerPt SteinerTree::null_pt = -1;
 
@@ -74,18 +74,17 @@ Resizer::makeSteinerTree(const Pin *drvr_pin)
   debugPrint(logger_, RSZ, "steiner", 1, "Net {}",
              sdc_network->pathName(net));
   SteinerTree *tree = new SteinerTree(drvr_pin, this);
-  PinSeq &pins = tree->pins();
+  Vector<PinLoc> &pinlocs = tree->pins();
   // Find all the connected pins
-  connectedPins(net, network_, pins);
+  connectedPins(*logger_, net, network_, db_network_, pinlocs);
+
   // Sort pins by location because connectedPins order is not deterministic.
-  sort(pins, [=](const Pin *pin1, const Pin *pin2) {
-      Point loc1 = db_network_->location(pin1);
-      Point loc2 = db_network_->location(pin2);
-      return loc1.getX() < loc2.getX()
-        || (loc1.getX() == loc2.getX()
-            && loc1.getY() < loc2.getY());
+  sort(pinlocs, [=](const PinLoc& pin1, const PinLoc& pin2) {
+      return pin1.loc.getX() < pin2.loc.getX()
+        || (pin1.loc.getX() == pin2.loc.getX()
+            && pin1.loc.getY() < pin2.loc.getY());
   });
-  int pin_count = pins.size();
+  int pin_count = pinlocs.size();
   bool is_placed = true;
   // Warn if there are too many pins (>10000)
   if (pin_count > max_steiner_pin_count_) {
@@ -96,23 +95,22 @@ Resizer::makeSteinerTree(const Pin *drvr_pin)
     vector<int> x, y;  // Two separate vectors of coordinates needed by flute.
     int drvr_idx = 0; // The "driver_pin" or the root of the Steiner tree.
     for (int i = 0; i < pin_count; i++) {
-      const Pin *pin = pins[i];
-      if (pin == drvr_pin) {
+      const PinLoc& pinloc = pinlocs[i];
+      if (pinloc.pin == drvr_pin) {
         drvr_idx = i;  // drvr_index is needed by flute.
       }
-      Point loc = db_network_->location(pin);
-      x.push_back(loc.x());
-      y.push_back(loc.y());
+      x.push_back(pinloc.loc.x());
+      y.push_back(pinloc.loc.y());
       debugPrint(logger_, RSZ, "steiner", 3, " {} ({} {})",
-                 sdc_network->pathName(pin),
-                 loc.x(), loc.y());
+                 sdc_network->pathName(pinloc.pin),
+                 pinloc.loc.x(), pinloc.loc.y());
       // Track that all our pins are placed.
-      is_placed &= db_network_->isPlaced(pin);
+      is_placed &= db_network_->isPlaced(pinloc.pin);
 
       // Flute may reorder the input points, so it takes some unravelling
       // to find the mapping back to the original pins. The complication is
       // that multiple pins can occupy the same location.
-      tree->locAddPin(loc, pin);
+      tree->locAddPin(pinloc.loc, pinloc.pin);
     }
     if (is_placed) {
       stt::Tree ftree = stt_builder_->makeSteinerTree(db_network_->staToDb(net),
@@ -128,15 +126,16 @@ Resizer::makeSteinerTree(const Pin *drvr_pin)
 }
 
 static void
-connectedPins(const Net *net,
-              Network *network,
+connectedPins(Logger& logger, const Net *net,
+              Network *network,sta::dbNetwork* db_network,
               // Return value.
-              PinSeq &pins)
+              Vector<PinLoc> &pins)
 {
   NetConnectedPinIterator *pin_iter = network->connectedPinIterator(net);
   while (pin_iter->hasNext()) {
     const Pin *pin = pin_iter->next();
-    pins.push_back(pin);
+    Point loc = db_network->location(pin);
+    pins.push_back({pin, loc});
   }
   delete pin_iter;
 }
@@ -193,7 +192,7 @@ SteinerTree::branchCount() const
 }
 
 void
-SteinerTree::locAddPin(Point &loc,
+SteinerTree::locAddPin(Point loc,
                        const Pin *pin)
 {
   PinSeq &pins = loc_pin_map_[loc];

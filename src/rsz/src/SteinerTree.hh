@@ -84,6 +84,11 @@ using LocPinMap = std::unordered_map<Point, PinSeq, PointHash, PointEqual>;
 
 class SteinerTree;
 
+struct PinLoc {
+  const Pin* pin;
+  Point loc;
+};
+
 // Wrapper for stt::Tree
 //
 // Flute
@@ -97,7 +102,7 @@ class SteinerTree
 {
 public:
   SteinerTree(const Pin *drvr_pin, Resizer *resizer);
-  PinSeq &pins() { return pins_; }
+  Vector<PinLoc> &pins() { return pins_; }
   int pinCount() const { return pins_.size(); }
   int branchCount() const;
   void branch(int index,
@@ -147,13 +152,13 @@ public:
   static SteinerPt null_pt;
 
 protected:
-  void locAddPin(Point &loc,
+  void locAddPin(Point loc,
                  const Pin *pin);
 
   stt::Tree tree_;
   const Pin *drvr_pin_;
   int drvr_steiner_pt_;            // index into tree_.branch
-  PinSeq pins_;                    // Initial input
+  Vector<PinLoc> pins_;                    // Initial input
   LocPinMap loc_pin_map_;          // location -> pins map
   std::vector<SteinerPt>  left_;
   std::vector<SteinerPt>  right_;
