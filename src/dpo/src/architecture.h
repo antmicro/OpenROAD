@@ -58,6 +58,15 @@ class Architecture
   class Spacing;
   class Region;
 
+  struct Padding {
+    bool isValid;
+    int  left;
+    int  right;
+
+    Padding () : isValid(false), left(0), right(0) {}
+    Padding (int l, int r) : isValid(true), left(l), right(r) {}
+  };
+
   ~Architecture();
 
   const std::vector<Architecture::Row*>& getRows() const { return rows_; }
@@ -144,7 +153,7 @@ class Architecture
 
   // Padding...
   bool usePadding_ = false;
-  std::map<int, std::pair<int, int>> cellPaddings_;  // Padding to left,right.
+  std::vector<Padding> cellPaddings_;
 };
 
 class Architecture::Spacing

@@ -375,7 +375,10 @@ void Architecture::addCellSpacingUsingTable(int firstEdge,
 ////////////////////////////////////////////////////////////////////////////////
 void Architecture::addCellPadding(Node* ndi, int leftPadding, int rightPadding)
 {
-  cellPaddings_[ndi->getId()] = std::make_pair(leftPadding, rightPadding);
+  size_t id   = ndi->getId();
+  size_t size = std::max(cellPaddings_.size(), id);
+  cellPaddings_.resize(size);
+  cellPaddings_.emplace(cellPaddings_.begin() + id, Padding(leftPadding, rightPadding));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -384,15 +387,17 @@ bool Architecture::getCellPadding(const Node* ndi,
                                   int& leftPadding,
                                   int& rightPadding) const
 {
-  auto it = cellPaddings_.find(ndi->getId());
-  if (it == cellPaddings_.end()) {
+  size_t id = ndi->getId();
+  if (id >= cellPaddings_.size()) {
+    leftPadding  = 0;
     rightPadding = 0;
-    leftPadding = 0;
     return false;
   }
-  rightPadding = it->second.second;
-  leftPadding = it->second.first;
-  return true;
+
+  const auto& padding = cellPaddings_[id];
+  leftPadding  = padding.left;
+  rightPadding = padding.right;
+  return padding.isValid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -421,15 +426,15 @@ int Architecture::getCellSpacing(const Node* leftNode,
 
     int separation = 0;
     if (leftNode != nullptr) {
-      auto it = cellPaddings_.find(leftNode->getId());
-      if (it != cellPaddings_.end()) {
-        separation += it->second.second;
+      size_t id = leftNode->getId();
+      if (id < cellPaddings_.size() && cellPaddings_[id].isValid) {
+        separation += cellPaddings_[id].right;
       }
     }
     if (rightNode != nullptr) {
-      auto it = cellPaddings_.find(rightNode->getId());
-      if (it != cellPaddings_.end()) {
-        separation += it->second.first;
+      size_t id = rightNode->getId();
+      if (id < cellPaddings_.size() && cellPaddings_[id].isValid) {
+        separation += cellPaddings_[id].left;
       }
     }
     retval = std::max(retval, separation);
