@@ -160,7 +160,7 @@ double DetailedDisplacement::delta(const int n,
   for (int i = 0; i < n; i++) {
     const Node* ndi = nodes[i];
 
-    const int spanned = std::lround(ndi->getHeight() / singleRowHeight_);
+    const int spanned = ndi->getHeight() / singleRowHeight_;
 
     const double dx = std::fabs(ndi->getLeft() - ndi->getOrigLeft());
     const double dy = std::fabs(ndi->getBottom() - ndi->getOrigBottom());

@@ -83,10 +83,8 @@ Architecture::~Architecture()
 
 void Architecture::clearSpacingTable()
 {
-  for (auto& cellSpacing : cellSpacings_) {
-    delete cellSpacing;
-  }
   cellSpacings_.clear();
+  maxCellSpacing_ = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +105,7 @@ bool Architecture::isMultiHeightCell(const Node* ndi) const
 ////////////////////////////////////////////////////////////////////////////////
 int Architecture::getCellHeightInRows(const Node* ndi) const
 {
-  return std::lround(ndi->getHeight() / (double) rows_[0]->getHeight());
+  return ndi->getHeight() / (double) rows_[0]->getHeight();
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +297,7 @@ bool Architecture::powerCompatible(const Node* ndi,
   flip = false;
 
   // Number of spanned rows.
-  const int spanned = std::lround(ndi->getHeight() / (double) row->getHeight());
+  const int spanned = ndi->getHeight() / (double) row->getHeight();
   const int lo = row->getId();
   const int hi = lo + spanned - 1;
   if (hi >= rows_.size()) {
@@ -367,18 +365,19 @@ void Architecture::addCellSpacingUsingTable(int firstEdge,
                                             int secondEdge,
                                             int sep)
 {
-  cellSpacings_.push_back(
-      new Architecture::Spacing(firstEdge, secondEdge, sep));
+  cellSpacings_.emplace_back(Architecture::Spacing(firstEdge, secondEdge, sep));
+  maxCellSpacing_ = std::max(maxCellSpacing_, sep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 void Architecture::addCellPadding(Node* ndi, int leftPadding, int rightPadding)
 {
-  size_t id   = ndi->getId();
+  size_t id = ndi->getId();
   size_t size = std::max(cellPaddings_.size(), id);
   cellPaddings_.resize(size);
-  cellPaddings_.emplace(cellPaddings_.begin() + id, Padding(leftPadding, rightPadding));
+  cellPaddings_.emplace(cellPaddings_.begin() + id,
+                        Padding(leftPadding, rightPadding));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -389,13 +388,13 @@ bool Architecture::getCellPadding(const Node* ndi,
 {
   size_t id = ndi->getId();
   if (id >= cellPaddings_.size()) {
-    leftPadding  = 0;
+    leftPadding = 0;
     rightPadding = 0;
     return false;
   }
 
   const auto& padding = cellPaddings_[id];
-  leftPadding  = padding.left;
+  leftPadding = padding.left;
   rightPadding = padding.right;
   return padding.isValid;
 }
@@ -418,7 +417,11 @@ int Architecture::getCellSpacing(const Node* leftNode,
     // Don't need this if one of the cells is null.
     const int i1 = (leftNode == nullptr) ? -1 : leftNode->getRightEdgeType();
     const int i2 = (rightNode == nullptr) ? -1 : rightNode->getLeftEdgeType();
-    retval = std::max(retval, getCellSpacingUsingTable(i1, i2));
+    if (i1 == -1 && i2 == -1) {
+      retval = maxCellSpacing_;
+    } else {
+      retval = getCellSpacingUsingTable(i1, i2);
+    }
   }
   if (usePadding_) {
     // Separation is padding to the right of the left cell plus
@@ -451,41 +454,38 @@ int Architecture::getCellSpacingUsingTable(int firstEdge, int secondEdge) const
   // is very pessimistic, but will ensure all issues are
   // resolved.
 
-  int spacing = 0;
-
   if (firstEdge == -1 && secondEdge == -1) {
-    for (auto cellSpacings : cellSpacings_) {
-      spacing = std::max(spacing, cellSpacings->getSeparation());
-    }
-    return spacing;
+    return maxCellSpacing_;
   }
 
+  int spacing = 0;
+
   if (firstEdge == -1) {
-    for (auto cellSpacings : cellSpacings_) {
-      if (cellSpacings->getFirstEdge() == secondEdge
-          || cellSpacings->getSecondEdge() == secondEdge) {
-        spacing = std::max(spacing, cellSpacings->getSeparation());
+    for (const auto& cellSpacings : cellSpacings_) {
+      if (cellSpacings.getFirstEdge() == secondEdge
+          || cellSpacings.getSecondEdge() == secondEdge) {
+        spacing = std::max(spacing, cellSpacings.getSeparation());
       }
     }
     return spacing;
   }
 
   if (secondEdge == -1) {
-    for (auto cellSpacings : cellSpacings_) {
-      if (cellSpacings->getFirstEdge() == firstEdge
-          || cellSpacings->getSecondEdge() == firstEdge) {
-        spacing = std::max(spacing, cellSpacings->getSeparation());
+    for (const auto& cellSpacings : cellSpacings_) {
+      if (cellSpacings.getFirstEdge() == firstEdge
+          || cellSpacings.getSecondEdge() == firstEdge) {
+        spacing = std::max(spacing, cellSpacings.getSeparation());
       }
     }
     return spacing;
   }
 
-  for (auto cellSpacings : cellSpacings_) {
-    if ((cellSpacings->getFirstEdge() == firstEdge
-         && cellSpacings->getSecondEdge() == secondEdge)
-        || (cellSpacings->getFirstEdge() == secondEdge
-            && cellSpacings->getSecondEdge() == firstEdge)) {
-      spacing = std::max(spacing, cellSpacings->getSeparation());
+  for (const auto& cellSpacings : cellSpacings_) {
+    if ((cellSpacings.getFirstEdge() == firstEdge
+         && cellSpacings.getSecondEdge() == secondEdge)
+        || (cellSpacings.getFirstEdge() == secondEdge
+            && cellSpacings.getSecondEdge() == firstEdge)) {
+      spacing = std::max(spacing, cellSpacings.getSeparation());
     }
   }
   return spacing;

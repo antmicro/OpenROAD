@@ -463,7 +463,7 @@ bool DetailedMis::gatherNeighbours(Node* ndi)
     return false;
   }
 
-  const int spanned_i = std::lround(ndi->getHeight() / singleRowHeight);
+  const int spanned_i = ndi->getHeight() / singleRowHeight;
 
   std::deque<Bucket*> Q;
   Q.push_back(it->second);
@@ -480,7 +480,7 @@ bool DetailedMis::gatherNeighbours(Node* ndi)
     // Scan all the cells in this bucket.  If they are compatible with the
     // original cell, then add them to the neighbour list.
     for (Node* ndj : currPtr->nodes_) {
-      const int spanned_j = std::lround(ndj->getHeight() / singleRowHeight);
+      const int spanned_j = ndj->getHeight() / singleRowHeight;
 
       // Check to make sure the cell is not the original, that they have
       // the same region, that they have the same size (if applicable),

@@ -1611,7 +1611,7 @@ int DetailedMgr::checkSiteAlignment()
     // assumes rows are continuous and that the bottom row lines up
     // with the bottom of the architecture.
     int rb = (int) ((yb - arch_->getMinY()) / singleRowHeight);
-    int spanned = std::lround(nd->getHeight() / singleRowHeight);
+    int spanned = nd->getHeight() / singleRowHeight;
     int rt = rb + spanned - 1;
 
     if (reverseCellToSegs_[nd->getId()].empty()) {
@@ -1635,7 +1635,7 @@ int DetailedMgr::checkSiteAlignment()
 
       // XXX: Should I check the site to the left and right to avoid rounding
       // errors???
-      int sid = std::lround((xl - originX) / siteSpacing);
+      int sid = (xl - originX) / siteSpacing;
       double xt = originX + sid * siteSpacing;
       if (std::fabs(xl - xt) > 1.0e-3) {
         ++err_n;

@@ -58,13 +58,14 @@ class Architecture
   class Spacing;
   class Region;
 
-  struct Padding {
+  struct Padding
+  {
     bool isValid;
-    int  left;
-    int  right;
+    int left;
+    int right;
 
-    Padding () : isValid(false), left(0), right(0) {}
-    Padding (int l, int r) : isValid(true), left(l), right(r) {}
+    Padding() : isValid(false), left(0), right(0) {}
+    Padding(int l, int r) : isValid(true), left(l), right(r) {}
   };
 
   ~Architecture();
@@ -116,8 +117,6 @@ class Architecture
   int getCellSpacingUsingTable(int firstEdge, int secondEdge) const;
   void addCellSpacingUsingTable(int firstEdge, int secondEdge, int sep);
 
-  const std::vector<Spacing*>& getCellSpacings() const { return cellSpacings_; }
-
   const std::vector<std::pair<std::string, int>>& getEdgeTypes() const
   {
     return edgeTypes_;
@@ -149,7 +148,8 @@ class Architecture
   // Spacing tables...
   bool useSpacingTable_ = false;
   std::vector<std::pair<std::string, int>> edgeTypes_;
-  std::vector<Spacing*> cellSpacings_;
+  std::vector<Spacing> cellSpacings_;
+  int maxCellSpacing_ = 0;
 
   // Padding...
   bool usePadding_ = false;
