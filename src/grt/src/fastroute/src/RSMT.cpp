@@ -572,24 +572,27 @@ bool FastRouteCore::HTreeSuite(const int netID)
 
 float FastRouteCore::coeffADJ(const int netID)
 {
-  const int deg = nets_[netID]->getNumPins();
+  auto &net = nets_[netID];
+  const int deg = net->getNumPins();
   int xmax = 0;
   int ymax = 0;
   int xmin = BIG_INT;
   int ymin = BIG_INT;
 
   for (int i = 0; i < deg; i++) {
-    if (xmin > nets_[netID]->getPinX(i)) {
-      xmin = nets_[netID]->getPinX(i);
+    int x = net->getPinX(i);
+    if (xmin > x) {
+      xmin = x;
     }
-    if (xmax < nets_[netID]->getPinX(i)) {
-      xmax = nets_[netID]->getPinX(i);
+    if (xmax < x) {
+      xmax = x;
     }
-    if (ymin > nets_[netID]->getPinY(i)) {
-      ymin = nets_[netID]->getPinY(i);
+    int y = net->getPinY(i);
+    if (ymin > y) {
+      ymin = y;
     }
-    if (ymax < nets_[netID]->getPinY(i)) {
-      ymax = nets_[netID]->getPinY(i);
+    if (ymax < y) {
+      ymax = y;
     }
   }
 
@@ -600,26 +603,26 @@ float FastRouteCore::coeffADJ(const int netID)
   float coef;
   if (xmin == xmax) {
     for (int j = ymin; j < ymax; j++) {
-      Vcap += getEdgeCapacity(nets_[netID], xmin, j, EdgeDirection::Vertical);
+      Vcap += getEdgeCapacity(net, xmin, j, EdgeDirection::Vertical);
       Vusage += v_edges_[j][xmin].est_usage;
     }
     coef = 1;
   } else if (ymin == ymax) {
     for (int i = xmin; i < xmax; i++) {
-      Hcap += getEdgeCapacity(nets_[netID], i, ymin, EdgeDirection::Horizontal);
+      Hcap += getEdgeCapacity(net, i, ymin, EdgeDirection::Horizontal);
       Husage += h_edges_[ymin][i].est_usage;
     }
     coef = 1;
   } else {
     for (int j = ymin; j <= ymax; j++) {
       for (int i = xmin; i < xmax; i++) {
-        Hcap += getEdgeCapacity(nets_[netID], i, j, EdgeDirection::Horizontal);
+        Hcap += getEdgeCapacity(net, i, j, EdgeDirection::Horizontal);
         Husage += h_edges_[j][i].est_usage;
       }
     }
     for (int j = ymin; j < ymax; j++) {
       for (int i = xmin; i <= xmax; i++) {
-        Vcap += getEdgeCapacity(nets_[netID], i, j, EdgeDirection::Vertical);
+        Vcap += getEdgeCapacity(net, i, j, EdgeDirection::Vertical);
         Vusage += v_edges_[j][i].est_usage;
       }
     }
