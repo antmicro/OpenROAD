@@ -826,8 +826,9 @@ void FastRouteCore::layerAssignmentV4()
       continue;
     }
 
-    auto& treeedges = sttrees_[netID].edges;
-    for (edgeID = 0; edgeID < sttrees_[netID].num_edges(); edgeID++) {
+    const auto& treeedges = sttrees_[netID].edges;
+    const int numEdges = sttrees_[netID].num_edges();
+    for (edgeID = 0; edgeID < numEdges; edgeID++) {
       treeedge = &(treeedges[edgeID]);
       if (treeedge->len > 0) {
         routeLen = treeedge->route.routelen;
@@ -838,7 +839,8 @@ void FastRouteCore::layerAssignmentV4()
   }
   netpinOrderInc();
 
-  for (i = 0; i < tree_order_pv_.size(); i++) {
+  const int tree_order_pv_size = tree_order_pv_.size();
+  for (i = 0; i < tree_order_pv_size; i++) {
     netID = tree_order_pv_[i].treeIndex;
 
     if (skipNet(netID)) {
