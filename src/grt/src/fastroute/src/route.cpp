@@ -1691,11 +1691,9 @@ void FastRouteCore::routeLVEnew(int netID,
   cnt++;
 
   treeedge->route.routelen = cnt - 1;
-  treeedge->route.gridsX.clear();
-  treeedge->route.gridsY.clear();
 
-  treeedge->route.gridsX.resize(cnt, 0);
-  treeedge->route.gridsY.resize(cnt, 0);
+  treeedge->route.gridsX.resize(cnt);
+  treeedge->route.gridsY.resize(cnt);
 
   for (int i = 0; i < cnt; i++) {
     treeedge->route.gridsX[i] = gridsX[i];
