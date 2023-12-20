@@ -571,19 +571,15 @@ void FastRouteCore::assignEdge(int netID, int edgeID, bool processDIR)
       for (l = 0; l < num_layers_; l++) {
         for (i = 0; i < num_layers_; i++) {
           if (k == 0) {
-            if (l != i) {
-              if (gridD[i][k] > gridD[l][k] + abs(i - l) * 2) {
-                gridD[i][k] = gridD[l][k] + abs(i - l) * 2;
-                via_link_[i][k] = l;
-              }
-            }
+	    if (gridD[i][k] > gridD[l][k] + abs(i - l) * 2) {
+	      gridD[i][k] = gridD[l][k] + abs(i - l) * 2;
+	      via_link_[i][k] = l;
+	    }
           } else {
-            if (l != i) {
-              if (gridD[i][k] > gridD[l][k] + abs(i - l) * 3) {
-                gridD[i][k] = gridD[l][k] + abs(i - l) * 3;
-                via_link_[i][k] = l;
-              }
-            }
+	    if (gridD[i][k] > gridD[l][k] + abs(i - l) * 3) {
+	      gridD[i][k] = gridD[l][k] + abs(i - l) * 3;
+	      via_link_[i][k] = l;
+	    }
           }
         }
       }
@@ -603,12 +599,10 @@ void FastRouteCore::assignEdge(int netID, int edgeID, bool processDIR)
 
     for (l = 0; l < num_layers_; l++) {
       for (i = 0; i < num_layers_; i++) {
-        if (l != i) {
           if (gridD[i][k] > gridD[l][k] + abs(i - l) * 1) {
             gridD[i][k] = gridD[l][k] + abs(i - l) * 1;
             via_link_[i][k] = l;
           }
-        }
       }
     }
 
@@ -692,19 +686,15 @@ void FastRouteCore::assignEdge(int netID, int edgeID, bool processDIR)
       for (l = 0; l < num_layers_; l++) {
         for (i = 0; i < num_layers_; i++) {
           if (k == routelen) {
-            if (l != i) {
-              if (gridD[i][k] > gridD[l][k] + abs(i - l) * 2) {
-                gridD[i][k] = gridD[l][k] + abs(i - l) * 2;
-                via_link_[i][k] = l;
-              }
-            }
+	    if (gridD[i][k] > gridD[l][k] + abs(i - l) * 2) {
+	      gridD[i][k] = gridD[l][k] + abs(i - l) * 2;
+	      via_link_[i][k] = l;
+	    }
           } else {
-            if (l != i) {
-              if (gridD[i][k] > gridD[l][k] + abs(i - l) * 3) {
-                gridD[i][k] = gridD[l][k] + abs(i - l) * 3;
-                via_link_[i][k] = l;
-              }
-            }
+	    if (gridD[i][k] > gridD[l][k] + abs(i - l) * 3) {
+	      gridD[i][k] = gridD[l][k] + abs(i - l) * 3;
+	      via_link_[i][k] = l;
+	    }
           }
         }
       }
@@ -724,12 +714,10 @@ void FastRouteCore::assignEdge(int netID, int edgeID, bool processDIR)
 
     for (l = 0; l < num_layers_; l++) {
       for (i = 0; i < num_layers_; i++) {
-        if (l != i) {
-          if (gridD[i][0] > gridD[l][0] + abs(i - l) * 1) {
-            gridD[i][0] = gridD[l][0] + abs(i - l) * 1;
-            via_link_[i][0] = l;
-          }
-        }
+	if (gridD[i][0] > gridD[l][0] + abs(i - l) * 1) {
+	  gridD[i][0] = gridD[l][0] + abs(i - l) * 1;
+	  via_link_[i][0] = l;
+	}
       }
     }
 
