@@ -445,7 +445,7 @@ void FastRouteCore::fixEdgeAssignment(int& net_layer,
 
 void FastRouteCore::assignEdge(int netID, int edgeID, bool processDIR)
 {
-  std::vector<std::vector<long>> gridD;
+  thread_local static std::vector<std::vector<long>> gridD;
   int i, k, l, min_x, min_y, routelen, n1a, n2a, last_layer;
   int min_result, endLayer = 0;
 
@@ -462,16 +462,12 @@ void FastRouteCore::assignEdge(int netID, int edgeID, bool processDIR)
   n1a = treeedge->n1a;
   n2a = treeedge->n2a;
 
-  gridD.resize(num_layers_);
+  gridD.resize(std::max<size_t>(num_layers_, gridD.size()));
   for (int i = 0; i < num_layers_; i++) {
-    gridD[i].resize(treeedge->route.routelen + 1);
-  }
-
-  for (l = 0; l < num_layers_; l++) {
-    for (k = 0; k <= routelen; k++) {
-      gridD[l][k] = BIG_INT;
-      via_link_[l][k] = BIG_INT;
-    }
+    size_t num_old_elements = std::min<size_t>(gridD[i].size(), routelen + 1);
+    std::fill(gridD[i].begin(), gridD[i].begin() + num_old_elements, BIG_INT);
+    gridD[i].resize(std::max<size_t>(gridD[i].size(), routelen + 1), BIG_INT);
+    std::fill(via_link_[i].begin(), via_link_[i].begin() + routelen + 1, BIG_INT);
   }
 
   for (k = 0; k < routelen; k++) {
