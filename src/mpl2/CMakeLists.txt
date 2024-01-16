@@ -33,9 +33,10 @@
 
 include("openroad")
 
-
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 find_package(ortools REQUIRED)
+find_package(OpenMP REQUIRED)
 
 add_library(mpl2_lib
   src/rtl_mp.cpp
@@ -60,6 +61,8 @@ target_link_libraries(mpl2_lib
     ortools::ortools
     dl
     par_lib
+    Threads::Threads
+    OpenMP::OpenMP_CXX
 )
 
 swig_lib(NAME      mpl2

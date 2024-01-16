@@ -244,6 +244,7 @@ void SimulatedAnnealingCore<T>::calWirelength()
 
   // calculate the total net weight
   float tot_net_weight = 0.0;
+  #pragma omp parallel for reduction(+:tot_net_weight)
   for (const auto& net : nets_) {
     tot_net_weight += net.weight;
   }
@@ -252,6 +253,7 @@ void SimulatedAnnealingCore<T>::calWirelength()
     return;
   }
 
+  #pragma omp parallel for reduction(+:wirelength_)
   for (const auto& net : nets_) {
     const float x1 = macros_[net.terminals.first].getPinX();
     const float y1 = macros_[net.terminals.first].getPinY();
@@ -304,7 +306,7 @@ void SimulatedAnnealingCore<T>::calFencePenalty()
     float height = y_dist <= max_y_dist ? 0.0 : (y_dist - max_y_dist);
     width = width / outline_width_;
     height = height / outline_height_;
-    fence_penalty_ += width * width + height * height;
+    fence_penalty_ = fence_penalty_ + width * width + height * height;
   }
   // normalization
   fence_penalty_ = fence_penalty_ / fences_.size();
@@ -338,7 +340,7 @@ void SimulatedAnnealingCore<T>::calGuidancePenalty()
                             - (bbox.yMax() + bbox.yMin()) / 2.0);
     x_dist = std::max(x_dist - width, 0.0f) / width;
     y_dist = std::max(y_dist - height, 0.0f) / height;
-    guidance_penalty_ += x_dist * x_dist + y_dist * y_dist;
+    guidance_penalty_ = guidance_penalty_ + x_dist * x_dist + y_dist * y_dist;
   }
   guidance_penalty_ = guidance_penalty_ / guides_.size();
   if (graphics_) {

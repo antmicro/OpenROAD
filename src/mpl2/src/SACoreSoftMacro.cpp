@@ -379,6 +379,7 @@ void SACoreSoftMacro::calBoundaryPenalty()
   }
 
   int tot_num_macros = 0;
+  #pragma omp parallel for reduction(+:tot_num_macros)
   for (const auto& macro : macros_) {
     tot_num_macros += macro.getNumMacro();
   }
@@ -386,6 +387,7 @@ void SACoreSoftMacro::calBoundaryPenalty()
     return;
   }
 
+  #pragma omp parallel for reduction(+:boundary_penalty_)
   for (const auto& macro : macros_) {
     if (macro.getNumMacro() > 0) {
       const float lx = macro.getX();
@@ -419,6 +421,7 @@ void SACoreSoftMacro::calMacroBlockagePenalty()
     return;
   }
 
+  #pragma omp parallel for reduction(+:macro_blockage_penalty_)
   for (auto& bbox : blockages_) {
     for (const auto& macro : macros_) {
       if (macro.getNumMacro() > 0) {
@@ -440,8 +443,8 @@ void SACoreSoftMacro::calMacroBlockagePenalty()
             = std::abs((region_uy + region_ly) / 2.0 - (uy + ly) / 2.0);
         x_dist = std::max(width - x_dist, 0.0f) / width;
         y_dist = std::max(height - y_dist, 0.0f) / height;
-        macro_blockage_penalty_
-            += (x_dist * x_dist + y_dist * y_dist) * macro.getNumMacro();
+        macro_blockage_penalty_ +=
+            (x_dist * x_dist + y_dist * y_dist) * macro.getNumMacro();
       }
     }
   }
