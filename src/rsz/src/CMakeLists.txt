@@ -35,6 +35,10 @@
 
 include("openroad")
 
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(OpenMP REQUIRED)
+
 swig_lib(NAME      rsz
          NAMESPACE rsz
          I_FILE    Resizer.i
@@ -78,6 +82,8 @@ target_link_libraries(rsz_lib
     dbSta_lib
     grt_lib
     utl_lib
+    Threads::Threads
+    OpenMP::OpenMP_CXX
 )
 
 target_link_libraries(rsz
