@@ -216,9 +216,13 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
     const BufferedNetSeq& Z1 = rebufferBottomUp(bnet->ref(), level + 1);
     const BufferedNetSeq& Z2 = rebufferBottomUp(bnet->ref2(), level + 1);
     BufferedNetSeq Z;
-    // Combine the options from both branches.
-    for (const BufferedNetPtr& p : Z1) {
-      for (const BufferedNetPtr& q : Z2) {
+    Z.resize(Z1.size()*Z2.size());
+    // Combine the options from both branches.=
+    for (int i = 0; i < Z1.size(); i++) {
+      const BufferedNetPtr& p = Z1[i];
+      const int base = i*Z2.size();
+      for (int j = 0; j < Z2.size(); j++) {
+        const BufferedNetPtr& q = Z2[j];
         const BufferedNetPtr& min_req = fuzzyLess(p->required(sta_),
                                            q->required(sta_)) ? p : q;
         BufferedNetPtr junc = make_shared<BufferedNet>(BufferedNetType::junction,
@@ -227,7 +231,7 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
         junc->setCapacitance(p->cap() + q->cap());
         junc->setRequiredPath(min_req->requiredPath());
         junc->setRequiredDelay(min_req->requiredDelay());
-        Z.push_back(std::move(junc));
+        Z[base + j] = std::move(junc);
       }
     }
     // Prune the options if there exists another option with
