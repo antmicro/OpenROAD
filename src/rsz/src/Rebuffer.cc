@@ -219,7 +219,7 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
 
     size_t size = Z1.size()*Z2.size();
     // This assumption is used only in the final loop
-    // but we quit as early as we know there's nothing to do here.
+    // but we can quit as early as we know there's nothing to do here.
     if (size <= 0)
       return Z;
     Z.resize(size);
