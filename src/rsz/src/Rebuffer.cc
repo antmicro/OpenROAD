@@ -225,10 +225,9 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
     Z.resize(size);
 
     // Combine the options from both branches.=
-    for (int i = 0; i < Z1.size(); i++) {
+    for (size_t i = 0, base = 0; i < Z1.size(); i++, base += Z2.size()) {
       const BufferedNetPtr& p = Z1[i];
-      const int base = i*Z2.size();
-      for (int j = 0; j < Z2.size(); j++) {
+      for (size_t j = 0; j < Z2.size(); j++) {
         const BufferedNetPtr& q = Z2[j];
         const BufferedNetPtr& min_req = fuzzyLess(p->required(sta_),
                                            q->required(sta_)) ? p : q;
@@ -257,19 +256,14 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
            if (slack2 > slack1) {
              return false;
            }
-
-           if (option1->cap() < option2->cap()) {
-             return true;
-           }
-
-           return false;
+           return option1->cap() < option2->cap();
          });
     float Lsmall = Z[0]->cap();
     size_t si = 1;
     for (size_t pi = si; pi < size; pi++) {
       const BufferedNetPtr& p = Z[pi];
       float Lp = p->cap();
-      if (Lp < Lsmall) {
+      if (fuzzyLess(Lp, Lsmall)) {
         Z[si++] = p;
         Lsmall = Lp;
       }
@@ -304,8 +298,10 @@ RepairSetup::addWireAndBuffer(const BufferedNetSeq& Z,
                               int level)
 {
   BufferedNetSeq Z1;
+  Z1.resize(Z.size());
   Point wire_end = bnet_wire->location();
-  for (const BufferedNetPtr& p : Z) {
+  for (int i = 0; i < Z.size(); i++) {
+    const BufferedNetPtr& p = Z[i];
     Point p_loc = p->location();
     int wire_length_dbu = abs(wire_end.x() - p_loc.x())
       + abs(wire_end.y() - p_loc.y());
@@ -332,7 +328,7 @@ RepairSetup::addWireAndBuffer(const BufferedNetSeq& Z,
                "", level,
                wire_length_dbu,
                z->to_string(resizer_));
-    Z1.push_back(z);
+    Z1[i] = z;
   }
   if (!Z1.empty()) {
     BufferedNetSeq buffered_options;
