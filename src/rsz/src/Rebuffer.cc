@@ -224,6 +224,8 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
       return Z;
     Z.resize(size);
 
+    std::unordered_map<BufferedNet*, Slack> slacks;
+
     // Combine the options from both branches.=
     for (size_t i = 0, base = 0; i < Z1.size(); i++, base += Z2.size()) {
       const BufferedNetPtr& p = Z1[i];
@@ -237,6 +239,7 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
         junc->setCapacitance(p->cap() + q->cap());
         junc->setRequiredPath(min_req->requiredPath());
         junc->setRequiredDelay(min_req->requiredDelay());
+        slacks[junc.get()] = slackPenalized(junc);
         Z[base + j] = std::move(junc);
       }
     }
@@ -246,9 +249,9 @@ RepairSetup::rebufferBottomUp(const BufferedNetPtr& bnet,
     // Presort options to hit better options sooner.
     sort(Z.begin(),
          Z.end(),
-         [this](const BufferedNetPtr& option1, const BufferedNetPtr& option2) {
-           Slack slack1 = slackPenalized(option1);
-           Slack slack2 = slackPenalized(option2);
+         [this, &slacks](const BufferedNetPtr& option1, const BufferedNetPtr& option2) {
+           Slack slack1 = slacks[option1.get()];
+           Slack slack2 = slacks[option2.get()];
 
            if (slack1 > slack2) {
              return true;
