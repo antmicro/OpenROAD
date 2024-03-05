@@ -133,6 +133,46 @@ void InitialPlace::doBicgstabPlace()
       break;
     }
   }
+
+  // Compute center
+  float  cx = 0.0f;
+  float  cy = 0.0f;
+  size_t n  = 0;
+
+  for (auto& inst : pbc_->placeInsts()) {
+    int idx = inst->extId();
+    if (!inst->isLocked()) {
+      cx += instLocVecX_(idx);
+      cy += instLocVecY_(idx);
+      n++;
+    }
+  }
+
+  cx /= n;
+  cy /= n;
+  fprintf(stderr, "cx=%f,cy=%f\n", cx, cy);
+
+  // Increase spread
+  const float spreadFac = 5.0f;
+
+  for (auto& inst : pbc_->placeInsts()) {
+    int idx = inst->extId();
+    if (!inst->isLocked()) {
+      float dx = instLocVecX_(idx) - cx;
+      float dy = instLocVecY_(idx) - cy;
+
+      dx *= spreadFac;
+      dy *= spreadFac;
+
+      inst->dbSetCenterLocation(cx + dx, cy + dy);
+      inst->dbSetPlaced();
+    }
+  }
+
+  // Update GFX if needed
+  if (graphics) {
+    graphics->cellPlot(true);
+  }
 }
 
 // starting point of initial place is center.
