@@ -639,20 +639,6 @@ find_resize_slacks()
   resizer->findResizeSlacks();
 }
 
-NetSeq *
-resize_worst_slack_nets()
-{
-  Resizer *resizer = getResizer();
-  return &resizer->resizeWorstSlackNets();
-}
-
-float
-resize_net_slack(Net *net)
-{
-  Resizer *resizer = getResizer();
-  return resizer->resizeNetSlack(net).value();
-}
-
 ////////////////////////////////////////////////////////////////
 
 float

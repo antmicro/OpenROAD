@@ -160,6 +160,8 @@ void RepairDesign::repairDesign(
 
   resizer_->incrementalParasiticsBegin();
   int print_iteration = 0;
+
+  resizer_->ensureLevelDrvrVertices();
   if (resizer_->level_drvr_vertices_.size() > size_t(5) * max_print_interval_) {
     print_interval_ = max_print_interval_;
   } else {

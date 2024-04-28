@@ -144,21 +144,28 @@ void TimingBase::setTimingNetWeightMax(float max)
 
 bool TimingBase::updateGNetWeights(float overflow)
 {
-  rs_->findResizeSlacks();
+  auto it = nbc_->gNets().begin();
+  const auto end = nbc_->gNets().end();
+  auto netSlacks
+      = rs_->findResizeSlacks([&it, end]() -> std::optional<rsz::NetGNet> {
+          while (it != end) {
+            auto gNet = *it++;
+            gNet->setTimingWeight(1.0);
+            if (gNet->gPins().size() > 1) {
+              return rsz::NetGNet{gNet->net()->dbNet(), gNet};
+            }
+          }
+          return {};
+        });
 
-  // get worst resize nets
-  sta::NetSeq& worst_slack_nets = rs_->resizeWorstSlackNets();
-
-  if (worst_slack_nets.empty()) {
+  if (netSlacks.empty()) {
     log_->warn(GPL, 114, "No net slacks found. Timing-driven mode disabled.");
     return false;
   }
 
   // min/max slack for worst nets
-  auto slack_min = rs_->resizeNetSlack(worst_slack_nets[0]).value();
-  auto slack_max
-      = rs_->resizeNetSlack(worst_slack_nets[worst_slack_nets.size() - 1])
-            .value();
+  auto slack_min = netSlacks.front().slack;
+  auto slack_max = netSlacks.back().slack;
 
   log_->info(GPL, 100, "worst slack {:.3g}", slack_min);
 
@@ -167,41 +174,31 @@ bool TimingBase::updateGNetWeights(float overflow)
     return false;
   }
 
-  int weighted_net_count = 0;
-  for (auto& gNet : nbc_->gNets()) {
-    // default weight
-    gNet->setTimingWeight(1.0);
-    if (gNet->gPins().size() > 1) {
-      auto net_slack_opt = rs_->resizeNetSlack(gNet->net()->dbNet());
-      if (!net_slack_opt) {
-        continue;
-      }
-      auto net_slack = net_slack_opt.value();
-      if (net_slack < slack_max) {
-        if (slack_max == slack_min) {
-          gNet->setTimingWeight(1.0);
-        } else {
-          // weight(min_slack) = net_weight_max_
-          // weight(max_slack) = 1
-          const float weight = 1
-                               + (net_weight_max_ - 1) * (slack_max - net_slack)
-                                     / (slack_max - slack_min);
-          gNet->setTimingWeight(weight);
-        }
-        weighted_net_count++;
-      }
-      debugPrint(log_,
-                 GPL,
-                 "timing",
-                 1,
-                 "net:{} slack:{} weight:{}",
-                 gNet->net()->dbNet()->getConstName(),
-                 net_slack,
-                 gNet->totalWeight());
-    }
+  if (slack_max == slack_min) {
+    log_->info(GPL, 101, "All slacks are the same. Skipping weighting");
+    return false;
   }
 
-  log_->info(GPL, 103, "Weighted {} nets.", weighted_net_count);
+  for (auto& netSlack : netSlacks) {
+    auto gNet = netSlack.net;
+    auto net_slack = netSlack.slack;
+    // weight(min_slack) = net_weight_max_
+    // weight(max_slack) = 1
+    const float weight = 1
+                         + (net_weight_max_ - 1) * (slack_max - net_slack)
+                               / (slack_max - slack_min);
+    gNet->setTimingWeight(weight);
+    debugPrint(log_,
+               GPL,
+               "timing",
+               1,
+               "net:{} slack:{} weight:{}",
+               gNet->net()->dbNet()->getConstName(),
+               net_slack,
+               gNet->totalWeight());
+  }
+
+  log_->info(GPL, 103, "Weighted {} nets.", netSlacks.size());
   return true;
 }
 

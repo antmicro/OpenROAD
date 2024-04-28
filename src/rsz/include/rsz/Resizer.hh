@@ -45,6 +45,10 @@
 #include "sta/UnorderedSet.hh"
 #include "utl/Logger.h"
 
+namespace gpl {
+class GNet;
+}
+
 namespace grt {
 class GlobalRouter;
 class IncrementalGRoute;
@@ -55,6 +59,13 @@ class SteinerTreeBuilder;
 }
 
 namespace rsz {
+
+using NetGNet = std::tuple<odb::dbNet*, gpl::GNet*>;
+
+struct NetSlack {
+  gpl::GNet* net;
+  float slack;
+};
 
 using std::array;
 using std::string;
@@ -358,14 +369,9 @@ class Resizer : public StaState
   //  restore resized gates
   // resizeSlackPreamble must be called before the first findResizeSlacks.
   void resizeSlackPreamble();
-  void findResizeSlacks();
-  // Return nets with worst slack.
-  NetSeq& resizeWorstSlackNets();
-  // Return net slack, if any (indicated by the bool).
-  std::optional<Slack> resizeNetSlack(const Net* net);
-  // db flavor
-  vector<dbNet*> resizeWorstSlackDbNets();
-  std::optional<Slack> resizeNetSlack(const dbNet* db_net);
+  std::vector<NetSlack> findResizeSlacks(
+      const std::function<std::optional<NetGNet>()>& iter
+      = []() -> std::optional<NetGNet> { return {}; });
 
   ////////////////////////////////////////////////////////////////
   // API for logic resynthesis
@@ -552,7 +558,6 @@ class Resizer : public StaState
                    const LibertyCell* replacement,
                    bool journal);
 
-  void findResizeSlacks1();
   bool removeBuffer(Instance* buffer);
   Instance* makeInstance(LibertyCell* cell,
                          const char* name,
@@ -676,9 +681,7 @@ class Resizer : public StaState
   // insert a buffer in the middle of. Theoretically computed using the smallest
   // drive cell (because larger ones would give us a longer length).
   float max_wire_length_ = 0;
-  float worst_slack_nets_percent_ = 10;
-  Map<const Net*, Slack> net_slack_map_;
-  NetSeq worst_slack_nets_;
+  float worst_slack_nets_percent_ = 15;
 
   // Journal to roll back changes (OpenDB not up to the task).
   Map<Instance*, LibertyCell*> resized_inst_map_;
