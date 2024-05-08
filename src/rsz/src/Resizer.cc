@@ -1207,8 +1207,8 @@ void Resizer::findResizeSlacks()
                                cap_violations,
                                fanout_violations,
                                length_violations);
-  findResizeSlacks1();
   journalRestore(resize_count_, inserted_buffer_count_, cloned_gate_count_);
+  findResizeSlacks1();
 }
 
 void Resizer::findResizeSlacks1()
