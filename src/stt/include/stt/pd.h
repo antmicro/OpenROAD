@@ -39,10 +39,13 @@ namespace utl {
 class Logger;
 }
 
+namespace odb {
+class Point;
+}
+
 namespace pdr {
 
-stt::Tree primDijkstra(const std::vector<int>& x,
-                       const std::vector<int>& y,
+stt::Tree primDijkstra(const std::vector<odb::Point>& points,
                        int driver_index,
                        float alpha,
                        utl::Logger* logger);

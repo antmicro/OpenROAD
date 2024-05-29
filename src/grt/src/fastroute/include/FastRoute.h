@@ -392,14 +392,12 @@ class FastRouteCore
                     const bool newType,
                     const bool noADJ);
   void fluteNormal(const int netID,
-                   const std::vector<int>& x,
-                   const std::vector<int>& y,
+                   const std::vector<PinCoords>& coords,
                    const int acc,
                    const float coeffV,
                    Tree& t);
   void fluteCongest(const int netID,
-                    const std::vector<int>& x,
-                    const std::vector<int>& y,
+                    const std::vector<PinCoords>& coords,
                     const int acc,
                     const float coeffV,
                     Tree& t);

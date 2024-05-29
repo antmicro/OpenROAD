@@ -1577,9 +1577,7 @@ int FrNet::getLayerEdgeCost(int layer) const
 
 void FrNet::addPin(int x, int y, int layer)
 {
-  pin_x_.push_back(x);
-  pin_y_.push_back(y);
-  pin_l_.push_back(layer);
+  pin_coords_.push_back({x, y, layer});
 }
 
 void FrNet::reset(odb::dbNet* db_net,
@@ -1600,9 +1598,7 @@ void FrNet::reset(odb::dbNet* db_net,
   max_layer_ = max_layer;
   slack_ = slack;
   edge_cost_per_layer_.reset(edge_cost_per_layer);
-  pin_x_.clear();
-  pin_y_.clear();
-  pin_l_.clear();
+  pin_coords_.clear();
 }
 
 }  // namespace grt

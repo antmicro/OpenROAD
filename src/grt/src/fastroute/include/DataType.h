@@ -84,6 +84,10 @@ struct Segment  // A Segment is a 2-pin connection
   short Zpoint;          // The coordinates of Z point (x for HVH and y for VHV)
 };
 
+struct PinCoords {
+  int x, y, l;
+};
+
 struct FrNet  // A Net is a set of connected MazePoints
 {
   bool isClock() const { return is_clock_; }
@@ -95,15 +99,34 @@ struct FrNet  // A Net is a set of connected MazePoints
   const char* getName() const;
   int getMaxLayer() const { return max_layer_; }
   int getMinLayer() const { return min_layer_; }
-  int getNumPins() const { return pin_x_.size(); }
+  int getNumPins() const { return pin_coords_.size(); }
   int getLayerEdgeCost(int layer) const;
 
-  int getPinX(int idx) const { return pin_x_[idx]; }
-  int getPinY(int idx) const { return pin_y_[idx]; }
-  int getPinL(int idx) const { return pin_l_[idx]; }
-  const std::vector<int>& getPinX() const { return pin_x_; }
-  const std::vector<int>& getPinY() const { return pin_y_; }
-  const std::vector<int>& getPinL() const { return pin_l_; }
+  const std::vector<PinCoords>& getPinCoords() const { return pin_coords_; }
+  int getPinX(int idx) const { return pin_coords_[idx].x; }
+  int getPinY(int idx) const { return pin_coords_[idx].y; }
+  int getPinL(int idx) const { return pin_coords_[idx].l; }
+  std::vector<int> getPinX() const {
+    std::vector<int> x(pin_coords_.size());
+    for (int i = 0; i < pin_coords_.size(); i++) {
+      x[i] = pin_coords_[i].x;
+    }
+    return x;
+  }
+  std::vector<int> getPinY() const {
+    std::vector<int> y(pin_coords_.size());
+    for (int i = 0; i < pin_coords_.size(); i++) {
+      y[i] = pin_coords_[i].y;
+    }
+    return y;
+  }
+  std::vector<int> getPinL() const {
+    std::vector<int> l(pin_coords_.size());
+    for (int i = 0; i < pin_coords_.size(); i++) {
+      l[i] = pin_coords_[i].l;
+    }
+    return l;
+  }
 
   void addPin(int x, int y, int layer);
   void reset(odb::dbNet* db_net,
@@ -121,9 +144,7 @@ struct FrNet  // A Net is a set of connected MazePoints
 
  private:
   odb::dbNet* db_net_;
-  std::vector<int> pin_x_;  // x coordinates of pins
-  std::vector<int> pin_y_;  // y coordinates of pins
-  std::vector<int> pin_l_;  // l coordinates of pins
+  std::vector<PinCoords> pin_coords_;
   bool is_clock_;           // flag that indicates if net is a clock net
   bool is_critical_;
   int driver_idx_;

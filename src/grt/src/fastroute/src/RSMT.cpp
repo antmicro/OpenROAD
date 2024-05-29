@@ -154,81 +154,80 @@ void FastRouteCore::copyStTree(const int ind, const Tree& rsmt)
 }
 
 void FastRouteCore::fluteNormal(const int netID,
-                                const std::vector<int>& x,
-                                const std::vector<int>& y,
+                                const std::vector<PinCoords>& coords,
                                 const int acc,
                                 const float coeffV,
                                 Tree& t)
 {
-  const int d = x.size();
+  const int d = coords.size();
 
   if (d == 2) {
     t.deg = 2;
-    t.length = abs(x[0] - x[1]) + abs(y[0] - y[1]);
+    t.length = abs(coords[0].x - coords[1].x) + abs(coords[0].y - coords[1].y);
     t.branch.resize(2);
-    t.branch[0].x = x[0];
-    t.branch[0].y = y[0];
+    t.branch[0].x = coords[0].x;
+    t.branch[0].y = coords[0].y;
     t.branch[0].n = 1;
-    t.branch[1].x = x[1];
-    t.branch[1].y = y[1];
+    t.branch[1].x = coords[1].x;
+    t.branch[1].y = coords[1].y;
     t.branch[1].n = 1;
   } else if (d == 3) {
     t.deg = 3;
     int x_max, x_min, x_mid;
-    if (x[0] < x[1]) {
-      if (x[0] < x[2]) {
-        x_min = x[0];
-        x_mid = std::min(x[1], x[2]);
-        x_max = std::max(x[1], x[2]);
+    if (coords[0].x < coords[1].x) {
+      if (coords[0].x < coords[2].x) {
+        x_min = coords[0].x;
+        x_mid = std::min(coords[1].x, coords[2].x);
+        x_max = std::max(coords[1].x, coords[2].x);
       } else {
-        x_min = x[2];
-        x_mid = x[0];
-        x_max = x[1];
+        x_min = coords[2].x;
+        x_mid = coords[0].x;
+        x_max = coords[1].x;
       }
     } else {
-      if (x[0] < x[2]) {
-        x_min = x[1];
-        x_mid = x[0];
-        x_max = x[2];
+      if (coords[0].x < coords[2].x) {
+        x_min = coords[1].x;
+        x_mid = coords[0].x;
+        x_max = coords[2].x;
       } else {
-        x_min = std::min(x[1], x[2]);
-        x_mid = std::max(x[1], x[2]);
-        x_max = x[0];
+        x_min = std::min(coords[1].x, coords[2].x);
+        x_mid = std::max(coords[1].x, coords[2].x);
+        x_max = coords[0].x;
       }
     }
     int y_max, y_min, y_mid;
-    if (y[0] < y[1]) {
-      if (y[0] < y[2]) {
-        y_min = y[0];
-        y_mid = std::min(y[1], y[2]);
-        y_max = std::max(y[1], y[2]);
+    if (coords[0].y < coords[1].y) {
+      if (coords[0].y < coords[2].y) {
+        y_min = coords[0].y;
+        y_mid = std::min(coords[1].y, coords[2].y);
+        y_max = std::max(coords[1].y, coords[2].y);
       } else {
-        y_min = y[2];
-        y_mid = y[0];
-        y_max = y[1];
+        y_min = coords[2].y;
+        y_mid = coords[0].y;
+        y_max = coords[1].y;
       }
     } else {
-      if (y[0] < y[2]) {
-        y_min = y[1];
-        y_mid = y[0];
-        y_max = y[2];
+      if (coords[0].y < coords[2].y) {
+        y_min = coords[1].y;
+        y_mid = coords[0].y;
+        y_max = coords[2].y;
       } else {
-        y_min = std::min(y[1], y[2]);
-        y_mid = std::max(y[1], y[2]);
-        y_max = y[0];
+        y_min = std::min(coords[1].y, coords[2].y);
+        y_mid = std::max(coords[1].y, coords[2].y);
+        y_max = coords[0].y;
       }
     }
 
     t.length = abs(x_max - x_min) + abs(y_max - y_min);
     t.branch.resize(4);
-    t.branch[0].x = x[0];
-    t.branch[0].y = y[0];
+    t.branch[0].x = coords[0].x;
+    t.branch[0].y = coords[0].y;
     t.branch[0].n = 3;
-    t.branch[1].x = x[1];
-    t.branch[1].y = y[1];
+    t.branch[1].x = coords[1].x;
+    t.branch[1].y = coords[1].y;
     t.branch[1].n = 3;
-    t.branch[2].x = x[2];
-    t.branch[2].y = y[2];
+    t.branch[2].x = coords[2].x;
+    t.branch[2].y = coords[2].y;
     t.branch[2].n = 3;
     t.branch[3].x = x_mid;
     t.branch[3].y = y_mid;
@@ -244,8 +243,8 @@ void FastRouteCore::fluteNormal(const int netID,
     std::vector<pnt*> ptp(d);
 
     for (int i = 0; i < d; i++) {
-      pt[i].x = x[i];
-      pt[i].y = y[i];
+      pt[i].x = coords[i].x;
+      pt[i].y = coords[i].y;
       ptp[i] = &pt[i];
     }
 
@@ -320,82 +319,81 @@ void FastRouteCore::fluteNormal(const int netID,
 }
 
 void FastRouteCore::fluteCongest(const int netID,
-                                 const std::vector<int>& x,
-                                 const std::vector<int>& y,
+                                 const std::vector<PinCoords>& coords,
                                  const int acc,
                                  const float coeffV,
                                  Tree& t)
 {
   const float coeffH = 1;
-  const int d = x.size();
+  const int d = coords.size();
 
   if (d == 2) {
     t.deg = 2;
-    t.length = abs(x[0] - x[1]) + abs(y[0] - y[1]);
+    t.length = abs(coords[0].x - coords[1].x) + abs(coords[0].y - coords[1].y);
     t.branch.resize(2);
-    t.branch[0].x = x[0];
-    t.branch[0].y = y[0];
+    t.branch[0].x = coords[0].x;
+    t.branch[0].y = coords[0].y;
     t.branch[0].n = 1;
-    t.branch[1].x = x[1];
-    t.branch[1].y = y[1];
+    t.branch[1].x = coords[1].x;
+    t.branch[1].y = coords[1].y;
     t.branch[1].n = 1;
   } else if (d == 3) {
     t.deg = 3;
     int x_max, x_min, x_mid;
-    if (x[0] < x[1]) {
-      if (x[0] < x[2]) {
-        x_min = x[0];
-        x_mid = std::min(x[1], x[2]);
-        x_max = std::max(x[1], x[2]);
+    if (coords[0].x < coords[1].x) {
+      if (coords[0].x < coords[2].x) {
+        x_min = coords[0].x;
+        x_mid = std::min(coords[1].x, coords[2].x);
+        x_max = std::max(coords[1].x, coords[2].x);
       } else {
-        x_min = x[2];
-        x_mid = x[0];
-        x_max = x[1];
+        x_min = coords[2].x;
+        x_mid = coords[0].x;
+        x_max = coords[1].x;
       }
     } else {
-      if (x[0] < x[2]) {
-        x_min = x[1];
-        x_mid = x[0];
-        x_max = x[2];
+      if (coords[0].x < coords[2].x) {
+        x_min = coords[1].x;
+        x_mid = coords[0].x;
+        x_max = coords[2].x;
       } else {
-        x_min = std::min(x[1], x[2]);
-        x_mid = std::max(x[1], x[2]);
-        x_max = x[0];
+        x_min = std::min(coords[1].x, coords[2].x);
+        x_mid = std::max(coords[1].x, coords[2].x);
+        x_max = coords[0].x;
       }
     }
     int y_max, y_min, y_mid;
-    if (y[0] < y[1]) {
-      if (y[0] < y[2]) {
-        y_min = y[0];
-        y_mid = std::min(y[1], y[2]);
-        y_max = std::max(y[1], y[2]);
+    if (coords[0].y < coords[1].y) {
+      if (coords[0].y < coords[2].y) {
+        y_min = coords[0].y;
+        y_mid = std::min(coords[1].y, coords[2].y);
+        y_max = std::max(coords[1].y, coords[2].y);
       } else {
-        y_min = y[2];
-        y_mid = y[0];
-        y_max = y[1];
+        y_min = coords[2].y;
+        y_mid = coords[0].y;
+        y_max = coords[1].y;
       }
     } else {
-      if (y[0] < y[2]) {
-        y_min = y[1];
-        y_mid = y[0];
-        y_max = y[2];
+      if (coords[0].y < coords[2].y) {
+        y_min = coords[1].y;
+        y_mid = coords[0].y;
+        y_max = coords[2].y;
       } else {
-        y_min = std::min(y[1], y[2]);
-        y_mid = std::max(y[1], y[2]);
-        y_max = y[0];
+        y_min = std::min(coords[1].y, coords[2].y);
+        y_mid = std::max(coords[1].y, coords[2].y);
+        y_max = coords[0].y;
       }
     }
 
     t.length = abs(x_max - x_min) + abs(y_max - y_min);
     t.branch.resize(4);
-    t.branch[0].x = x[0];
-    t.branch[0].y = y[0];
+    t.branch[0].x = coords[0].x;
+    t.branch[0].y = coords[0].y;
     t.branch[0].n = 3;
-    t.branch[1].x = x[1];
-    t.branch[1].y = y[1];
+    t.branch[1].x = coords[1].x;
+    t.branch[1].y = coords[1].y;
     t.branch[1].n = 3;
-    t.branch[2].x = x[2];
-    t.branch[2].y = y[2];
+    t.branch[2].x = coords[2].x;
+    t.branch[2].y = coords[2].y;
     t.branch[2].n = 3;
     t.branch[3].x = x_mid;
     t.branch[3].y = y_mid;
@@ -688,8 +686,12 @@ void FastRouteCore::gen_brk_RSMT(const bool congestionDriven,
     // TODO: move this flute implementation to SteinerTreeBuilder
     const float net_alpha = stt_builder_->getAlpha(net->getDbNet());
     if (net_alpha > 0.0) {
+      std::vector<odb::Point> pts(net->getPinCoords().size());
+      for (size_t i = 0; i < net->getPinCoords().size(); i++) {
+        pts[i] = odb::Point(net->getPinX(i), net->getPinY(i));
+      }
       rsmt = stt_builder_->makeSteinerTree(
-          net->getDbNet(), net->getPinX(), net->getPinY(), net->getDriverIdx());
+          net->getDbNet(), pts, net->getDriverIdx());
     } else {
       float coeffV = 1.36;
 
@@ -700,15 +702,13 @@ void FastRouteCore::gen_brk_RSMT(const bool congestionDriven,
         cong = netCongestion(netID);
         if (cong) {
           fluteCongest(netID,
-                       net->getPinX(),
-                       net->getPinY(),
+                       net->getPinCoords(),
                        flute_accuracy,
                        coeffV,
                        rsmt);
         } else {
           fluteNormal(netID,
-                      net->getPinX(),
-                      net->getPinY(),
+                      net->getPinCoords(),
                       flute_accuracy,
                       coeffV,
                       rsmt);
@@ -722,8 +722,7 @@ void FastRouteCore::gen_brk_RSMT(const bool congestionDriven,
           coeffV = 1.2;
         }
         fluteNormal(netID,
-                    net->getPinX(),
-                    net->getPinY(),
+                    net->getPinCoords(),
                     flute_accuracy,
                     coeffV,
                     rsmt);

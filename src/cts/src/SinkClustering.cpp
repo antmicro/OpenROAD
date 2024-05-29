@@ -485,8 +485,7 @@ void SinkClustering::writePlotFile(unsigned groupSize)
 
 double SinkClustering::getWireLength(const vector<Point<double>>& points) const
 {
-  vector<int> vecX;
-  vector<int> vecY;
+  vector<odb::Point> pts;
   double driverX = 0;
   double driverY = 0;
   for (const auto& point : points) {
@@ -495,15 +494,13 @@ double SinkClustering::getWireLength(const vector<Point<double>>& points) const
   }
   driverX /= points.size();
   driverY /= points.size();
-  vecX.emplace_back(driverX * options_->getDbUnits());
-  vecY.emplace_back(driverY * options_->getDbUnits());
+  pts.push_back({(int) driverX * options_->getDbUnits(), (int) driverY * options_->getDbUnits()});
 
   for (const auto& point : points) {
-    vecX.emplace_back(point.getX() * options_->getDbUnits());
-    vecY.emplace_back(point.getY() * options_->getDbUnits());
+    pts.push_back({(int) point.getX() * options_->getDbUnits(), (int) point.getY() * options_->getDbUnits()});
   }
   stt::SteinerTreeBuilder* sttBuilder = options_->getSttBuilder();
-  const stt::Tree pdTree = sttBuilder->makeSteinerTree(vecX, vecY, 0);
+  const stt::Tree pdTree = sttBuilder->makeSteinerTree(pts, 0);
   const int wl = pdTree.length;
   return wl / double(options_->getDbUnits());
 }

@@ -49,6 +49,7 @@ class OpenRoad;
 namespace odb {
 class dbDatabase;
 class dbNet;
+class Point;
 }  // namespace odb
 
 namespace gui {
@@ -83,16 +84,13 @@ class SteinerTreeBuilder
 
   void init(odb::dbDatabase* db, Logger* logger);
 
-  Tree makeSteinerTree(const std::vector<int>& x,
-                       const std::vector<int>& y,
+  Tree makeSteinerTree(const std::vector<odb::Point>& points,
                        int drvr_index,
                        float alpha);
-  Tree makeSteinerTree(const std::vector<int>& x,
-                       const std::vector<int>& y,
+  Tree makeSteinerTree(const std::vector<odb::Point>& points,
                        int drvr_index);
   Tree makeSteinerTree(odb::dbNet* net,
-                       const std::vector<int>& x,
-                       const std::vector<int>& y,
+                       const std::vector<odb::Point>& points,
                        int drvr_index);
   // API only for FastRoute, that requires the use of flutes in its
   // internal flute implementation

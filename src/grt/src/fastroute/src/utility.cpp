@@ -377,14 +377,12 @@ void FastRouteCore::getViaStackRange(int netID,
   bot_pin_l = SHRT_MAX;
   top_pin_l = -1;
 
-  const auto& pin_X = net->getPinX();
-  const auto& pin_Y = net->getPinY();
-  const auto& pin_L = net->getPinL();
+  const auto& pinCoords = net->getPinCoords();
 
-  for (int p = 0; p < pin_L.size(); p++) {
-    if (pin_X[p] == node_x && pin_Y[p] == node_y) {
-      bot_pin_l = std::min(bot_pin_l, (int16_t) pin_L[p]);
-      top_pin_l = std::max(top_pin_l, (int16_t) pin_L[p]);
+  for (int p = 0; p < pinCoords.size(); p++) {
+    if (pinCoords[p].x == node_x && pinCoords[p].y == node_y) {
+      bot_pin_l = std::min(bot_pin_l, (int16_t) pinCoords[p].l);
+      top_pin_l = std::max(top_pin_l, (int16_t) pinCoords[p].l);
     }
   }
 }
@@ -913,8 +911,8 @@ void FastRouteCore::layerAssignmentV4()
       treenodes[nodeID].assigned = false;
 
       if (nodeID < num_terminals) {
-        treenodes[nodeID].botL = nets_[netID]->getPinL()[nodeID];
-        treenodes[nodeID].topL = nets_[netID]->getPinL()[nodeID];
+        treenodes[nodeID].botL = nets_[netID]->getPinCoords()[nodeID].l;
+        treenodes[nodeID].topL = nets_[netID]->getPinCoords()[nodeID].l;
         treenodes[nodeID].assigned = true;
         treenodes[nodeID].status = 1;
       }
@@ -991,8 +989,8 @@ void FastRouteCore::layerAssignment()
       treenodes[d].status = 0;
 
       if (d < sttrees_[netID].num_terminals) {
-        treenodes[d].botL = nets_[netID]->getPinL()[d];
-        treenodes[d].topL = nets_[netID]->getPinL()[d];
+        treenodes[d].botL = nets_[netID]->getPinCoords()[d].l;
+        treenodes[d].topL = nets_[netID]->getPinCoords()[d].l;
         // treenodes[d].l = 0;
         treenodes[d].assigned = true;
         treenodes[d].status = 1;
@@ -1078,7 +1076,7 @@ void FastRouteCore::printTree3D(int netID)
     int y = tile_size_ * (sttrees_[netID].nodes[nodeID].y + 0.5) + y_corner_;
     int l = num_layers_;
     if (nodeID < sttrees_[netID].num_terminals) {
-      l = nets_[netID]->getPinL()[nodeID];
+      l = nets_[netID]->getPinCoords()[nodeID].l;
     }
 
     logger_->report("nodeID {},  [{}, {}, {}], status: {}",
@@ -1107,8 +1105,8 @@ void FastRouteCore::checkRoute3D()
 
     for (nodeID = 0; nodeID < sttrees_[netID].num_nodes(); nodeID++) {
       if (nodeID < num_terminals) {
-        if ((treenodes[nodeID].botL > nets_[netID]->getPinL()[nodeID])
-            || (treenodes[nodeID].topL < nets_[netID]->getPinL()[nodeID])) {
+        if ((treenodes[nodeID].botL > nets_[netID]->getPinCoords()[nodeID].l)
+            || (treenodes[nodeID].topL < nets_[netID]->getPinCoords()[nodeID].l)) {
           logger_->error(GRT, 203, "Caused floating pin node.");
         }
       }
@@ -2683,8 +2681,8 @@ void FastRouteCore::setTreeNodesVariables(const int netID)
     treenodes[d].status = 0;
 
     if (d < num_terminals) {
-      treenodes[d].botL = nets_[netID]->getPinL()[d];
-      treenodes[d].topL = nets_[netID]->getPinL()[d];
+      treenodes[d].botL = nets_[netID]->getPinCoords()[d].l;
+      treenodes[d].topL = nets_[netID]->getPinCoords()[d].l;
       treenodes[d].assigned = true;
       treenodes[d].status = 1;
 

@@ -91,15 +91,14 @@ SteinerTree* Resizer::makeSteinerTree(const Pin* drvr_pin)
                   sdc_network->pathName(net),
                   pin_count);
   } else if (pin_count >= 2) {
-    vector<int> x, y;  // Two separate vectors of coordinates needed by flute.
+    vector<Point> pts;  // Two separate vectors of coordinates needed by flute.
     int drvr_idx = 0;  // The "driver_pin" or the root of the Steiner tree.
     for (int i = 0; i < pin_count; i++) {
       const PinLoc& pinloc = pinlocs[i];
       if (pinloc.pin == drvr_pin) {
         drvr_idx = i;  // drvr_index is needed by flute.
       }
-      x.push_back(pinloc.loc.x());
-      y.push_back(pinloc.loc.y());
+      pts.push_back(pinloc.loc);
       debugPrint(logger_,
                  RSZ,
                  "steiner",
@@ -118,7 +117,7 @@ SteinerTree* Resizer::makeSteinerTree(const Pin* drvr_pin)
     }
     if (is_placed) {
       stt::Tree ftree = stt_builder_->makeSteinerTree(
-          db_network_->staToDb(net), x, y, drvr_idx);
+          db_network_->staToDb(net), pts, drvr_idx);
 
       tree->setTree(ftree, db_network_);
       tree->createSteinerPtToPinMap();

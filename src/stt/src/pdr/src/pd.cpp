@@ -449,8 +449,7 @@ static Tree makeTree(ListGraph& graph,
 
 /////////// Entry Point
 
-Tree primDijkstra(const vector<int>& x,
-                  const vector<int>& y,
+Tree primDijkstra(const vector<Point>& pts,
                   const int driver_index,
                   const float alpha,
                   Logger* logger)
@@ -459,10 +458,8 @@ Tree primDijkstra(const vector<int>& x,
   ListGraph::NodeMap<Point> node_point(graph);  // Node -> location
 
   // convert x/y to points
-  const int num_terminals = x.size();
-  vector<Point> pts(num_terminals);
+  const int num_terminals = pts.size();
   for (int i = 0; i < num_terminals; ++i) {
-    pts[i] = {x[i], y[i]};
     node_point[graph.addNode()] = pts[i];
   }
 

@@ -61,18 +61,16 @@ void SteinerTreeBuilder::init(odb::dbDatabase* db, Logger* logger)
   logger_ = logger;
 }
 
-Tree SteinerTreeBuilder::makeSteinerTree(const std::vector<int>& x,
-                                         const std::vector<int>& y,
+Tree SteinerTreeBuilder::makeSteinerTree(const std::vector<odb::Point>& points,
                                          const int drvr_index)
 {
-  Tree tree = makeSteinerTree(x, y, drvr_index, alpha_);
+  Tree tree = makeSteinerTree(points, drvr_index, alpha_);
 
   return tree;
 }
 
 Tree SteinerTreeBuilder::makeSteinerTree(odb::dbNet* net,
-                                         const std::vector<int>& x,
-                                         const std::vector<int>& y,
+                                         const std::vector<odb::Point>& points,
                                          const int drvr_index)
 {
   float net_alpha = alpha_;
@@ -91,20 +89,25 @@ Tree SteinerTreeBuilder::makeSteinerTree(odb::dbNet* net,
     }
   }
 
-  return makeSteinerTree(x, y, drvr_index, net_alpha);
+  return makeSteinerTree(points, drvr_index, net_alpha);
 }
 
-Tree SteinerTreeBuilder::makeSteinerTree(const std::vector<int>& x,
-                                         const std::vector<int>& y,
+Tree SteinerTreeBuilder::makeSteinerTree(const std::vector<odb::Point>& points,
                                          const int drvr_index,
                                          const float alpha)
 {
   if (alpha > 0.0) {
-    Tree tree = pdr::primDijkstra(x, y, drvr_index, alpha, logger_);
+    Tree tree = pdr::primDijkstra(points, drvr_index, alpha, logger_);
     if (checkTree(tree)) {
       return tree;
     }
     // Fall back to flute if PD fails.
+  }
+  std::vector<int> x(points.size());
+  std::vector<int> y(points.size());
+  for (int i = 0; i < points.size(); i++) {
+    x[i] = points[i].x();
+    y[i] = points[i].y();
   }
   return flt::flute(x, y, flute_accuracy);
 }

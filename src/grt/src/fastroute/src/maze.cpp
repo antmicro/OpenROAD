@@ -1263,11 +1263,11 @@ void FastRouteCore::reInitTree(const int netID)
   // first so the structs necessary for fluteCongest are filled
   if (net_alpha > 0.0) {
     fluteNormal(
-        netID, nets_[netID]->getPinX(), nets_[netID]->getPinY(), 2, 1.2, rsmt);
+        netID, nets_[netID]->getPinCoords(), 2, 1.2, rsmt);
   }
 
   fluteCongest(
-      netID, nets_[netID]->getPinX(), nets_[netID]->getPinY(), 2, 1.2, rsmt);
+      netID, nets_[netID]->getPinCoords(), 2, 1.2, rsmt);
 
   if (nets_[netID]->getNumPins() > 3) {
     edgeShiftNew(rsmt, netID);

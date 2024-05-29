@@ -105,9 +105,9 @@ report_pd_tree(std::vector<int> x,
                int drvr_index,
                float alpha)
 {
-  utl::Logger *logger = ord::getLogger();
-  stt::Tree tree = pdr::primDijkstra(x, y, drvr_index, alpha, logger);
-  stt::reportSteinerTree(tree, x[drvr_index], y[drvr_index], logger);
+  // utl::Logger *logger = ord::getLogger();
+  // stt::Tree tree = pdr::primDijkstra(x, y, drvr_index, alpha, logger);
+  // stt::reportSteinerTree(tree, x[drvr_index], y[drvr_index], logger);
 }
 
 void
@@ -116,11 +116,11 @@ report_stt_tree(std::vector<int> x,
                 int drvr_index,
                 float alpha)
 {
-  utl::Logger *logger = ord::getLogger();
-  auto builder = getSteinerTreeBuilder();
+  // utl::Logger *logger = ord::getLogger();
+  // auto builder = getSteinerTreeBuilder();
 
-  auto tree = builder->makeSteinerTree(x, y, drvr_index, alpha);
-  stt::reportSteinerTree(tree, x[drvr_index], y[drvr_index], logger);
+  //auto tree = builder->makeSteinerTree(x, y, drvr_index, alpha);
+  //stt::reportSteinerTree(tree, x[drvr_index], y[drvr_index], logger);
 }
 
 void
@@ -129,11 +129,11 @@ highlight_stt_tree(std::vector<int> x,
                    int drvr_index,
                    float alpha)
 {
-  auto builder = getSteinerTreeBuilder();
-  auto tree = builder->makeSteinerTree(x, y, drvr_index, alpha);
+  // auto builder = getSteinerTreeBuilder();
+  // auto tree = builder->makeSteinerTree(x, y, drvr_index, alpha);
 
-  gui::Gui *gui = gui::Gui::get();
-  stt::highlightSteinerTree(tree, gui);
+  // gui::Gui *gui = gui::Gui::get();
+  // stt::highlightSteinerTree(tree, gui);
 }
 
 void
@@ -142,10 +142,10 @@ highlight_pd_tree(std::vector<int> x,
                   int drvr_index,
                   float alpha)
 {
-  utl::Logger *logger = ord::getLogger();
-  gui::Gui *gui = gui::Gui::get();
-  stt::Tree tree = pdr::primDijkstra(x, y, drvr_index, alpha, logger);
-  stt::highlightSteinerTree(tree, gui);
+  // utl::Logger *logger = ord::getLogger();
+  // gui::Gui *gui = gui::Gui::get();
+  // stt::Tree tree = pdr::primDijkstra(x, y, drvr_index, alpha, logger);
+  // stt::highlightSteinerTree(tree, gui);
 }
 
 void
