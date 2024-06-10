@@ -75,17 +75,17 @@ class RouteBaseVars
   void reset();
 };
 
-class GpuRouteBase
+class RouteBase
 {
  public:
-  GpuRouteBase();
-  GpuRouteBase(RouteBaseVars rbVars,
+  RouteBase();
+  RouteBase(RouteBaseVars rbVars,
                odb::dbDatabase* db,
                grt::GlobalRouter* grouter,
                std::shared_ptr<PlacerBaseCommon> nbc,
                std::vector<std::shared_ptr<PlacerBase>> nbVec,
                utl::Logger* log);
-  ~GpuRouteBase();
+  ~RouteBase();
 
  private:
   RouteBaseVars rbVars_;

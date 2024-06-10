@@ -34,11 +34,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include <chrono>
-#include <cmath>
 #include <iostream>
-#include <memory>
-#include <numeric>
 
 #include "util.h"
 // basic vectors

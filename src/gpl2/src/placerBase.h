@@ -45,27 +45,13 @@
 
 #pragma once
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <thrust/copy.h>
-#include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
-#include <thrust/fill.h>
-#include <thrust/for_each.h>
-#include <thrust/host_vector.h>
-#include <thrust/sequence.h>
-
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "db_sta/dbNetwork.hh"
 #include "densityOp.h"
 #include "placerObjects.h"
-#include "poissonSolver.h"
-#include "sta/Liberty.hh"
-#include "util.h"
 #include "wirelengthOp.h"
 
 namespace odb {

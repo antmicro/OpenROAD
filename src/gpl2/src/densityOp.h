@@ -36,16 +36,9 @@
 #pragma once
 
 #include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
-#include <thrust/functional.h>
-#include <thrust/host_vector.h>
-#include <thrust/iterator/counting_iterator.h>
-#include <thrust/iterator/transform_iterator.h>
 
-#include <ctime>
 #include <memory>
 
-#include "cudaUtil.h"
 #include "placerBase.h"
 #include "placerObjects.h"
 #include "poissonSolver.h"

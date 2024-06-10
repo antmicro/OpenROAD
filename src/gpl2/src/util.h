@@ -35,13 +35,6 @@
 
 #pragma once
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-
-#include <algorithm>
-#include <iostream>
-#include <random>
-
 namespace gpl2 {
 
 // utilities for free memory on gpu

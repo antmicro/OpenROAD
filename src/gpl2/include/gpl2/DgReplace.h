@@ -63,16 +63,16 @@ namespace gpl2 {
 
 class PlacerBaseCommon;
 class PlacerBase;
-class GpuRouteBase;
-class GpuTimingBase;
+class RouteBase;
+class TimingBase;
 class InitialPlace;
 class NesterovPlace;
 
-class GpuReplace
+class DgReplace
 {
  public:
-  GpuReplace();
-  ~GpuReplace();
+  DgReplace();
+  ~DgReplace();
 
   void init(sta::dbNetwork* network,
             odb::dbDatabase* odb,
@@ -154,8 +154,8 @@ class GpuReplace
   int numHops_ = 0;
 
   std::shared_ptr<PlacerBaseCommon> pbc_;
-  std::shared_ptr<GpuRouteBase> rb_;
-  std::shared_ptr<GpuTimingBase> tb_;
+  std::shared_ptr<RouteBase> rb_;
+  std::shared_ptr<TimingBase> tb_;
   std::vector<std::shared_ptr<PlacerBase>> pbVec_;
 
   std::unique_ptr<InitialPlace> ip_;

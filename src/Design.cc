@@ -257,10 +257,10 @@ gpl::Replace* Design::getReplace()
   return app->getReplace();
 }
 
-gpl2::GpuReplace* Design::getGpuReplace()
+gpl2::DgReplace* Design::getDgReplace()
 {
   auto app = OpenRoad::openRoad();
-  return app->getGpuReplace();
+  return app->getDgReplace();
 }
 
 dpl::Opendp* Design::getOpendp()

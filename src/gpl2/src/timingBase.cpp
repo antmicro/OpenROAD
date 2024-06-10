@@ -35,75 +35,31 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
-#include <string>
 #include <utility>
 
-#include "gpuRouteBase.h"
-#include "grt/GlobalRouter.h"
-#include "odb/db.h"
+#include "timingBase.h"
 #include "placerBase.h"
+#include "rsz/Resizer.hh"
+#include "sta/Fuzzy.hh"
 #include "utl/Logger.h"
-
-using grt::GlobalRouter;
-using std::make_pair;
-using std::pair;
-using std::sort;
-using std::string;
-using std::vector;
-
-using utl::GPL2;
 
 namespace gpl2 {
 
-/////////////////////////////////////////////
-// RouteBaseVars
+using utl::GPL;
 
-RouteBaseVars::RouteBaseVars()
-{
-  reset();
-}
-
-void RouteBaseVars::reset()
-{
-  inflationRatioCoef = 2.5;
-  maxInflationRatio = 2.5;
-  maxDensity = 0.90;
-  targetRC = 1.25;
-  ignoreEdgeRatio = 0.8;
-  minInflationRatio = 1.01;
-  rcK1 = rcK2 = 1.0;
-  rcK3 = rcK4 = 0.0;
-  maxBloatIter = 1;
-  maxInflationIter = 4;
-}
-
-/////////////////////////////////////////////
-// GpuRouteBase
-
-GpuRouteBase::GpuRouteBase()
-    : rbVars_(), db_(nullptr), grouter_(nullptr), nbc_(nullptr), log_(nullptr)
+// TimingBase
+TimingBase::TimingBase() : rs_(nullptr), log_(nullptr), nbc_(nullptr)
 {
 }
 
-GpuRouteBase::GpuRouteBase(RouteBaseVars rbVars,
-                           odb::dbDatabase* db,
-                           grt::GlobalRouter* grouter,
-                           std::shared_ptr<PlacerBaseCommon> nbc,
-                           std::vector<std::shared_ptr<PlacerBase>> nbVec,
-                           utl::Logger* log)
-    : GpuRouteBase()
+TimingBase::TimingBase(std::shared_ptr<PlacerBaseCommon> nbc,
+                             rsz::Resizer* rs,
+                             utl::Logger* log)
+    : TimingBase()
 {
-  rbVars_ = rbVars;
-  db_ = db;
-  grouter_ = grouter;
+  rs_ = rs;
   nbc_ = std::move(nbc);
   log_ = log;
-  nbVec_ = std::move(nbVec);
-}
-
-GpuRouteBase::~GpuRouteBase()
-{
 }
 
 }  // namespace gpl2

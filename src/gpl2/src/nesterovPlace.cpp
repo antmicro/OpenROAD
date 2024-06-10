@@ -39,8 +39,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "gpuRouteBase.h"
-#include "gpuTimingBase.h"
+#include "routeBase.h"
+#include "timingBase.h"
 #include "odb/db.h"
 #include "placerBase.h"
 #include "utl/Logger.h"
@@ -72,8 +72,8 @@ NesterovPlace::NesterovPlace()
 NesterovPlace::NesterovPlace(const NesterovPlaceVars& npVars,
                              const std::shared_ptr<PlacerBaseCommon>& pbc,
                              std::vector<std::shared_ptr<PlacerBase>>& pbVec,
-                             std::shared_ptr<GpuRouteBase> rb,
-                             std::shared_ptr<GpuTimingBase> tb,
+                             std::shared_ptr<RouteBase> rb,
+                             std::shared_ptr<TimingBase> tb,
                              utl::Logger* log)
     : NesterovPlace()
 {

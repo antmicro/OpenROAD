@@ -1,8 +1,7 @@
-///////////////////////////////////////////////////////////////////////////
-//
+///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (c) 2023, Google LLC
+// Copyright (c) 2018-2020, The Regents of the University of California
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -22,22 +21,22 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
-//
+// ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "gpl2/MakeGpuReplace.h"
+#include "gpl2/MakeDgReplace.h"
 
 #include <tcl.h>
 
-#include "gpl2/GpuReplace.h"
+#include <Kokkos_Core.hpp>
+#include "gpl2/DgReplace.h"
 #include "ord/OpenRoad.hh"
 #include "sta/StaMain.hh"
 
@@ -51,26 +50,28 @@ extern int Gpl2_Init(Tcl_Interp* interp);
 
 namespace ord {
 
-gpl2::GpuReplace* makeGpuReplace()
+gpl2::DgReplace* makeDgReplace()
 {
-  return new gpl2::GpuReplace();
+  return new gpl2::DgReplace();
 }
 
-void initGpuReplace(OpenRoad* openroad)
+void initDgReplace(OpenRoad* openroad)
 {
+  Kokkos::initialize();
   Tcl_Interp* tcl_interp = openroad->tclInterp();
   Gpl2_Init(tcl_interp);
   sta::evalTclInit(tcl_interp, sta::gpl2_tcl_inits);
-  openroad->getGpuReplace()->init(openroad->getDbNetwork(),
+  openroad->getDgReplace()->init(openroad->getDbNetwork(),
                                   openroad->getDb(),
                                   openroad->getResizer(),
                                   openroad->getGlobalRouter(),
                                   openroad->getLogger());
 }
 
-void deleteGpuReplace(gpl2::GpuReplace* gpu_replace)
+void deleteDgReplace(gpl2::DgReplace* replace)
 {
-  delete gpu_replace;
+  delete replace;
+  Kokkos::finalize();
 }
 
 }  // namespace ord

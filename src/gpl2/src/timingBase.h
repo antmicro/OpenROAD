@@ -32,20 +32,35 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #pragma once
 
-namespace gpl2 {
-class GpuReplace;
+#include <memory>
+
+namespace rsz {
+class Resizer;
 }
 
-namespace ord {
+namespace utl {
+class Logger;
+}
 
-class OpenRoad;
+namespace gpl2 {
 
-gpl2::GpuReplace* makeGpuReplace();
+class PlacerBaseCommon;
 
-void initGpuReplace(OpenRoad* openroad);
+class TimingBase
+{
+ public:
+  TimingBase();
+  TimingBase(std::shared_ptr<PlacerBaseCommon> nbc,
+                rsz::Resizer* rs,
+                utl::Logger* log);
 
-void deleteGpuReplace(gpl2::GpuReplace* gpu_replace);
+ private:
+  rsz::Resizer* rs_;
+  utl::Logger* log_;
+  std::shared_ptr<PlacerBaseCommon> nbc_;
+};
 
-}  // namespace ord
+}  // namespace gpl2

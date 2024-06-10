@@ -47,8 +47,7 @@
 
 #include <memory>
 
-#include "cudaDCT.h"
-#include "cudaUtil.h"
+#include "dct.h"
 #include "util.h"
 
 #define FFT_PI 3.141592653589793238462L

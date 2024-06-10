@@ -33,35 +33,69 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include <algorithm>
+#include <string>
+#include <utility>
 
-#include <memory>
-#include <vector>
+#include "routeBase.h"
+#include "grt/GlobalRouter.h"
+#include "odb/db.h"
+#include "placerBase.h"
+#include "utl/Logger.h"
 
-namespace rsz {
-class Resizer;
-}
-
-namespace utl {
-class Logger;
-}
+using std::string;
+using std::vector;
 
 namespace gpl2 {
 
-class PlacerBaseCommon;
+/////////////////////////////////////////////
+// RouteBaseVars
 
-class GpuTimingBase
+RouteBaseVars::RouteBaseVars()
 {
- public:
-  GpuTimingBase();
-  GpuTimingBase(std::shared_ptr<PlacerBaseCommon> nbc,
-                rsz::Resizer* rs,
-                utl::Logger* log);
+  reset();
+}
 
- private:
-  rsz::Resizer* rs_;
-  utl::Logger* log_;
-  std::shared_ptr<PlacerBaseCommon> nbc_;
-};
+void RouteBaseVars::reset()
+{
+  inflationRatioCoef = 2.5;
+  maxInflationRatio = 2.5;
+  maxDensity = 0.90;
+  targetRC = 1.25;
+  ignoreEdgeRatio = 0.8;
+  minInflationRatio = 1.01;
+  rcK1 = rcK2 = 1.0;
+  rcK3 = rcK4 = 0.0;
+  maxBloatIter = 1;
+  maxInflationIter = 4;
+}
+
+/////////////////////////////////////////////
+// RouteBase
+
+RouteBase::RouteBase()
+    : rbVars_(), db_(nullptr), grouter_(nullptr), nbc_(nullptr), log_(nullptr)
+{
+}
+
+RouteBase::RouteBase(RouteBaseVars rbVars,
+                           odb::dbDatabase* db,
+                           grt::GlobalRouter* grouter,
+                           std::shared_ptr<PlacerBaseCommon> nbc,
+                           std::vector<std::shared_ptr<PlacerBase>> nbVec,
+                           utl::Logger* log)
+    : RouteBase()
+{
+  rbVars_ = rbVars;
+  db_ = db;
+  grouter_ = grouter;
+  nbc_ = std::move(nbc);
+  log_ = log;
+  nbVec_ = std::move(nbVec);
+}
+
+RouteBase::~RouteBase()
+{
+}
 
 }  // namespace gpl2

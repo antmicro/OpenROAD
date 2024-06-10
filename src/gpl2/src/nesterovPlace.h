@@ -53,8 +53,8 @@ namespace gpl2 {
 
 class PlacerBase;
 class PlacerBaseCommon;
-class GpuRouteBase;
-class GpuTimingBase;
+class RouteBase;
+class TimingBase;
 
 // Compared to the original implementation,
 // We do not have cutFillerCooridinates.
@@ -67,8 +67,8 @@ class NesterovPlace
   NesterovPlace(const NesterovPlaceVars& npVars,
                 const std::shared_ptr<PlacerBaseCommon>& pbc,
                 std::vector<std::shared_ptr<PlacerBase>>& pbVec,
-                std::shared_ptr<GpuRouteBase> rb,
-                std::shared_ptr<GpuTimingBase> tb,
+                std::shared_ptr<RouteBase> rb,
+                std::shared_ptr<TimingBase> tb,
                 utl::Logger* log);
 
   ~NesterovPlace();
@@ -105,8 +105,8 @@ class NesterovPlace
   std::shared_ptr<PlacerBaseCommon> pbc_;
   std::vector<std::shared_ptr<PlacerBase>> pbVec_;
   utl::Logger* log_;
-  std::shared_ptr<GpuRouteBase> rb_;
-  std::shared_ptr<GpuTimingBase> tb_;
+  std::shared_ptr<RouteBase> rb_;
+  std::shared_ptr<TimingBase> tb_;
   NesterovPlaceVars npVars_;
 
   // Without macro area scaling, the bin density at the the macro blocks becomes

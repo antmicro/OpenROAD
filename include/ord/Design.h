@@ -70,7 +70,7 @@ class Replace;
 }
 
 namespace gpl2 {
-class GpuReplace;
+class DgReplace;
 }
 
 namespace dpl {
@@ -181,7 +181,7 @@ class Design
   ant::AntennaChecker* getAntennaChecker();
   grt::GlobalRouter* getGlobalRouter();
   gpl::Replace* getReplace();
-  gpl2::GpuReplace* getGpuReplace();
+  gpl2::DgReplace* getDgReplace();
   dpl::Opendp* getOpendp();
   mpl::MacroPlacer* getMacroPlacer();
   ppl::IOPlacer* getIOPlacer();

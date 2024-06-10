@@ -52,8 +52,8 @@
 #include <iostream>
 #include <memory>
 
-#include "gpuRouteBase.h"
-#include "gpuTimingBase.h"
+#include "routeBase.h"
+#include "timingBase.h"
 #include "nesterovPlace.h"
 #include "placerBase.h"
 #include "placerObjects.h"
@@ -114,8 +114,8 @@ class InitialPlace
   utl::Logger* log_;
   sta::dbNetwork* network_;
   odb::dbDatabase* db_;
-  std::shared_ptr<GpuRouteBase> rb_;
-  std::shared_ptr<GpuTimingBase> tb_;
+  std::shared_ptr<RouteBase> rb_;
+  std::shared_ptr<TimingBase> tb_;
 
   // Nesterov placement
   PlacerBaseVars pbVars_;

@@ -42,13 +42,8 @@
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
 
-#include <ctime>
-#include <memory>
-
-#include "cudaUtil.h"
 #include "placerBase.h"
 #include "placerObjects.h"
-#include "util.h"
 #include "utl/Logger.h"
 
 namespace gpl2 {
