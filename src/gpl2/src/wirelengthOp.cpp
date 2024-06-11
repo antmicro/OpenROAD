@@ -38,6 +38,8 @@
 #include "placerBase.h"
 #include "placerObjects.h"
 
+#include <Kokkos_Core.hpp>
+
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
 #include <thrust/functional.h>
@@ -287,19 +289,11 @@ void WirelengthOp::freeCUDAKernel()
   dNetCNegYPtr_ = nullptr;
 }
 
-// All other operations only for placeable Instances
-__global__ void updatePinLocationKernel(const int numPlaceInsts,
-                                        const int* dInstPinIdxPtr,
-                                        const int* dInstPinPosPtr,
-                                        const int* dPinOffsetXPtr,
-                                        const int* dPinOffsetYPtr,
-                                        const int* instDCx,
-                                        const int* instDCy,
-                                        int* dPinXPtr,
-                                        int* dPinYPtr)
+void WirelengthOp::updatePinLocation(const int* instDCx, const int* instDCy)
 {
-  const int instId = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instId < numPlaceInsts) {
+  auto dInstPinPosPtr = dInstPinPosPtr_, dInstPinIdxPtr = dInstPinIdxPtr_, dPinXPtr = dPinXPtr_, dPinYPtr = dPinYPtr_,
+       dPinOffsetXPtr = dPinOffsetXPtr_, dPinOffsetYPtr = dPinOffsetYPtr_;
+  Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instId) {
     const int pinStart = dInstPinPosPtr[instId];
     const int pinEnd = dInstPinPosPtr[instId + 1];
     const float instDCxVal = instDCx[instId];
@@ -309,23 +303,11 @@ __global__ void updatePinLocationKernel(const int numPlaceInsts,
       dPinXPtr[pinIdx] = instDCxVal + dPinOffsetXPtr[pinIdx];
       dPinYPtr[pinIdx] = instDCyVal + dPinOffsetYPtr[pinIdx];
     }
-  }
-}
+  });
 
-__global__ void updateNetBBoxKernel(int numNets,
-                                    const int* dNetPinIdxPtr,
-                                    const int* dNetPinPosPtr,
-                                    const int* dPinXPtr,
-                                    const int* dPinYPtr,
-                                    int* dNetLxPtr,
-                                    int* dNetLyPtr,
-                                    int* dNetUxPtr,
-                                    int* dNetUyPtr,
-                                    int* dNetWidthPtr,
-                                    int* dNetHeightPtr)
-{
-  const int netId = blockIdx.x * blockDim.x + threadIdx.x;
-  if (netId < numNets) {
+  auto dNetPinPosPtr = dNetPinPosPtr_, dNetPinIdxPtr = dNetPinIdxPtr_, dNetLxPtr = dNetLxPtr_, dNetLyPtr = dNetLyPtr_,
+       dNetUxPtr = dNetUxPtr_, dNetUyPtr = dNetUyPtr_, dNetWidthPtr = dNetWidthPtr_, dNetHeightPtr = dNetHeightPtr_;
+  Kokkos::parallel_for(numNets_, KOKKOS_LAMBDA (const int netId) {
     const int pinStart = dNetPinPosPtr[netId];
     const int pinEnd = dNetPinPosPtr[netId + 1];
     int netLx = INT_MAX;
@@ -355,36 +337,7 @@ __global__ void updateNetBBoxKernel(int numNets,
     dNetUyPtr[netId] = netUy;
     dNetWidthPtr[netId] = netUx - netLx;
     dNetHeightPtr[netId] = netUy - netLy;
-  }
-}
-
-void WirelengthOp::updatePinLocation(const int* instDCx, const int* instDCy)
-{
-  int numThreads = 256;
-  int numBlocks = (numInsts_ + numThreads - 1) / numThreads;
-  updatePinLocationKernel<<<numBlocks, numThreads>>>(numPlaceInsts_,
-                                                     dInstPinIdxPtr_,
-                                                     dInstPinPosPtr_,
-                                                     dPinOffsetXPtr_,
-                                                     dPinOffsetYPtr_,
-                                                     instDCx,
-                                                     instDCy,
-                                                     dPinXPtr_,
-                                                     dPinYPtr_);
-
-  int numNetThreads = 256;
-  int numNetBlocks = (numNets_ + numNetThreads - 1) / numThreads;
-  updateNetBBoxKernel<<<numNetBlocks, numThreads>>>(numNets_,
-                                                    dNetPinIdxPtr_,
-                                                    dNetPinPosPtr_,
-                                                    dPinXPtr_,
-                                                    dPinYPtr_,
-                                                    dNetLxPtr_,
-                                                    dNetLyPtr_,
-                                                    dNetUxPtr_,
-                                                    dNetUyPtr_,
-                                                    dNetWidthPtr_,
-                                                    dNetHeightPtr_);
+  });
 }
 
 struct TypeConvertor
@@ -452,24 +405,17 @@ int64_t WirelengthOp::computeWeightedHPWL(float virtualWeightFactor)
   return hpwl;
 }
 
-// Compute aPos and aNeg
-__global__ void computeAPosNegKernel(const int numPins,
-                                     const float wlCoeffX,
-                                     const float wlCoeffY,
-                                     const int* dPinXPtr,
-                                     const int* dPinYPtr,
-                                     const int* dPinNetIdPtr,
-                                     const int* dNetLxPtr,
-                                     const int* dNetLyPtr,
-                                     const int* dNetUxPtr,
-                                     const int* dNetUyPtr,
-                                     float* dPinAPosXPtr,
-                                     float* dPinANegXPtr,
-                                     float* dPinAPosYPtr,
-                                     float* dPinANegYPtr)
+void WirelengthOp::computeWireLengthForce(const float wlCoeffX,
+                                          const float wlCoeffY,
+                                          const float virtualWeightFactor,
+                                          float* wirelengthForceX,
+                                          float* wirelengthForceY)
 {
-  const unsigned int pinId = blockIdx.x * blockDim.x + threadIdx.x;
-  if (pinId < numPins) {
+  auto dPinNetIdPtr = dPinNetIdPtr_, dPinXPtr = dPinXPtr_, dPinYPtr = dPinYPtr_, dNetUxPtr = dNetUxPtr_,
+       dNetLxPtr = dNetLxPtr_, dNetUyPtr = dNetUyPtr_, dNetLyPtr = dNetLyPtr_;
+  auto dPinAPosXPtr = dPinAPosXPtr_, dPinANegXPtr = dPinANegXPtr_, dPinAPosYPtr = dPinAPosYPtr_,
+       dPinANegYPtr = dPinANegYPtr_;
+  Kokkos::parallel_for(numPins_, KOKKOS_LAMBDA (const int pinId) {
     const int netId = dPinNetIdPtr[pinId];
     dPinAPosXPtr[pinId] = expf(wlCoeffX * (dPinXPtr[pinId] - dNetUxPtr[netId]));
     dPinANegXPtr[pinId]
@@ -477,29 +423,13 @@ __global__ void computeAPosNegKernel(const int numPins,
     dPinAPosYPtr[pinId] = expf(wlCoeffY * (dPinYPtr[pinId] - dNetUyPtr[netId]));
     dPinANegYPtr[pinId]
         = expf(-1.0 * wlCoeffY * (dPinYPtr[pinId] - dNetLyPtr[netId]));
-  }
-}
+  });
 
-__global__ void computeBCPosNegKernel(int numNets,
-                                      const int* __restrict__ dNetPinPosPtr,
-                                      const int* __restrict__ dNetPinIdxPtr,
-                                      const int* __restrict__ dPinXPtr,
-                                      const int* __restrict__ dPinYPtr,
-                                      const float* __restrict__ dPinAPosXPtr,
-                                      const float* __restrict__ dPinANegXPtr,
-                                      const float* __restrict__ dPinAPosYPtr,
-                                      const float* __restrict__ dPinANegYPtr,
-                                      float* dNetBPosXPtr,
-                                      float* dNetBNegXPtr,
-                                      float* dNetBPosYPtr,
-                                      float* dNetBNegYPtr,
-                                      float* dNetCPosXPtr,
-                                      float* dNetCNegXPtr,
-                                      float* dNetCPosYPtr,
-                                      float* dNetCNegYPtr)
-{
-  const unsigned int netId = blockIdx.x * blockDim.x + threadIdx.x;
-  if (netId < numNets) {
+  auto dNetPinPosPtr = dNetPinPosPtr_, dNetPinIdxPtr = dNetPinIdxPtr_, dPinX = dPinXPtr_, dPinY = dPinYPtr_;
+  auto dNetBPosXPtr = dNetBPosXPtr_, dNetBNegXPtr = dNetBNegXPtr_, dNetBPosYPtr = dNetBPosYPtr_,
+       dNetBNegYPtr = dNetBNegYPtr_, dNetCPosXPtr = dNetCPosXPtr_, dNetCNegXPtr = dNetCNegXPtr_,
+       dNetCPosYPtr = dNetCPosYPtr_, dNetCNegYPtr = dNetCNegYPtr_;
+  Kokkos::parallel_for(numNets_, KOKKOS_LAMBDA (const int netId) {
     const int pinStart = dNetPinPosPtr[netId];
     const int pinEnd = dNetPinPosPtr[netId + 1];
     float bPosX = 0.0;
@@ -534,35 +464,11 @@ __global__ void computeBCPosNegKernel(int numNets,
     dNetCNegXPtr[netId] = cNegX;
     dNetCPosYPtr[netId] = cPosY;
     dNetCNegYPtr[netId] = cNegY;
-  }
-}
+  });
 
-__global__ void computePinWAGradKernel(const int numPins,
-                                       const float wlCoeffX,
-                                       const float wlCoeffY,
-                                       const int* __restrict__ dPinNetIdPtr,
-                                       const int* __restrict__ dNetPinPosPtr,
-                                       const int* __restrict__ dPinXPtr,
-                                       const int* __restrict__ dPinYPtr,
-                                       const float* __restrict__ dPinAPosXPtr,
-                                       const float* __restrict__ dPinANegXPtr,
-                                       const float* __restrict__ dPinAPosYPtr,
-                                       const float* __restrict__ dPinANegYPtr,
-                                       const float* __restrict__ dNetBPosXPtr,
-                                       const float* __restrict__ dNetBNegXPtr,
-                                       const float* __restrict__ dNetBPosYPtr,
-                                       const float* __restrict__ dNetBNegYPtr,
-                                       const float* __restrict__ dNetCPosXPtr,
-                                       const float* __restrict__ dNetCNegXPtr,
-                                       const float* __restrict__ dNetCPosYPtr,
-                                       const float* __restrict__ dNetCNegYPtr,
-                                       float* dPinGradXPtr,
-                                       float* dPinGradYPtr)
-{
-  int pinIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (pinIdx < numPins) {
+  auto dPinGradXPtr = dPinGradXPtr_, dPinGradYPtr = dPinGradYPtr_;
+  Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int pinIdx) {
     const int netId = dPinNetIdPtr[pinIdx];
-    const int netSize = dNetPinPosPtr[netId + 1] - dNetPinPosPtr[netId];
 
     // TODO:  if we need to remove high-fanout nets,
     // we can remove it here
@@ -588,26 +494,12 @@ __global__ void computePinWAGradKernel(const int numPins,
                            - ((1.0f + pinYWlCoeffY) * dNetBPosYPtr[netId]
                               - wlCoeffY * dNetCPosYPtr[netId])
                                  * dPinAPosYPtr[pinIdx] / netBPosY2;
-  }
-}
+  });
 
-// define the kernel for updating wirelength force
-// on each instance
-__global__ void computeWirelengthGradientWAKernel(
-    const int numPlaceInsts,
-    const float virtualWeightFactor,
-    const int* dPinNetIdPtr,
-    const float* dNetWeightPtr,
-    const float* dNetVirtualWeightPtr,
-    const int* dInstPinIdxPtr,
-    const int* dInstPinPosPtr,
-    const float* dPinGradX,
-    const float* dPinGradY,
-    float* wirelengthForceX,
-    float* wirelengthForceY)
-{
-  const int instId = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instId < numPlaceInsts) {
+  // get the force on each instance
+  auto dInstPinPosPtr = dInstPinPosPtr_, dInstPinIdxPtr = dInstPinIdxPtr_;
+  auto dNetWeightPtr = dNetWeightPtr_, dNetVirtualWeightPtr = dNetVirtualWeightPtr_;
+  Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instId) {
     const int pinStart = dInstPinPosPtr[instId];
     const int pinEnd = dInstPinPosPtr[instId + 1];
     float wlGradX = 0.0;
@@ -617,94 +509,13 @@ __global__ void computeWirelengthGradientWAKernel(
       const int netId = dPinNetIdPtr[pinIdx];
       const float weight = dNetWeightPtr[netId]
                            + dNetVirtualWeightPtr[netId] * virtualWeightFactor;
-      wlGradX += dPinGradX[pinIdx] * weight;
-      wlGradY += dPinGradY[pinIdx] * weight;
+      wlGradX += dPinGradXPtr[pinIdx] * weight;
+      wlGradY += dPinGradYPtr[pinIdx] * weight;
     }
 
     wirelengthForceX[instId] = wlGradX;
     wirelengthForceY[instId] = wlGradY;
-  }
+  });
 }
-
-void WirelengthOp::computeWireLengthForce(const float wlCoeffX,
-                                          const float wlCoeffY,
-                                          const float virtualWeightFactor,
-                                          float* wirelengthForceX,
-                                          float* wirelengthForceY)
-{
-  int numThreads = 256;
-  int numNetBlocks = (numNets_ + numThreads - 1) / numThreads;
-  int numInstBlocks = (numPlaceInsts_ + numThreads - 1) / numThreads;
-  int numPinBlocks = (numPins_ + numThreads - 1) / numThreads;
-
-  computeAPosNegKernel<<<numPinBlocks, numThreads>>>(numPins_,
-                                                     wlCoeffX,
-                                                     wlCoeffY,
-                                                     dPinXPtr_,
-                                                     dPinYPtr_,
-                                                     dPinNetIdPtr_,
-                                                     dNetLxPtr_,
-                                                     dNetLyPtr_,
-                                                     dNetUxPtr_,
-                                                     dNetUyPtr_,
-                                                     dPinAPosXPtr_,
-                                                     dPinANegXPtr_,
-                                                     dPinAPosYPtr_,
-                                                     dPinANegYPtr_);
-
-  computeBCPosNegKernel<<<numNetBlocks, numThreads>>>(numNets_,
-                                                      dNetPinPosPtr_,
-                                                      dNetPinIdxPtr_,
-                                                      dPinXPtr_,
-                                                      dPinYPtr_,
-                                                      dPinAPosXPtr_,
-                                                      dPinANegXPtr_,
-                                                      dPinAPosYPtr_,
-                                                      dPinANegYPtr_,
-                                                      dNetBPosXPtr_,
-                                                      dNetBNegXPtr_,
-                                                      dNetBPosYPtr_,
-                                                      dNetBNegYPtr_,
-                                                      dNetCPosXPtr_,
-                                                      dNetCNegXPtr_,
-                                                      dNetCPosYPtr_,
-                                                      dNetCNegYPtr_);
-
-  computePinWAGradKernel<<<numPinBlocks, numThreads>>>(numPins_,
-                                                       wlCoeffX,
-                                                       wlCoeffY,
-                                                       dPinNetIdPtr_,
-                                                       dNetPinPosPtr_,
-                                                       dPinXPtr_,
-                                                       dPinYPtr_,
-                                                       dPinAPosXPtr_,
-                                                       dPinANegXPtr_,
-                                                       dPinAPosYPtr_,
-                                                       dPinANegYPtr_,
-                                                       dNetBPosXPtr_,
-                                                       dNetBNegXPtr_,
-                                                       dNetBPosYPtr_,
-                                                       dNetBNegYPtr_,
-                                                       dNetCPosXPtr_,
-                                                       dNetCNegXPtr_,
-                                                       dNetCPosYPtr_,
-                                                       dNetCNegYPtr_,
-                                                       dPinGradXPtr_,
-                                                       dPinGradYPtr_);
-
-  // get the force on each instance
-  computeWirelengthGradientWAKernel<<<numInstBlocks, numThreads>>>(
-      numPlaceInsts_,
-      virtualWeightFactor,
-      dPinNetIdPtr_,
-      dNetWeightPtr_,
-      dNetVirtualWeightPtr_,
-      dInstPinIdxPtr_,
-      dInstPinPosPtr_,
-      dPinGradXPtr_,
-      dPinGradYPtr_,
-      wirelengthForceX,
-      wirelengthForceY);
-  }
 
 }  // namespace gpl2

@@ -50,12 +50,12 @@ inline void __CUDA_CHECK(cudaError_t status, const char* file, const int line)
   }
 }
 
-inline __device__ int INDEX(const int hid, const int wid, const int N)
+inline __host__ __device__ int INDEX(const int hid, const int wid, const int N)
 {
   return (hid * N + wid);
 }
 
-inline __device__ cufftDoubleComplex complexMul(const cufftDoubleComplex& x,
+inline __host__ __device__ cufftDoubleComplex complexMul(const cufftDoubleComplex& x,
                                                 const cufftDoubleComplex& y)
 {
   cufftDoubleComplex res;
@@ -64,7 +64,7 @@ inline __device__ cufftDoubleComplex complexMul(const cufftDoubleComplex& x,
   return res;
 }
 
-inline __device__ cufftComplex complexMul(const cufftComplex& x,
+inline __host__ __device__ cufftComplex complexMul(const cufftComplex& x,
                                           const cufftComplex& y)
 {
   cufftComplex res;
@@ -73,31 +73,31 @@ inline __device__ cufftComplex complexMul(const cufftComplex& x,
   return res;
 }
 
-inline __device__ cufftDoubleReal RealPartOfMul(const cufftDoubleComplex& x,
+inline __host__ __device__ cufftDoubleReal RealPartOfMul(const cufftDoubleComplex& x,
                                                 const cufftDoubleComplex& y)
 {
   return x.x * y.x - x.y * y.y;
 }
 
-inline __device__ cufftReal RealPartOfMul(const cufftComplex& x,
+inline __host__ __device__ cufftReal RealPartOfMul(const cufftComplex& x,
                                           const cufftComplex& y)
 {
   return x.x * y.x - x.y * y.y;
 }
 
-inline __device__ cufftDoubleReal
+inline __host__ __device__ cufftDoubleReal
 ImaginaryPartOfMul(const cufftDoubleComplex& x, const cufftDoubleComplex& y)
 {
   return x.x * y.y + x.y * y.x;
 }
 
-inline __device__ cufftReal ImaginaryPartOfMul(const cufftComplex& x,
+inline __host__ __device__ cufftReal ImaginaryPartOfMul(const cufftComplex& x,
                                                const cufftComplex& y)
 {
   return x.x * y.y + x.y * y.x;
 }
 
-inline __device__ cufftDoubleComplex complexAdd(const cufftDoubleComplex& x,
+inline __host__ __device__ cufftDoubleComplex complexAdd(const cufftDoubleComplex& x,
                                                 const cufftDoubleComplex& y)
 {
   cufftDoubleComplex res;
@@ -106,7 +106,7 @@ inline __device__ cufftDoubleComplex complexAdd(const cufftDoubleComplex& x,
   return res;
 }
 
-inline __device__ cufftComplex complexAdd(const cufftComplex& x,
+inline __host__ __device__ cufftComplex complexAdd(const cufftComplex& x,
                                           const cufftComplex& y)
 {
   cufftComplex res;
@@ -115,7 +115,7 @@ inline __device__ cufftComplex complexAdd(const cufftComplex& x,
   return res;
 }
 
-inline __device__ cufftDoubleComplex
+inline __host__ __device__ cufftDoubleComplex
 complexSubtract(const cufftDoubleComplex& x, const cufftDoubleComplex& y)
 {
   cufftDoubleComplex res;
@@ -124,7 +124,7 @@ complexSubtract(const cufftDoubleComplex& x, const cufftDoubleComplex& y)
   return res;
 }
 
-inline __device__ cufftComplex complexSubtract(const cufftComplex& x,
+inline __host__ __device__ cufftComplex complexSubtract(const cufftComplex& x,
                                                const cufftComplex& y)
 {
   cufftComplex res;
@@ -133,7 +133,7 @@ inline __device__ cufftComplex complexSubtract(const cufftComplex& x,
   return res;
 }
 
-inline __device__ cufftDoubleComplex complexConj(const cufftDoubleComplex& x)
+inline __host__ __device__ cufftDoubleComplex complexConj(const cufftDoubleComplex& x)
 {
   cufftDoubleComplex res;
   res.x = x.x;
@@ -141,7 +141,7 @@ inline __device__ cufftDoubleComplex complexConj(const cufftDoubleComplex& x)
   return res;
 }
 
-inline __device__ cufftComplex complexConj(const cufftComplex& x)
+inline __host__ __device__ cufftComplex complexConj(const cufftComplex& x)
 {
   cufftComplex res;
   res.x = x.x;
@@ -149,7 +149,7 @@ inline __device__ cufftComplex complexConj(const cufftComplex& x)
   return res;
 }
 
-inline __device__ cufftDoubleComplex complexMulConj(const cufftDoubleComplex& x,
+inline __host__ __device__ cufftDoubleComplex complexMulConj(const cufftDoubleComplex& x,
                                                     const cufftDoubleComplex& y)
 {
   cufftDoubleComplex res;
@@ -158,7 +158,7 @@ inline __device__ cufftDoubleComplex complexMulConj(const cufftDoubleComplex& x,
   return res;
 }
 
-inline __device__ cufftComplex complexMulConj(const cufftComplex& x,
+inline __host__ __device__ cufftComplex complexMulConj(const cufftComplex& x,
                                               const cufftComplex& y)
 {
   cufftComplex res;

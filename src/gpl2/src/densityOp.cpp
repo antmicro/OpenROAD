@@ -33,6 +33,8 @@
 
 #include "densityOp.h"
 
+#include <Kokkos_Core.hpp>
+
 #include <memory>
 
 #include <cufft.h>
@@ -264,19 +266,7 @@ void DensityOp::freeCUDAKernel()
   dGCellIsMacroPtr_ = nullptr;
 }
 
-// Step1 :  Initialize bin density information
-__global__ void initBinsGCellDensityArea(const int numBins,
-                                         int64_t_cu* dBinInstPlacedAreaPtr,
-                                         int64_t_cu* dBinFillerAreaPtr)
-{
-  const int binIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (binIdx < numBins) {
-    dBinInstPlacedAreaPtr[binIdx] = 0;
-    dBinFillerAreaPtr[binIdx] = 0;
-  }
-}
-
-__device__ inline IntRect getMinMaxIdxXY(const int numBins,
+__host__ __device__ inline IntRect getMinMaxIdxXY(const int numBins,
                                          const int binSizeX,
                                          const int binSizeY,
                                          const int binCntX,
@@ -311,7 +301,7 @@ __device__ inline IntRect getMinMaxIdxXY(const int numBins,
 }
 
 // Utility functions
-__device__ inline float getOverlapWidth(const float& instDLx,
+__host__ __device__ inline float getOverlapWidth(const float& instDLx,
                                         const float& instDUx,
                                         const float& binLx,
                                         const float& binUx)
@@ -323,43 +313,24 @@ __device__ inline float getOverlapWidth(const float& instDLx,
   }
 }
 
-// Step2:  compute the overlap between bin and instance
-// The following function is critical runtime
-// hotspot in the original RePlAce implementation.
-// We solve the problem through parallel updating.
-__global__ void updateBinsGCellDensityArea(
-    // bin information
-    const int numBins,
-    const int binSizeX,
-    const int binSizeY,
-    const int binCntX,
-    const int binCntY,
-    const int* dBinLxPtr,
-    const int* dBinLyPtr,
-    const int* dBinUxPtr,
-    const int* dBinUyPtr,
-    const float* dBinTargetDensityPtr,
-    const int64_t_cu* dBinNonPlaceAreaPtr,
-    // die information
-    const int coreLx,
-    const int coreLy,
-    const int coreUx,
-    const int coreUy,
-    // Instance information
-    const int numInsts,
-    const int* dGCellDCxPtr,
-    const int* dGCellDCyPtr,
-    const int* dGCellDensityWidthPtr,
-    const int* dGCellDensityHeightPtr,
-    const float* dGCellDensityScalePtr,
-    const bool* dGCellIsFillerPtr,
-    const bool* dGCellIsMacroPtr,
-    // output
-    int64_t_cu* dBinInstPlacedAreaPtr,
-    int64_t_cu* dBinFillerAreaPtr)
+void DensityOp::updateDensityForceBin()
 {
-  const int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
+  // Step 1: Initialize the bin density information
+  auto dBinInstPlacedAreaPtr = dBinInstPlacedAreaPtr_, dBinFillerAreaPtr = dBinFillerAreaPtr_;
+  Kokkos::parallel_for(numBins_, KOKKOS_LAMBDA (const int binIdx) {
+    dBinInstPlacedAreaPtr[binIdx] = 0;
+    dBinFillerAreaPtr[binIdx] = 0;
+  });
+
+  // Step 2: compute the overlap between bin and instance
+  auto numBins = numBins_, binSizeX = binSizeX_, binSizeY = binSizeY_, binCntX = binCntX_, binCntY = binCntY_,
+      coreLx = coreLx_, coreLy = coreLy_, coreUx = coreUx_, coreUy = coreUy_;
+  auto dGCellDCxPtr = dGCellDCxPtr_, dGCellDCyPtr = dGCellDCyPtr_, dGCellDensityWidthPtr = dGCellDensityWidthPtr_,
+       dGCellDensityHeightPtr = dGCellDensityHeightPtr_, dBinLxPtr = dBinLxPtr_, dBinLyPtr = dBinLyPtr_,
+       dBinUxPtr = dBinUxPtr_, dBinUyPtr = dBinUyPtr_;
+  auto dGCellDensityScalePtr = dGCellDensityScalePtr_, dBinTargetDensityPtr = dBinTargetDensityPtr_;
+  auto dGCellIsFillerPtr = dGCellIsFillerPtr_, dGCellIsMacroPtr = dGCellIsMacroPtr_;
+  Kokkos::parallel_for(numBins_, KOKKOS_LAMBDA (const int instIdx) {
     IntRect binRect = getMinMaxIdxXY(numBins,
                                      binSizeX,
                                      binSizeY,
@@ -397,95 +368,36 @@ __global__ void updateBinsGCellDensityArea(
         // each other, providing a correct total even when multiple threads
         // update the same bin simultaneously.
         if (dGCellIsFillerPtr[instIdx]) {
-          atomicAdd(&dBinFillerAreaPtr[binIdx],
+          Kokkos::atomic_add(&dBinFillerAreaPtr[binIdx],
                     static_cast<int64_t_cu>(overlapArea));
         } else {
           if (dGCellIsMacroPtr[instIdx] == true) {
             overlapArea = overlapArea * dBinTargetDensityPtr[binIdx];
           }
-          atomicAdd(&dBinInstPlacedAreaPtr[binIdx],
+          Kokkos::atomic_add(&dBinInstPlacedAreaPtr[binIdx],
                     static_cast<int64_t_cu>(overlapArea));
         }
       }
     }
-  }
-}
-
-// Step 3: update the bin overflow information
-__global__ void updateBinDensityAndOverflow(
-    const int numBins,
-    const int64_t_cu* dBinNonPlaceAreaPtr_,
-    const int64_t_cu* dBinInstPlacedAreaPtr_,
-    const int64_t_cu* dBinFillerAreaPtr_,
-    const float* dBinScaledAreaPtr_,
-    float* dBinDensityPtr_,
-    float* dBinOverflowAreaPtr_)
-{
-  const int binIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (binIdx < numBins) {
-    dBinDensityPtr_[binIdx]
-        = (static_cast<float>(dBinNonPlaceAreaPtr_[binIdx])
-           + static_cast<float>(dBinInstPlacedAreaPtr_[binIdx])
-           + static_cast<float>(dBinFillerAreaPtr_[binIdx]))
-          / dBinScaledAreaPtr_[binIdx];
-
-    dBinOverflowAreaPtr_[binIdx]
-        = max(0.0,
-              static_cast<float>(dBinInstPlacedAreaPtr_[binIdx])
-                  + static_cast<float>(dBinNonPlaceAreaPtr_[binIdx])
-                  - dBinScaledAreaPtr_[binIdx]);
-  }
-}
-
-void DensityOp::updateDensityForceBin()
-{
-  const int numThreadBin = 256;
-  const int numBlockBin = (numBins_ + numThreadBin - 1) / numThreadBin;
-
-  const int numThreadInst = 256;
-  const int numBlockInst = (numInsts_ + numThreadInst - 1) / numThreadInst;
-
-  // Step 1: Initialize the bin density information
-  initBinsGCellDensityArea<<<numBlockBin, numThreadBin>>>(
-      numBins_, dBinInstPlacedAreaPtr_, dBinFillerAreaPtr_);
-
-  // Step 2: compute the overlap between bin and instance
-  updateBinsGCellDensityArea<<<numBlockInst, numThreadInst>>>(
-      numBins_,
-      binSizeX_,
-      binSizeY_,
-      binCntX_,
-      binCntY_,
-      dBinLxPtr_,
-      dBinLyPtr_,
-      dBinUxPtr_,
-      dBinUyPtr_,
-      dBinTargetDensityPtr_,
-      dBinNonPlaceAreaPtr_,
-      coreLx_,
-      coreLy_,
-      coreUx_,
-      coreUy_,
-      numInsts_,
-      dGCellDCxPtr_,
-      dGCellDCyPtr_,
-      dGCellDensityWidthPtr_,
-      dGCellDensityHeightPtr_,
-      dGCellDensityScalePtr_,
-      dGCellIsFillerPtr_,
-      dGCellIsMacroPtr_,
-      dBinInstPlacedAreaPtr_,
-      dBinFillerAreaPtr_);
+  });
 
   // Step 3: update overflow
-  updateBinDensityAndOverflow<<<numBlockBin, numThreadBin>>>(
-      numBins_,
-      dBinNonPlaceAreaPtr_,
-      dBinInstPlacedAreaPtr_,
-      dBinFillerAreaPtr_,
-      dBinScaledAreaPtr_,
-      dBinDensityPtr_,
-      dBinOverflowAreaPtr_);
+  auto dBinDensityPtr = dBinDensityPtr_, dBinOverflowAreaPtr = dBinOverflowAreaPtr_;
+  auto dBinNonPlaceAreaPtr = dBinNonPlaceAreaPtr_;
+  auto dBinScaledAreaPtr = dBinScaledAreaPtr_;
+  Kokkos::parallel_for(numBins_, KOKKOS_LAMBDA (const int binIdx) {
+  dBinDensityPtr[binIdx]
+        = (static_cast<float>(dBinNonPlaceAreaPtr[binIdx])
+           + static_cast<float>(dBinInstPlacedAreaPtr[binIdx])
+           + static_cast<float>(dBinFillerAreaPtr[binIdx]))
+          / dBinScaledAreaPtr[binIdx];
+
+    dBinOverflowAreaPtr[binIdx]
+        = max(0.0,
+              static_cast<float>(dBinInstPlacedAreaPtr[binIdx])
+                  + static_cast<float>(dBinNonPlaceAreaPtr[binIdx])
+                  - dBinScaledAreaPtr[binIdx]);
+  });
 
   sumOverflow_ = thrust::reduce(dBinOverflowArea_.begin(),
                                 dBinOverflowArea_.end(),
@@ -499,38 +411,18 @@ void DensityOp::updateDensityForceBin()
                      dBinElectroForceYPtr_);
 }
 
-// Compute electro force for each instance
-__global__ void computeInstElectroForce(
-    // bin information
-    const int numBins,
-    const int binSizeX,
-    const int binSizeY,
-    const int binCntX,
-    const int binCntY,
-    const int* dBinLxPtr,
-    const int* dBinLyPtr,
-    const int* dBinUxPtr,
-    const int* dBinUyPtr,
-    const float* dBinElectroForceXPtr,
-    const float* dBinElectroForceYPtr,
-    // die information
-    const int coreLx,
-    const int coreLy,
-    const int coreUx,
-    const int coreUy,
-    // Instance information
-    const int numInsts,
-    const int* dGCellDCxPtr,
-    const int* dGCellDCyPtr,
-    const int* dGCellDensityWidthPtr,
-    const int* dGCellDensityHeightPtr,
-    const float* dGCellDensityScalePtr,
-    // output
-    float* electroForceX,
-    float* electroForceY)
+void DensityOp::getDensityGradient(float* densityGradientX,
+                                   float* densityGradientY)
 {
-  const int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
+  // Step 5: Compute electro force for each instance
+  auto numBins = numBins_, binSizeX = binSizeX_, binSizeY = binSizeY_, binCntX = binCntX_, binCntY = binCntY_,
+      coreLx = coreLx_, coreLy = coreLy_, coreUx = coreUx_, coreUy = coreUy_;
+  auto dGCellDCxPtr = dGCellDCxPtr_, dGCellDCyPtr = dGCellDCyPtr_, dGCellDensityWidthPtr = dGCellDensityWidthPtr_,
+       dGCellDensityHeightPtr = dGCellDensityHeightPtr_, dBinLxPtr = dBinLxPtr_, dBinLyPtr = dBinLyPtr_,
+       dBinUxPtr = dBinUxPtr_, dBinUyPtr = dBinUyPtr_;
+  auto dGCellDensityScalePtr = dGCellDensityScalePtr_;
+  auto dBinElectroForceXPtr = dBinElectroForceXPtr_, dBinElectroForceYPtr = dBinElectroForceYPtr_;
+  Kokkos::parallel_for(numBins_, KOKKOS_LAMBDA (const int instIdx) {
     IntRect binRect = getMinMaxIdxXY(numBins,
                                      binSizeX,
                                      binSizeY,
@@ -570,64 +462,18 @@ __global__ void computeInstElectroForce(
       }
     }
 
-    electroForceX[instIdx] = electroForceSumX;
-    electroForceY[instIdx] = electroForceSumY;
-  }
-}
-
-void DensityOp::getDensityGradient(float* densityGradientX,
-                                   float* densityGradientY)
-{
-  const int numThreadInst = 256;
-  const int numBlockInst = (numInsts_ + numThreadInst - 1) / numThreadInst;
-
-  // Step 5: Compute electro force for each instance
-  computeInstElectroForce<<<numBlockInst, numThreadInst>>>(
-      numBins_,
-      binSizeX_,
-      binSizeY_,
-      binCntX_,
-      binCntY_,
-      dBinLxPtr_,
-      dBinLyPtr_,
-      dBinUxPtr_,
-      dBinUyPtr_,
-      dBinElectroForceXPtr_,
-      dBinElectroForceYPtr_,
-      coreLx_,
-      coreLy_,
-      coreUx_,
-      coreUy_,
-      numInsts_,
-      dGCellDCxPtr_,
-      dGCellDCyPtr_,
-      dGCellDensityWidthPtr_,
-      dGCellDensityHeightPtr_,
-      dGCellDensityScalePtr_,
-      densityGradientX,
-      densityGradientY);
-}
-
-__global__ void updateGCellLocationKernel(const int numInsts,
-                                          const int* instDCx,
-                                          const int* instDCy,
-                                          int* dGCellDCxPtr,
-                                          int* dGCellDCyPtr)
-{
-  const int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
-    dGCellDCxPtr[instIdx] = instDCx[instIdx];
-    dGCellDCyPtr[instIdx] = instDCy[instIdx];
-  }
+    densityGradientX[instIdx] = electroForceSumX;
+    densityGradientY[instIdx] = electroForceSumY;
+  });
 }
 
 void DensityOp::updateGCellLocation(const int* instDCx, const int* instDCy)
 {
-  const int numThreadInst = 256;
-  const int numBlockInst = (numInsts_ + numThreadInst - 1) / numThreadInst;
-
-  updateGCellLocationKernel<<<numBlockInst, numThreadInst>>>(
-      numInsts_, instDCx, instDCy, dGCellDCxPtr_, dGCellDCyPtr_);
+  auto dGCellDCxPtr = dGCellDCxPtr_, dGCellDCyPtr = dGCellDCyPtr_;
+  Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
+    dGCellDCxPtr[instIdx] = instDCx[instIdx];
+    dGCellDCyPtr[instIdx] = instDCy[instIdx];
+  });
 }
 
 }  // namespace gpl2

@@ -34,8 +34,10 @@
 #include "placerBase.h"
 
 #include <odb/db.h>
-#include <stdio.h>
 
+#include <Kokkos_Core.hpp>
+
+#include <stdio.h>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -812,7 +814,7 @@ void PlacerBase::freeCUDAKernel()
 }
 
 // Make sure the instances are within the region
-__device__ float getDensityCoordiLayoutInside(int instWidth,
+__host__ __device__ float getDensityCoordiLayoutInside(int instWidth,
                                               float cx,
                                               int coreLx,
                                               int coreUx)
@@ -829,65 +831,28 @@ __device__ float getDensityCoordiLayoutInside(int instWidth,
   return adjVal;
 }
 
-__global__ void updateDensityCoordiLayoutInsideKernel(const int numInsts,
-                                                      const int coreLx,
-                                                      const int coreLy,
-                                                      const int coreUx,
-                                                      const int coreUy,
-                                                      const int* instDDx,
-                                                      const int* instDDy,
-                                                      int* instDCx,
-                                                      int* instDCy)
-{
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
-    instDCx[instIdx] = getDensityCoordiLayoutInside(
-        instDDx[instIdx], instDCx[instIdx], coreLx, coreUx);
-    instDCy[instIdx] = getDensityCoordiLayoutInside(
-        instDDy[instIdx], instDCy[instIdx], coreLy, coreUy);
-  }
-}
-
-__global__ void initDensityCoordiKernel(int numInsts,
-                                        const int* instDCx,
-                                        const int* instDCy,
-                                        FloatPoint* dCurCoordiPtr,
-                                        FloatPoint* dCurSLPCoordiPtr,
-                                        FloatPoint* dPrevSLPCoordiPtr)
-{
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
-    const FloatPoint loc(instDCx[instIdx], instDCy[instIdx]);
-    dCurCoordiPtr[instIdx] = loc;
-    dCurSLPCoordiPtr[instIdx] = loc;
-    dPrevSLPCoordiPtr[instIdx] = loc;
-  }
-}
-
 void PlacerBase::initDensity1()
 {
   // update density coordinate for each instance
-  int numThreads = 256;
-  int numBlocks = (numInsts_ + numThreads - 1) / numThreads;
-  updateDensityCoordiLayoutInsideKernel<<<numBlocks, numThreads>>>(
-      numInsts_,
-      bg_.lx(),
-      bg_.ly(),
-      bg_.ux(),
-      bg_.uy(),
-      dInstDDxPtr_,
-      dInstDDyPtr_,
-      dInstDCxPtr_,
-      dInstDCyPtr_);
+  auto dInstDCxPtr = dInstDCxPtr_, dInstDCyPtr = dInstDCyPtr_, dInstDDxPtr = dInstDDxPtr_, dInstDDyPtr = dInstDDyPtr_;
+  auto coreLx = bg_.lx(), coreLy = bg_.ly(), coreUx = bg_.ux(), coreUy = bg_.uy();
+  Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
+    dInstDCxPtr[instIdx] = getDensityCoordiLayoutInside(
+        dInstDDxPtr[instIdx], dInstDCxPtr[instIdx], coreLx, coreUx);
+    dInstDCyPtr[instIdx] = getDensityCoordiLayoutInside(
+        dInstDDyPtr[instIdx], dInstDCyPtr[instIdx], coreLy, coreUy);
+  });
 
   // initialize the dCurSLPCoordiPtr_, dPrevSLPCoordiPtr_
   // and dCurCoordiPtr_
-  initDensityCoordiKernel<<<numBlocks, numThreads>>>(numInsts_,
-                                                     dInstDCxPtr_,
-                                                     dInstDCyPtr_,
-                                                     dCurCoordiPtr_,
-                                                     dCurSLPCoordiPtr_,
-                                                     dPrevSLPCoordiPtr_);
+
+  auto dCurCoordiPtr = dCurCoordiPtr_, dCurSLPCoordiPtr = dCurSLPCoordiPtr_, dPrevSLPCoordiPtr = dPrevSLPCoordiPtr_;
+  Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
+    const FloatPoint loc(dInstDCxPtr[instIdx], dInstDCyPtr[instIdx]);
+    dCurCoordiPtr[instIdx] = loc;
+    dCurSLPCoordiPtr[instIdx] = loc;
+    dPrevSLPCoordiPtr[instIdx] = loc;
+  });
 
   // We need to sync up bewteen pb and pbCommon
   updateGCellDensityCenterLocation(dCurSLPCoordiPtr_);
@@ -1010,41 +975,6 @@ float PlacerBase::initDensity2()
   return stepLength_;
 }
 
-__global__ void sumGradientKernel(const int numInsts,
-                                  const float densityPenalty,
-                                  const float minPrecondi,
-                                  const float* wireLengthPrecondi,
-                                  const float* densityPrecondi,
-                                  const float* wireLengthGradientsX,
-                                  const float* wireLengthGradientsY,
-                                  const float* densityGradientsX,
-                                  const float* densityGradientsY,
-                                  FloatPoint* sumGrads)
-{
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
-    sumGrads[instIdx].x = wireLengthGradientsX[instIdx]
-                          + densityPenalty * densityGradientsX[instIdx];
-    sumGrads[instIdx].y = wireLengthGradientsY[instIdx]
-                          + densityPenalty * densityGradientsY[instIdx];
-    FloatPoint sumPrecondi(
-        wireLengthPrecondi[instIdx] + densityPenalty * densityPrecondi[instIdx],
-        wireLengthPrecondi[instIdx]
-            + densityPenalty * densityPrecondi[instIdx]);
-
-    if (sumPrecondi.x < minPrecondi) {
-      sumPrecondi.x = minPrecondi;
-    }
-
-    if (sumPrecondi.y < minPrecondi) {
-      sumPrecondi.y = minPrecondi;
-    }
-
-    sumGrads[instIdx].x /= sumPrecondi.x;
-    sumGrads[instIdx].y /= sumPrecondi.y;
-  }
-}
-
 void PlacerBase::updatePrevGradient()
 {
   updateGradients(dPrevSLPWireLengthGradXPtr_,
@@ -1094,98 +1024,63 @@ void PlacerBase::updateGradients(float* wireLengthGradientsX,
   densityGradSum_ += getAbsGradSum(densityGradientsX, numInsts_);
   densityGradSum_ += getAbsGradSum(densityGradientsY, numInsts_);
 
-  int numThreads = 256;
-  int numBlocks = (numInsts_ + numThreads - 1) / numThreads;
-  sumGradientKernel<<<numBlocks, numThreads>>>(numInsts_,
-                                               densityPenalty_,
-                                               npVars_.minPreconditioner,
-                                               dWireLengthPrecondiPtr_,
-                                               dDensityPrecondiPtr_,
-                                               wireLengthGradientsX,
-                                               wireLengthGradientsY,
-                                               densityGradientsX,
-                                               densityGradientsY,
-                                               sumGrads);
-}
+  auto densityPenalty = densityPenalty_;
+  auto minPrecondi = npVars_.minPreconditioner;
+  auto wireLengthPrecondi = dWireLengthPrecondiPtr_;
+  auto densityPrecondi = dDensityPrecondiPtr_;
+  Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
+           sumGrads[instIdx].x = wireLengthGradientsX[instIdx]
+                          + densityPenalty * densityGradientsX[instIdx];
+    sumGrads[instIdx].y = wireLengthGradientsY[instIdx]
+                          + densityPenalty * densityGradientsY[instIdx];
+    FloatPoint sumPrecondi(
+        wireLengthPrecondi[instIdx] + densityPenalty * densityPrecondi[instIdx],
+        wireLengthPrecondi[instIdx]
+            + densityPenalty * densityPrecondi[instIdx]);
 
-// sync up the instances location based on the corrodinates
-__global__ void updateGCellDensityCenterLocationKernel(
-    const int numInsts,
-    const FloatPoint* coordis,
-    int* instDCx,
-    int* instDCy)
-{
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
-    instDCx[instIdx] = coordis[instIdx].x;
-    instDCy[instIdx] = coordis[instIdx].y;
-  }
-}
+    if (sumPrecondi.x < minPrecondi) {
+      sumPrecondi.x = minPrecondi;
+    }
 
-// sync up the instances between pbCommon and current pb
-__global__ void syncPlaceInstsCommonKernel(const int numPlaceInsts,
-                                           const int* placeInstIds,
-                                           const int* placeInstDCx,
-                                           const int* placeInstDCy,
-                                           int* instDCxCommon,
-                                           int* instDCyCommon)
-{
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numPlaceInsts) {
-    int instId = placeInstIds[instIdx];
-    instDCxCommon[instId] = placeInstDCx[instIdx];
-    instDCyCommon[instId] = placeInstDCy[instIdx];
-  }
+    if (sumPrecondi.y < minPrecondi) {
+      sumPrecondi.y = minPrecondi;
+    }
+
+    sumGrads[instIdx].x /= sumPrecondi.x;
+    sumGrads[instIdx].y /= sumPrecondi.y;
+  });
 }
 
 void PlacerBase::updateGCellDensityCenterLocation(const FloatPoint* coordis)
 {
-  const int numThreads = 256;
-  const int numBlocks = (numInsts_ + numThreads - 1) / numThreads;
-  const int numPlaceInstBlocks = (numPlaceInsts_ + numThreads - 1) / numThreads;
+  auto dInstDCxPtr = dInstDCxPtr_, dInstDCyPtr = dInstDCyPtr_;
+  Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instIdx) {
+    dInstDCxPtr[instIdx] = coordis[instIdx].x;
+    dInstDCyPtr[instIdx] = coordis[instIdx].y;
+  });
 
-  updateGCellDensityCenterLocationKernel<<<numBlocks, numThreads>>>(
-      numInsts_, coordis, dInstDCxPtr_, dInstDCyPtr_);
-
-  syncPlaceInstsCommonKernel<<<numPlaceInstBlocks, numThreads>>>(
-      numPlaceInsts_,
-      dPlaceInstIdsPtr_,
-      dInstDCxPtr_,
-      dInstDCyPtr_,
-      pbCommon_->dInstDCxPtr(),
-      pbCommon_->dInstDCyPtr());
+  auto* dPlaceInstIdsPtr = dPlaceInstIdsPtr_;
+  int* instDCxCommon = pbCommon_->dInstDCxPtr();
+  int* instDCyCommon = pbCommon_->dInstDCyPtr();
+  Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instIdx) {
+    int instId = dPlaceInstIdsPtr[instIdx];
+    instDCxCommon[instId] = dInstDCxPtr[instIdx];
+    instDCyCommon[instId] = dInstDCyPtr[instIdx];
+  });
 
   densityOp_->updateGCellLocation(dInstDCxPtr_, dInstDCyPtr_);
-}
-
-__global__ void getWireLengthGradientWAKernel(const int numPlaceInsts,
-                                              const int* dPlaceInstIdsPtr,
-                                              const float* dWLGradXCommonPtr,
-                                              const float* dWLGradYCommonPtr,
-                                              float* dWireLengthGradXPtr,
-                                              float* dWireLengthGradYPtr)
-{
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numPlaceInsts) {
-    int instId = dPlaceInstIdsPtr[instIdx];
-    dWireLengthGradXPtr[instIdx] = dWLGradXCommonPtr[instId];
-    dWireLengthGradYPtr[instIdx] = dWLGradYCommonPtr[instId];
-  }
 }
 
 void PlacerBase::getWireLengthGradientWA(float* wireLengthGradientsX,
                                          float* wireLengthGradientsY)
 {
-  int numThreads = 256;
-  int numBlocks = (numPlaceInsts_ + numThreads - 1) / numThreads;
-
-  getWireLengthGradientWAKernel<<<numBlocks, numThreads>>>(
-      numPlaceInsts_,
-      dPlaceInstIdsPtr_,
-      pbCommon_->dWLGradXPtr(),
-      pbCommon_->dWLGradYPtr(),
-      wireLengthGradientsX,
-      wireLengthGradientsY);
+  auto dPlaceInstIdsPtr = dPlaceInstIdsPtr_;
+  auto dWLGradXCommonPtr = pbCommon_->dWLGradXPtr(), dWLGradYCommonPtr = pbCommon_->dWLGradYPtr();
+  Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instIdx) {
+    int instId = dPlaceInstIdsPtr[instIdx];
+    wireLengthGradientsX[instIdx] = dWLGradXCommonPtr[instId];
+    wireLengthGradientsY[instIdx] = dWLGradYCommonPtr[instId];
+  });
 }
 
 void PlacerBase::getDensityGradient(float* densityGradientsX,
@@ -1194,25 +1089,18 @@ void PlacerBase::getDensityGradient(float* densityGradientsX,
   densityOp_->getDensityGradient(densityGradientsX, densityGradientsY);
 }
 
-// calculate the next state based on current state
-__global__ void nesterovUpdateCooridnatesKernel(
-    const int numInsts,
-    const int coreLx,
-    const int coreLy,
-    const int coreUx,
-    const int coreUy,
-    const float stepLength,
-    const float coeff,
-    const int* instDDx,
-    const int* instDDy,
-    const FloatPoint* curCoordiPtr,
-    const FloatPoint* curSLPCoordiPtr,
-    const FloatPoint* curSLPSumGradsPtr,
-    FloatPoint* nextCoordiPtr,
-    FloatPoint* nextSLPCoordiPtr)
+void PlacerBase::nesterovUpdateCoordinates(float coeff)
 {
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
+  if (isConverged_) {
+    return;
+  }
+
+  auto curSLPCoordiPtr = dCurSLPCoordiPtr_, curSLPSumGradsPtr = dCurSLPSumGradsPtr_, curCoordiPtr = dCurCoordiPtr_;
+  auto nextCoordiPtr = dNextCoordiPtr_, nextSLPCoordiPtr = dNextSLPCoordiPtr_;
+  auto instDDx = dInstDDxPtr_, instDDy = dInstDDyPtr_;
+  auto stepLength = stepLength_;
+  auto coreLx = bg_.lx(), coreLy = bg_.ly(), coreUx = bg_.ux(), coreUy = bg_.uy();
+  Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
     FloatPoint nextCoordi(
         curSLPCoordiPtr[instIdx].x + stepLength * curSLPSumGradsPtr[instIdx].x,
         curSLPCoordiPtr[instIdx].y + stepLength * curSLPSumGradsPtr[instIdx].y);
@@ -1233,54 +1121,20 @@ __global__ void nesterovUpdateCooridnatesKernel(
                          instDDx[instIdx], nextSLPCoordi.x, coreLx, coreUx),
                      getDensityCoordiLayoutInside(
                          instDDy[instIdx], nextSLPCoordi.y, coreLy, coreUy));
-  }
-}
-
-void PlacerBase::nesterovUpdateCoordinates(float coeff)
-{
-  if (isConverged_) {
-    return;
-  }
-
-  int numThreads = 256;
-  int numBlocks = (numInsts_ + numThreads - 1) / numThreads;
-
-  nesterovUpdateCooridnatesKernel<<<numBlocks, numThreads>>>(
-      numInsts_,
-      bg_.lx(),
-      bg_.ly(),
-      bg_.ux(),
-      bg_.uy(),
-      stepLength_,
-      coeff,
-      dInstDDxPtr_,
-      dInstDDyPtr_,
-      dCurCoordiPtr_,
-      dCurSLPCoordiPtr_,
-      dCurSLPSumGradsPtr_,
-      dNextCoordiPtr_,
-      dNextSLPCoordiPtr_);
+  });
 
   // update density
   updateGCellDensityCenterLocation(dNextSLPCoordiPtr_);
   updateDensityForceBin();
 }
 
-__global__ void updateInitialPrevSLPCoordiKernel(
-    const int numInsts,
-    const int coreLx,
-    const int coreLy,
-    const int coreUx,
-    const int coreUy,
-    const int* instDDx,
-    const int* instDDy,
-    const float initialPrevCoordiUpdateCoef,
-    const FloatPoint* dCurSLPCoordiPtr,
-    const FloatPoint* dCurSLPSumGradsPtr,
-    FloatPoint* dPrevSLPCoordiPtr)
+void PlacerBase::updateInitialPrevSLPCoordi()
 {
-  int instIdx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (instIdx < numInsts) {
+  auto dCurSLPCoordiPtr = dCurSLPCoordiPtr_, dCurSLPSumGradsPtr = dCurSLPSumGradsPtr_, dPrevSLPCoordiPtr = dPrevSLPCoordiPtr_;
+  auto initialPrevCoordiUpdateCoef = npVars_.initialPrevCoordiUpdateCoef;
+  auto instDDx = dInstDDxPtr_, instDDy = dInstDDyPtr_;
+  auto coreLx = bg_.lx(), coreLy = bg_.ly(), coreUx = bg_.ux(), coreUy = bg_.uy();
+  Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
     const float preCoordiX
         = dCurSLPCoordiPtr[instIdx].x
           - initialPrevCoordiUpdateCoef * dCurSLPSumGradsPtr[instIdx].x;
@@ -1293,25 +1147,7 @@ __global__ void updateInitialPrevSLPCoordiKernel(
         getDensityCoordiLayoutInside(
             instDDy[instIdx], preCoordiY, coreLy, coreUy));
     dPrevSLPCoordiPtr[instIdx] = newCoordi;
-  }
-}
-
-void PlacerBase::updateInitialPrevSLPCoordi()
-{
-  const int numThreads = 256;
-  const int numBlocks = (numInsts_ + numThreads - 1) / numThreads;
-  updateInitialPrevSLPCoordiKernel<<<numBlocks, numThreads>>>(
-      numInsts_,
-      bg_.lx(),
-      bg_.ly(),
-      bg_.ux(),
-      bg_.uy(),
-      dInstDDxPtr_,
-      dInstDDyPtr_,
-      npVars_.initialPrevCoordiUpdateCoef,
-      dCurSLPCoordiPtr_,
-      dCurSLPSumGradsPtr_,
-      dPrevSLPCoordiPtr_);
+  });
 }
 
 void splitString(std::string& inputString)

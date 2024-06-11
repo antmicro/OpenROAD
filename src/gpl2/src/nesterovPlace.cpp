@@ -35,6 +35,8 @@
 
 #include "nesterovPlace.h"
 
+#include <Kokkos_Core.hpp>
+
 #include <iomanip>
 #include <iostream>
 #include <sstream>

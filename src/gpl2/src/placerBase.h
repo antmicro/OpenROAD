@@ -714,6 +714,7 @@ class PlacerBase
                       const FloatPoint* curSLPCoordi,
                       const FloatPoint* curSLPSumGrads) const;
 
+ public:  // Public needed for lambda kernels
   void updateGradients(float* wireLengthGradientsX,
                        float* wireLengthGradientsY,
                        float* densityGradientsX,
@@ -725,6 +726,7 @@ class PlacerBase
   void getWireLengthGradientWA(float* wireLengthGradientsX,
                                float* wireLengthGradientsY);
 
+ private:
   void getDensityGradient(float* densityGradientsX, float* densityGradientsY);
 
   float getPhiCoef(float scaledDiffHpwl) const;

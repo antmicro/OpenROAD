@@ -42,6 +42,9 @@
 
 #include "poissonSolver.h"
 
+#include <Kokkos_Core.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
+
 #include <stdio.h>
 
 #include <cmath>
@@ -109,74 +112,14 @@ PoissonSolver::~PoissonSolver()
   freeCUDAKernel();
 }
 
-__global__ void precomputeExpk(cufftComplex* expkM,
-                               cufftComplex* expkN,
-                               const int M,
-                               const int N)
-{
-  const int tID = blockDim.x * blockIdx.x + threadIdx.x;
-
-  if (tID <= M / 2) {
-    int hID = tID;
-    cufftComplex W_h_4M = make_float2(__cosf((float) PI * hID / (2 * M)),
-                                      -__sinf((float) PI * hID / (M * 2)));
-    expkM[hID] = W_h_4M;
-  }
-  if (tID <= N / 2) {
-    int wid = tID;
-    cufftComplex W_w_4N = make_float2(__cosf((float) PI * wid / (2 * N)),
-                                      -__sinf((float) PI * wid / (N * 2)));
-    expkN[wid] = W_w_4N;
-  }
-}
-
-__global__ void precomputeExpkForInverse(cufftComplex* expkM,
-                                         cufftComplex* expkN,
-                                         cufftComplex* expkMN_1,
-                                         cufftComplex* expkMN_2,
-                                         const int M,
-                                         const int N)
-{
-  const int tid = blockDim.x * blockIdx.x + threadIdx.x;
-  if (tid < M) {
-    int hid = tid;
-    cufftComplex W_h_4M = make_float2(__cosf((float) PI * hid / (2 * M)),
-                                      -__sinf((float) PI * hid / (M * 2)));
-    expkM[hid] = W_h_4M;
-    // expkMN_1
-    cufftComplex W_h_4M_offset
-        = make_float2(__cosf((float) PI * (hid + M) / (2 * M)),
-                      -__sinf((float) PI * (hid + M) / (M * 2)));
-    expkMN_1[hid] = W_h_4M;
-    expkMN_1[hid + M] = W_h_4M_offset;
-
-    // expkMN_2
-    W_h_4M = make_float2(-__sinf((float) PI * (hid - (N - 1)) / (M * 2)),
-                         -__cosf((float) PI * (hid - (N - 1)) / (2 * M)));
-
-    W_h_4M_offset
-        = make_float2(-__sinf((float) PI * (hid - (N - 1) + M) / (M * 2)),
-                      -__cosf((float) PI * (hid - (N - 1) + M) / (2 * M)));
-    expkMN_2[hid] = W_h_4M;
-    expkMN_2[hid + M] = W_h_4M_offset;
-  }
-  if (tid <= N / 2) {
-    int wid = tid;
-    cufftComplex W_w_4N = make_float2(__cosf((float) PI * wid / (2 * N)),
-                                      -__sinf((float) PI * wid / (N * 2)));
-    expkN[wid] = W_w_4N;
-  }
-}
-
-__global__ void divideByWSquare(const int binCntX,
+__host__ __device__ void divideByWSquare(const int wID,
+                                const int hID,
+                                const int binCntX,
                                 const int binCntY,
                                 const int binSizeX,
                                 const int binSizeY,
                                 cufftReal* input)
 {
-  const int wID = blockDim.x * blockIdx.x + threadIdx.x;
-  const int hID = blockDim.y * blockIdx.y + threadIdx.y;
-
   if (wID < binCntX && hID < binCntY) {
     int binID = wID + hID * binCntX;
 
@@ -192,39 +135,9 @@ __global__ void divideByWSquare(const int binCntX,
   }
 }
 
-__global__ void multiplyW(const int binCntX,
-                          const int binCntY,
-                          const int binSizeX,
-                          const int binSizeY,
-                          const cufftReal* auv,
-                          cufftReal* inputForX,
-                          cufftReal* inputForY)
-{
-  const int wID = blockDim.x * blockIdx.x + threadIdx.x;
-  const int hID = blockDim.y * blockIdx.y + threadIdx.y;
-
-  if (wID < binCntX && hID < binCntY) {
-    int binID = wID + hID * binCntX;
-
-    float w_u = (2.0 * float(FFT_PI) * wID) / binCntX;
-    float w_v = (2.0 * float(FFT_PI) * hID) / binCntY * binSizeY / binSizeX;
-
-    inputForX[binID] = w_u * auv[binID];
-    inputForY[binID] = w_v * auv[binID];
-  }
-}
-
 void PoissonSolver::solvePoissonPotential(const float* binDensity,
                                           float* potential)
 {
-  int numThread = 16;
-
-  dim3 gridSize((binCntX_ + numThread - 1) / numThread,
-                (binCntY_ + numThread - 1) / numThread,
-                1);
-
-  dim3 blockSize(numThread, numThread, 1);
-
   // Step #1. Compute Coefficient (a_uv)
   dct_2d_fft(binCntY_,
              binCntX_,
@@ -237,8 +150,12 @@ void PoissonSolver::solvePoissonPotential(const float* binDensity,
              d_auv_);
 
   // Step #2. Divide by (w_u^2 + w_v^2)
-  divideByWSquare<<<gridSize, blockSize>>>(
-      binCntX_, binCntY_, binSizeX_, binSizeY_, d_auv_);
+  auto binCntX = binCntX_, binCntY = binCntY_, binSizeX = binSizeX_, binSizeY = binSizeY_;
+  auto d_auv = d_auv_;
+  Kokkos::parallel_for(Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {binCntX_, binCntY_}),
+  KOKKOS_LAMBDA (const int wID, const int hID) {
+    divideByWSquare(hID, wID, binCntX, binCntY, binSizeX, binSizeY, d_auv);
+  });
 
   // Step #3. Compute Potential
   idct_2d_fft(binCntY_,
@@ -259,14 +176,6 @@ void PoissonSolver::solvePoisson(const float* binDensity,
                                  float* electroForceX,
                                  float* electroForceY)
 {
-  int numThread = 16;
-
-  dim3 gridSize((binCntX_ + numThread - 1) / numThread,
-                (binCntY_ + numThread - 1) / numThread,
-                1);
-
-  dim3 blockSize(numThread, numThread, 1);
-
   // Step #1. Compute Coefficient (a_uv)
   dct_2d_fft(binCntY_,
              binCntX_,
@@ -279,8 +188,12 @@ void PoissonSolver::solvePoisson(const float* binDensity,
              d_auv_);
 
   // Step #2. Divide by (w_u^2 + w_v^2)
-  divideByWSquare<<<gridSize, blockSize>>>(
-      binCntX_, binCntY_, binSizeX_, binSizeY_, d_auv_);
+  auto binCntX = binCntX_, binCntY = binCntY_, binSizeX = binSizeX_, binSizeY = binSizeY_;
+  auto d_auv = d_auv_;
+  Kokkos::parallel_for(Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {binCntX_, binCntY_}),
+  KOKKOS_LAMBDA (const int wID, const int hID) {
+    divideByWSquare(hID, wID, binCntX, binCntY, binSizeX, binSizeY, d_auv);
+  });
 
   // Step #3. Compute Potential
   idct_2d_fft(binCntY_,
@@ -296,13 +209,17 @@ void PoissonSolver::solvePoisson(const float* binDensity,
               potential);
 
   // Step #4. Multiply w_u , w_v
-  multiplyW<<<gridSize, blockSize>>>(binCntX_,
-                                     binCntY_,
-                                     binSizeX_,
-                                     binSizeY_,
-                                     d_auv_,
-                                     d_inputForX_,
-                                     d_inputForY_);
+  auto d_inputForX = d_inputForX_, d_inputForY = d_inputForY_;
+  Kokkos::parallel_for(Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {binCntX_, binCntY_}),
+  KOKKOS_LAMBDA (const int wID, const int hID) {
+    int binID = wID + hID * binCntX;
+
+    float w_u = (2.0 * float(FFT_PI) * wID) / binCntX;
+    float w_v = (2.0 * float(FFT_PI) * hID) / binCntY * binSizeY / binSizeX;
+
+    d_inputForX[binID] = w_u * d_auv[binID];
+    d_inputForY[binID] = w_v * d_auv[binID];
+  });
 
   // Step #5. Compute ElectroForceX
   idxst_idct(binCntY_,
@@ -394,19 +311,55 @@ void PoissonSolver::initCUDAKernel()
   CUDA_CHECK(cudaMalloc((void**) &d_inputForY_,
                         binCntX_ * binCntY_ * sizeof(cufftReal)));
 
-  int numThread = 1024;
-  int numBin = std::max(binCntX_, binCntY_);
-  int numBlock = (numBin - 1 + numThread) / numThread;
+  auto M = binCntY_, N = binCntX_;
+  auto expkM = d_expkM_, expkN = d_expkN_;
+  Kokkos::parallel_for(std::max(binCntX_, binCntY_), KOKKOS_LAMBDA (const int tID) {
+    if (tID <= M / 2) {
+      int hID = tID;
+      cufftComplex W_h_4M = make_float2(Kokkos::cosf((float) PI * hID / (2 * M)),
+                                        -Kokkos::sinf((float) PI * hID / (M * 2)));
+      expkM[hID] = W_h_4M;
+    }
+    if (tID <= N / 2) {
+      int wid = tID;
+      cufftComplex W_w_4N = make_float2(Kokkos::cosf((float) PI * wid / (2 * N)),
+                                        -Kokkos::sinf((float) PI * wid / (N * 2)));
+      expkN[wid] = W_w_4N;
+    }
+  });
 
-  precomputeExpk<<<numBlock, numThread>>>(
-      d_expkM_, d_expkN_, binCntY_, binCntX_);
+  auto expkMForInverse = d_expkMForInverse_, expkNForInverse = d_expkNForInverse_;
+  auto expkMN_1 = d_expkMN1_, expkMN_2 = d_expkMN2_;
+  Kokkos::parallel_for(std::max(binCntX_, binCntY_), KOKKOS_LAMBDA (const int tid) {
+      if (tid < M) {
+      int hid = tid;
+      cufftComplex W_h_4M = make_float2(Kokkos::cosf((float) PI * hid / (2 * M)),
+                                        -Kokkos::sinf((float) PI * hid / (M * 2)));
+      expkMForInverse[hid] = W_h_4M;
+      // expkMN_1
+      cufftComplex W_h_4M_offset
+          = make_float2(Kokkos::cosf((float) PI * (hid + M) / (2 * M)),
+                        -Kokkos::sinf((float) PI * (hid + M) / (M * 2)));
+      expkMN_1[hid] = W_h_4M;
+      expkMN_1[hid + M] = W_h_4M_offset;
 
-  precomputeExpkForInverse<<<numBlock, numThread>>>(d_expkMForInverse_,
-                                                    d_expkNForInverse_,
-                                                    d_expkMN1_,
-                                                    d_expkMN2_,
-                                                    binCntY_,
-                                                    binCntX_);
+      // expkMN_2
+      W_h_4M = make_float2(-Kokkos::sinf((float) PI * (hid - (N - 1)) / (M * 2)),
+                           -Kokkos::cosf((float) PI * (hid - (N - 1)) / (2 * M)));
+
+      W_h_4M_offset
+          = make_float2(-Kokkos::sinf((float) PI * (hid - (N - 1) + M) / (M * 2)),
+                        -Kokkos::cosf((float) PI * (hid - (N - 1) + M) / (2 * M)));
+      expkMN_2[hid] = W_h_4M;
+      expkMN_2[hid + M] = W_h_4M_offset;
+    }
+    if (tid <= N / 2) {
+      int wid = tid;
+      cufftComplex W_w_4N = make_float2(Kokkos::cosf((float) PI * wid / (2 * N)),
+                                        -Kokkos::sinf((float) PI * wid / (N * 2)));
+      expkNForInverse[wid] = W_w_4N;
+    }
+  }); 
 
   cufftPlan2d(&plan_, binCntY_, binCntX_, CUFFT_R2C);
   cufftPlan2d(&planInverse_, binCntY_, binCntX_, CUFFT_C2R);

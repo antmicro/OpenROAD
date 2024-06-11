@@ -70,15 +70,15 @@ class PoissonSolver
   // Compute Potential Only (not Electric Force) the row-major order
   void solvePoissonPotential(const float* binDensity, float* potential);
 
+  // device memory management
+  void initCUDAKernel();
+  void freeCUDAKernel();
+
  private:
   int binCntX_;
   int binCntY_;
   int binSizeX_;
   int binSizeY_;
-
-  // device memory management
-  void initCUDAKernel();
-  void freeCUDAKernel();
 
   cufftHandle plan_;
   cufftHandle planInverse_;
