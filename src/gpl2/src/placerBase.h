@@ -49,6 +49,8 @@
 #include <string>
 #include <vector>
 
+#include <Kokkos_Core.hpp>
+
 #include "db_sta/dbNetwork.hh"
 #include "densityOp.h"
 #include "placerObjects.h"
@@ -211,10 +213,10 @@ class PlacerBaseCommon
   // Following functions are designed for nestrovPlace
   void updateWireLengthForce(float wlCoeffX, float wlCoeffY);
   void updatePinLocation();
-  int* dInstDCxPtr() const { return dInstDCxPtr_; }
-  int* dInstDCyPtr() const { return dInstDCyPtr_; }
-  float* dWLGradXPtr() const { return dWLGradXPtr_; }
-  float* dWLGradYPtr() const { return dWLGradYPtr_; }
+  int* dInstDCxPtr() const { return dInstDCx_.data(); }
+  int* dInstDCyPtr() const { return dInstDCy_.data(); }
+  float* dWLGradXPtr() const { return dWLGradX_.data(); }
+  float* dWLGradYPtr() const { return dWLGradY_.data(); }
   int64_t hpwl() const;
 
   void updateDB();
@@ -224,7 +226,7 @@ class PlacerBaseCommon
   bool getClusterFlag() const { return clusterFlag_; }
 
   // This is called during nesterovPlace::init
-  void initCUDAKernel();  // allocate memory on device
+  void initDeviceMemory();  // allocate memory on device
 
   void updateVirtualWeightFactor(int iter);
   void reset();
@@ -277,21 +279,15 @@ class PlacerBaseCommon
   int64_t stdCellInstsArea_;
 
   // placable instances (no filler, no nonplace instances)
-  thrust::device_vector<int> dInstDCx_;
-  thrust::device_vector<int> dInstDCy_;
-  thrust::host_vector<int> hInstDCx_;
-  thrust::host_vector<int> hInstDCy_;
-
-  int* dInstDCxPtr_;
-  int* dInstDCyPtr_;
+  Kokkos::View<int*> dInstDCx_;
+  Kokkos::View<int*> dInstDCy_;
+  Kokkos::View<int*>::HostMirror hInstDCx_;
+  Kokkos::View<int*>::HostMirror hInstDCy_;
 
   float virtualWeightFactor_ = 0.0;
   float initVirtualWeightFactor_ = 0.0;
-  thrust::device_vector<float> dWLGradX_;
-  thrust::device_vector<float> dWLGradY_;
-
-  float* dWLGradXPtr_;
-  float* dWLGradYPtr_;
+  Kokkos::View<float*> dWLGradX_;
+  Kokkos::View<float*> dWLGradY_;
 
   bool clusterFlag_ = false;  // Create clustered netlist
   bool clusterConstraintFlag_
@@ -302,9 +298,6 @@ class PlacerBaseCommon
   void init();
   // void reset();
   void initClusterNetlist();
-
-  // CUDA related functions
-  void freeCUDAKernel();
 
   // Dataflow Information
   int largeNetThreshold_ = 50;  // threshold for large nets
@@ -416,7 +409,6 @@ class PlacerBase
              std::shared_ptr<PlacerBaseCommon> pbCommon,
              utl::Logger* log,
              odb::dbGroup* group = nullptr);
-  ~PlacerBase();
 
   // Basic accessors
   // insts_ = placeInsts_ + fillerInsts_
@@ -481,7 +473,7 @@ class PlacerBase
 
   // Functions called by NesterovPlace
   // for nesterovplace initialization
-  void initCUDAKernel();  // allocate memory on device
+  void initDeviceMemory();  // allocate memory on device
 
   void setNpVars(NesterovPlaceVars npVars) { npVars_ = npVars; }
   void initDensity1();
@@ -582,26 +574,13 @@ class PlacerBase
   int numFillerInsts_;
 
   // variables
-  thrust::device_vector<int> dPlaceInstIds_;
-  int* dPlaceInstIdsPtr_;
-
-  thrust::device_vector<int> dInstDDx_;
-  thrust::device_vector<int> dInstDDy_;
-
-  int* dInstDDxPtr_;
-  int* dInstDDyPtr_;
-
-  thrust::device_vector<int> dInstDCx_;
-  thrust::device_vector<int> dInstDCy_;
-
-  int* dInstDCxPtr_;
-  int* dInstDCyPtr_;
-
-  thrust::device_vector<float> dWireLengthPrecondi_;
-  float* dWireLengthPrecondiPtr_;
-
-  thrust::device_vector<float> dDensityPrecondi_;
-  float* dDensityPrecondiPtr_;
+  Kokkos::View<int*> dPlaceInstIds_;
+  Kokkos::View<int*> dInstDDx_;
+  Kokkos::View<int*> dInstDDy_;
+  Kokkos::View<int*> dInstDCx_;
+  Kokkos::View<int*> dInstDCy_;
+  Kokkos::View<float*> dWireLengthPrecondi_;
+  Kokkos::View<float*> dDensityPrecondi_;
 
   // Following variables belong to NesterovBase
   // ***************************************************
@@ -639,75 +618,34 @@ class PlacerBase
   float wireLengthGradSum_;
   float densityGradSum_;
 
-  // density gradient
-  thrust::device_vector<float> dDensityGradX_;
-  thrust::device_vector<float> dDensityGradY_;
-  thrust::device_vector<float> dWireLengthGradX_;
-  thrust::device_vector<float> dWireLengthGradY_;
-
-  float* dDensityGradXPtr_;
-  float* dDensityGradYPtr_;
-  float* dWireLengthGradXPtr_;
-  float* dWireLengthGradYPtr_;
-
   // SLP related variables
-  thrust::device_vector<FloatPoint> dCurSLPCoordi_;
-  thrust::device_vector<float> dCurSLPWireLengthGradX_;
-  thrust::device_vector<float> dCurSLPWireLengthGradY_;
-  thrust::device_vector<float> dCurSLPDensityGradX_;
-  thrust::device_vector<float> dCurSLPDensityGradY_;
-  thrust::device_vector<FloatPoint> dCurSLPSumGrads_;
+  Kokkos::View<FloatPoint*> dCurSLPCoordi_;
+  Kokkos::View<float*> dCurSLPWireLengthGradX_;
+  Kokkos::View<float*> dCurSLPWireLengthGradY_;
+  Kokkos::View<float*> dCurSLPDensityGradX_;
+  Kokkos::View<float*> dCurSLPDensityGradY_;
+  Kokkos::View<FloatPoint*> dCurSLPSumGrads_;
 
-  thrust::device_vector<FloatPoint> dPrevSLPCoordi_;
-  thrust::device_vector<float> dPrevSLPWireLengthGradX_;
-  thrust::device_vector<float> dPrevSLPWireLengthGradY_;
-  thrust::device_vector<float> dPrevSLPDensityGradX_;
-  thrust::device_vector<float> dPrevSLPDensityGradY_;
-  thrust::device_vector<FloatPoint> dPrevSLPSumGrads_;
+  Kokkos::View<FloatPoint*> dPrevSLPCoordi_;
+  Kokkos::View<float*> dPrevSLPWireLengthGradX_;
+  Kokkos::View<float*> dPrevSLPWireLengthGradY_;
+  Kokkos::View<float*> dPrevSLPDensityGradX_;
+  Kokkos::View<float*> dPrevSLPDensityGradY_;
+  Kokkos::View<FloatPoint*> dPrevSLPSumGrads_;
 
-  thrust::device_vector<FloatPoint> dNextSLPCoordi_;
-  thrust::device_vector<float> dNextSLPWireLengthGradX_;
-  thrust::device_vector<float> dNextSLPWireLengthGradY_;
-  thrust::device_vector<float> dNextSLPDensityGradX_;
-  thrust::device_vector<float> dNextSLPDensityGradY_;
-  thrust::device_vector<FloatPoint> dNextSLPSumGrads_;
+  Kokkos::View<FloatPoint*> dNextSLPCoordi_;
+  Kokkos::View<float*> dNextSLPWireLengthGradX_;
+  Kokkos::View<float*> dNextSLPWireLengthGradY_;
+  Kokkos::View<float*> dNextSLPDensityGradX_;
+  Kokkos::View<float*> dNextSLPDensityGradY_;
+  Kokkos::View<FloatPoint*> dNextSLPSumGrads_;
 
-  thrust::device_vector<FloatPoint> dCurCoordi_;
-  thrust::device_vector<FloatPoint> dNextCoordi_;
+  Kokkos::View<FloatPoint*> dCurCoordi_;
+  Kokkos::View<FloatPoint*> dNextCoordi_;
 
   // For test
-  thrust::device_vector<float> dSumGradsX_;
-  thrust::device_vector<float> dSumGradsY_;
-
-  float* dSumGradsXPtr_;
-  float* dSumGradsYPtr_;
-
-  FloatPoint* dCurSLPCoordiPtr_;
-  float* dCurSLPWireLengthGradXPtr_;
-  float* dCurSLPWireLengthGradYPtr_;
-  float* dCurSLPDensityGradXPtr_;
-  float* dCurSLPDensityGradYPtr_;
-  FloatPoint* dCurSLPSumGradsPtr_;
-
-  FloatPoint* dPrevSLPCoordiPtr_;
-  float* dPrevSLPWireLengthGradXPtr_;
-  float* dPrevSLPWireLengthGradYPtr_;
-  float* dPrevSLPDensityGradXPtr_;
-  float* dPrevSLPDensityGradYPtr_;
-  FloatPoint* dPrevSLPSumGradsPtr_;
-
-  FloatPoint* dNextSLPCoordiPtr_;
-  float* dNextSLPWireLengthGradXPtr_;
-  float* dNextSLPWireLengthGradYPtr_;
-  float* dNextSLPDensityGradXPtr_;
-  float* dNextSLPDensityGradYPtr_;
-  FloatPoint* dNextSLPSumGradsPtr_;
-
-  FloatPoint* dCurCoordiPtr_;
-  FloatPoint* dNextCoordiPtr_;
-
-  // device memory management
-  void freeCUDAKernel();
+  Kokkos::View<float*> dSumGradsX_;
+  Kokkos::View<float*> dSumGradsY_;
 
   float getStepLength(const FloatPoint* prevSLPCoordi,
                       const FloatPoint* prevSLPSumGrads,

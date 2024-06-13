@@ -35,8 +35,6 @@
 
 #pragma once
 
-#include <thrust/device_vector.h>
-
 #include <memory>
 
 #include "placerBase.h"
@@ -55,8 +53,6 @@ class DensityOp
  public:
   DensityOp();
   DensityOp(PlacerBase* pb);
-
-  ~DensityOp();
 
   void getDensityGradient(float* densityGradientsX, float* densityGradientsY);
 
@@ -86,39 +82,22 @@ class DensityOp
   int coreUy_;
 
   // We need to store all the statictis information for each bin
-  thrust::device_vector<int> dBinLx_;
-  thrust::device_vector<int> dBinLy_;
-  thrust::device_vector<int> dBinUx_;
-  thrust::device_vector<int> dBinUy_;
-  thrust::device_vector<float> dBinTargetDensity_;
+  Kokkos::View<int*> dBinLx_;
+  Kokkos::View<int*> dBinLy_;
+  Kokkos::View<int*> dBinUx_;
+  Kokkos::View<int*> dBinUy_;
+  Kokkos::View<float*> dBinTargetDensity_;
 
-  int* dBinLxPtr_;
-  int* dBinLyPtr_;
-  int* dBinUxPtr_;
-  int* dBinUyPtr_;
-  float* dBinTargetDensityPtr_;
+  Kokkos::View<int64_t_cu*> dBinNonPlaceArea_;
+  Kokkos::View<int64_t_cu*> dBinInstPlacedArea_;
+  Kokkos::View<int64_t_cu*> dBinFillerArea_;
+  Kokkos::View<float*> dBinScaledArea_;
+  Kokkos::View<float*> dBinOverflowArea_;
 
-  thrust::device_vector<int64_t_cu> dBinNonPlaceArea_;
-  thrust::device_vector<int64_t_cu> dBinInstPlacedArea_;
-  thrust::device_vector<int64_t_cu> dBinFillerArea_;
-  thrust::device_vector<float> dBinScaledArea_;
-  thrust::device_vector<float> dBinOverflowArea_;
-
-  int64_t_cu* dBinNonPlaceAreaPtr_;
-  int64_t_cu* dBinInstPlacedAreaPtr_;
-  int64_t_cu* dBinFillerAreaPtr_;
-  float* dBinScaledAreaPtr_;
-  float* dBinOverflowAreaPtr_;
-
-  thrust::device_vector<float> dBinDensity_;
-  thrust::device_vector<float> dBinElectroPhi_;
-  thrust::device_vector<float> dBinElectroForceX_;
-  thrust::device_vector<float> dBinElectroForceY_;
-
-  float* dBinDensityPtr_;
-  float* dBinElectroPhiPtr_;
-  float* dBinElectroForceXPtr_;
-  float* dBinElectroForceYPtr_;
+  Kokkos::View<float*> dBinDensity_;
+  Kokkos::View<float*> dBinElectroPhi_;
+  Kokkos::View<float*> dBinElectroForceX_;
+  Kokkos::View<float*> dBinElectroForceY_;
 
   // placeable instance information
   int numInsts_;  // placeInsts_ + fillerInsts_
@@ -128,28 +107,18 @@ class DensityOp
   float sumOverflowUnscaled_;
 
   // instance information
-  thrust::device_vector<int> dGCellDensityWidth_;
-  thrust::device_vector<int> dGCellDensityHeight_;
-  thrust::device_vector<int> dGCellDCx_;
-  thrust::device_vector<int> dGCellDCy_;
+  Kokkos::View<int*> dGCellDensityWidth_;
+  Kokkos::View<int*> dGCellDensityHeight_;
+  Kokkos::View<int*> dGCellDCx_;
+  Kokkos::View<int*> dGCellDCy_;
 
   // We modify the density scale for macro
-  thrust::device_vector<float> dGCellDensityScale_;
-  thrust::device_vector<bool> dGCellIsFiller_;
-  thrust::device_vector<bool> dGCellIsMacro_;
-
-  int* dGCellDensityWidthPtr_;
-  int* dGCellDensityHeightPtr_;
-  int* dGCellDCxPtr_;
-  int* dGCellDCyPtr_;
-
-  float* dGCellDensityScalePtr_;
-  bool* dGCellIsFillerPtr_;
-  bool* dGCellIsMacroPtr_;
+  Kokkos::View<float*> dGCellDensityScale_;
+  Kokkos::View<bool*> dGCellIsFiller_;
+  Kokkos::View<bool*> dGCellIsMacro_;
 
   // device memory management
-  void initCUDAKernel();
-  void freeCUDAKernel();
+  void initDeviceMemory();
 };
 
 }  // namespace gpl2

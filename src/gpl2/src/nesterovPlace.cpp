@@ -95,9 +95,9 @@ NesterovPlace::~NesterovPlace()
 
 void NesterovPlace::init()
 {
-  pbc_->initCUDAKernel();
+  pbc_->initDeviceMemory();
   for (auto& pb : pbVec_) {
-    pb->initCUDAKernel();
+    pb->initDeviceMemory();
   }
 
   // for_each nesterovbase call init

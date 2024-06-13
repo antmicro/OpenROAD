@@ -40,13 +40,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
-#include <thrust/functional.h>
-#include <thrust/host_vector.h>
-#include <thrust/iterator/counting_iterator.h>
-#include <thrust/iterator/transform_iterator.h>
-
 #include <climits>
 #include <cmath>
 #include <vector>
@@ -63,40 +56,40 @@ WirelengthOp::WirelengthOp()
       numPins_(0),
       numNets_(0),
       numPlaceInsts_(0),
-      dInstPinIdxPtr_(nullptr),
-      dInstPinPosPtr_(nullptr),
-      dPinInstIdPtr_(nullptr),
-      dNetPinIdxPtr_(nullptr),
-      dNetPinPosPtr_(nullptr),
-      dPinNetIdPtr_(nullptr),
+      dInstPinIdx_(nullptr),
+      dInstPinPos_(nullptr),
+      dPinInstId_(nullptr),
+      dNetPinIdx_(nullptr),
+      dNetPinPos_(nullptr),
+      dPinNetId_(nullptr),
       // pin information
-      dPinXPtr_(nullptr),
-      dPinYPtr_(nullptr),
-      dPinOffsetXPtr_(nullptr),
-      dPinOffsetYPtr_(nullptr),
-      dPinGradXPtr_(nullptr),
-      dPinGradYPtr_(nullptr),
-      dPinAPosXPtr_(nullptr),
-      dPinAPosYPtr_(nullptr),
-      dPinANegXPtr_(nullptr),
-      dPinANegYPtr_(nullptr),
+      dPinX_(nullptr),
+      dPinY_(nullptr),
+      dPinOffsetX_(nullptr),
+      dPinOffsetY_(nullptr),
+      dPinGradX_(nullptr),
+      dPinGradY_(nullptr),
+      dPinAPosX_(nullptr),
+      dPinAPosY_(nullptr),
+      dPinANegX_(nullptr),
+      dPinANegY_(nullptr),
       // net information
-      dNetWidthPtr_(nullptr),
-      dNetHeightPtr_(nullptr),
-      dNetLxPtr_(nullptr),
-      dNetLyPtr_(nullptr),
-      dNetUxPtr_(nullptr),
-      dNetUyPtr_(nullptr),
-      dNetWeightPtr_(nullptr),
-      dNetVirtualWeightPtr_(nullptr),
-      dNetBPosXPtr_(nullptr),
-      dNetBPosYPtr_(nullptr),
-      dNetBNegXPtr_(nullptr),
-      dNetBNegYPtr_(nullptr),
-      dNetCPosXPtr_(nullptr),
-      dNetCPosYPtr_(nullptr),
-      dNetCNegXPtr_(nullptr),
-      dNetCNegYPtr_(nullptr)
+      dNetWidth_(nullptr),
+      dNetHeight_(nullptr),
+      dNetLx_(nullptr),
+      dNetLy_(nullptr),
+      dNetUx_(nullptr),
+      dNetUy_(nullptr),
+      dNetWeight_(nullptr),
+      dNetVirtualWeight_(nullptr),
+      dNetBPosX_(nullptr),
+      dNetBPosY_(nullptr),
+      dNetBNegX_(nullptr),
+      dNetBNegY_(nullptr),
+      dNetCPosX_(nullptr),
+      dNetCPosY_(nullptr),
+      dNetCNegX_(nullptr),
+      dNetCNegY_(nullptr)
 {
 }
 
@@ -112,31 +105,43 @@ WirelengthOp::WirelengthOp(PlacerBaseCommon* pbc) : WirelengthOp()
   numPins_ = pbc_->numPins();
   numNets_ = pbc_->numNets();
 
-  initCUDAKernel();
+  initDeviceMemory();
   logger_->report("[WirelengthOp] Initialization Succeed.");
-}
-
-WirelengthOp::~WirelengthOp()
-{
-  freeCUDAKernel();
 }
 
 /////////////////////////////////////////////////////////
 // Class WirelengthOp
-void WirelengthOp::initCUDAKernel()
+void WirelengthOp::initDeviceMemory()
 {
+  size_t instPinCount = 0;
+  size_t netPinCount = 0;
+  for (auto& inst : pbc_->insts()) {
+    instPinCount += inst->numPins();
+  }
+  for (auto& net : pbc_->nets()) {
+    netPinCount += net->numPins();
+  }
+
+  // Allocate memory on the device side
+  dInstPinIdx_ = Kokkos::View<int*>("InstPinIdx", instPinCount);
+  auto hInstPinIdx = Kokkos::create_mirror_view(dInstPinIdx_);
+  dInstPinPos_ = Kokkos::View<int*>("InstPinPos", numInsts_ + 1);
+  auto hInstPinPos = Kokkos::create_mirror_view(dInstPinPos_);
+  dPinInstId_ = Kokkos::View<int*>("PinInstId", numPins_);
+  auto hPinInstId = Kokkos::create_mirror_view(dPinInstId_);
+
+  dNetPinIdx_ = Kokkos::View<int*>("NetPinIdx", netPinCount);
+  auto hNetPinIdx = Kokkos::create_mirror_view(dNetPinIdx_);
+  dNetWeight_ = Kokkos::View<float*>("NetWeight", numNets_);
+  auto hNetWeight = Kokkos::create_mirror_view(dNetWeight_);
+  dNetVirtualWeight_ = Kokkos::View<float*>("NetVirtualWeight", numNets_);
+  auto hNetVirtualWeight = Kokkos::create_mirror_view(dNetVirtualWeight_);
+  dNetPinPos_ = Kokkos::View<int*>("NetPinPos", numNets_ + 1);
+  auto hNetPinPos = Kokkos::create_mirror_view(dNetPinPos_);
+  dPinNetId_ = Kokkos::View<int*>("PinNetId", numPins_);
+  auto hPinNetId = Kokkos::create_mirror_view(dPinNetId_);
+
   // Initialize related information
-  std::vector<int> hInstPinIdx;
-  thrust::host_vector<int> hInstPinPos(numInsts_ + 1);
-  thrust::host_vector<int> hPinInstId(numPins_);
-
-  std::vector<int> hNetPinIdx;
-  thrust::host_vector<int> hNetPinPos(numNets_ + 1);
-  thrust::host_vector<int> hPinNetId(numPins_);
-
-  thrust::host_vector<float> hNetWeight(numNets_);
-  thrust::host_vector<float> hNetVirtualWeight(numNets_);
-
   int pinIdx = 0;
   for (auto pin : pbc_->pins()) {
     hPinInstId[pinIdx] = pin->instId();
@@ -145,20 +150,22 @@ void WirelengthOp::initCUDAKernel()
   }
 
   int instIdx = 0;
+  int instPinIdx = 0;
   hInstPinPos[0] = 0;
   for (auto& inst : pbc_->insts()) {
     for (auto& pin : inst->pins()) {
-      hInstPinIdx.push_back(pin->pinId());
+      hInstPinIdx[instPinIdx++] = pin->pinId();
     }
     hInstPinPos[instIdx + 1] = hInstPinPos[instIdx] + inst->numPins();
     instIdx++;
   }
 
   int netIdx = 0;
+  int netPinIdx = 0;
   hNetPinPos[0] = 0;
   for (auto& net : pbc_->nets()) {
     for (auto& pin : net->pins()) {
-      hNetPinIdx.push_back(pin->pinId());
+      hNetPinIdx[netPinIdx++] = pin->pinId();
     }
 
     hNetWeight[netIdx] = net->weight();
@@ -167,36 +174,69 @@ void WirelengthOp::initCUDAKernel()
     netIdx++;
   }
 
-  // Allocate memory on the device side
-  dInstPinIdxPtr_ = setThrustVector<int>(hInstPinIdx.size(), dInstPinIdx_);
-  dInstPinPosPtr_ = setThrustVector<int>(numInsts_ + 1, dInstPinPos_);
-  dPinInstIdPtr_ = setThrustVector<int>(numPins_, dPinInstId_);
-
-  dNetPinIdxPtr_ = setThrustVector<int>(hNetPinIdx.size(), dNetPinIdx_);
-  dNetWeightPtr_ = setThrustVector<float>(numNets_, dNetWeight_);
-  dNetVirtualWeightPtr_ = setThrustVector<float>(numNets_, dNetVirtualWeight_);
-  dNetPinPosPtr_ = setThrustVector<int>(numNets_ + 1, dNetPinPos_);
-  dPinNetIdPtr_ = setThrustVector<int>(numPins_, dPinNetId_);
-
   // copy from host to device
-  thrust::copy(hInstPinIdx.begin(), hInstPinIdx.end(), dInstPinIdx_.begin());
-  thrust::copy(hInstPinPos.begin(), hInstPinPos.end(), dInstPinPos_.begin());
-  thrust::copy(hPinInstId.begin(), hPinInstId.end(), dPinInstId_.begin());
+  Kokkos::deep_copy(dInstPinIdx_, hInstPinIdx);
+  Kokkos::deep_copy(dInstPinPos_, hInstPinPos);
+  Kokkos::deep_copy(dPinInstId_, hPinInstId);
 
-  thrust::copy(hNetWeight.begin(), hNetWeight.end(), dNetWeight_.begin());
-  thrust::copy(hNetVirtualWeight.begin(),
-               hNetVirtualWeight.end(),
-               dNetVirtualWeight_.begin());
+  Kokkos::deep_copy(dNetWeight_, hNetWeight);
+  Kokkos::deep_copy(dNetVirtualWeight_, hNetVirtualWeight);
 
-  thrust::copy(hNetPinIdx.begin(), hNetPinIdx.end(), dNetPinIdx_.begin());
-  thrust::copy(hNetPinPos.begin(), hNetPinPos.end(), dNetPinPos_.begin());
-  thrust::copy(hPinNetId.begin(), hPinNetId.end(), dPinNetId_.begin());
+  Kokkos::deep_copy(dNetPinIdx_, hNetPinIdx);
+  Kokkos::deep_copy(dNetPinPos_, hNetPinPos);
+  Kokkos::deep_copy(dPinNetId_, hPinNetId);
 
-  // Check the pin information
-  thrust::host_vector<int> hPinX(numPins_);
-  thrust::host_vector<int> hPinY(numPins_);
-  thrust::host_vector<int> hPinOffsetX(numPins_);
-  thrust::host_vector<int> hPinOffsetY(numPins_);
+  // allocate memory on the device side
+  dPinX_ = Kokkos::View<int*>("PinX", numPins_);
+  auto hPinX = Kokkos::create_mirror_view(dPinX_);
+  dPinY_ = Kokkos::View<int*>("PinY", numPins_);
+  auto hPinY = Kokkos::create_mirror_view(dPinY_);
+  dPinOffsetX_ = Kokkos::View<int*>("PinOffsetX", numPins_);
+  auto hPinOffsetX = Kokkos::create_mirror_view(dPinOffsetX_);
+  dPinOffsetY_ = Kokkos::View<int*>("PinOffsetY", numPins_);
+  auto hPinOffsetY = Kokkos::create_mirror_view(dPinOffsetY_);
+  dPinGradX_ = Kokkos::View<float*>("PinGradX", numPins_);
+  auto hPinGradX = Kokkos::create_mirror_view(dPinGradX_);
+  dPinGradY_ = Kokkos::View<float*>("PinGradY", numPins_);
+  auto hPinGradY = Kokkos::create_mirror_view(dPinGradY_);
+
+  dPinAPosX_ = Kokkos::View<float*>("PinAPosX", numPins_);
+  auto hPinAPosX = Kokkos::create_mirror_view(dPinAPosX_);
+  dPinANegX_ = Kokkos::View<float*>("PinANegX", numPins_);
+  auto hPinANegX = Kokkos::create_mirror_view(dPinANegX_);
+  dPinAPosY_ = Kokkos::View<float*>("PinAPosY", numPins_);
+  auto hPinAPosY = Kokkos::create_mirror_view(dPinAPosY_);
+  dPinANegY_ = Kokkos::View<float*>("PinANegY", numPins_);
+  auto hPinANegY = Kokkos::create_mirror_view(dPinANegY_);
+  dNetBPosX_ = Kokkos::View<float*>("NetBPosX", numNets_);
+  auto hNetBPosX = Kokkos::create_mirror_view(dNetBPosX_);
+  dNetBNegX_ = Kokkos::View<float*>("NetBNegX", numNets_);
+  auto hNetBNegX = Kokkos::create_mirror_view(dNetBNegX_);
+  dNetBPosY_ = Kokkos::View<float*>("NetBPosY", numNets_);
+  auto hNetBPosY = Kokkos::create_mirror_view(dNetBPosY_);
+  dNetBNegY_ = Kokkos::View<float*>("NetBNegY", numNets_);
+  auto hNetBNegY = Kokkos::create_mirror_view(dNetBNegY_);
+  dNetCPosX_ = Kokkos::View<float*>("NetCPosX", numNets_);
+  auto hNetCPosX = Kokkos::create_mirror_view(dNetCPosX_);
+  dNetCNegX_ = Kokkos::View<float*>("NetCNegX", numNets_);
+  auto hNetCNegX = Kokkos::create_mirror_view(dNetCNegX_);
+  dNetCPosY_ = Kokkos::View<float*>("NetCPosY", numNets_);
+  auto hNetCPosY = Kokkos::create_mirror_view(dNetCPosY_);
+  dNetCNegY_ = Kokkos::View<float*>("NetCNegY", numNets_);
+  auto hNetCNegY = Kokkos::create_mirror_view(dNetCNegY_);
+
+  dNetLx_ = Kokkos::View<int*>("NetLx", numNets_);
+  auto hNetLx = Kokkos::create_mirror_view(dNetLx_);
+  dNetLy_ = Kokkos::View<int*>("NetLy", numNets_);
+  auto hNetLy = Kokkos::create_mirror_view(dNetLy_);
+  dNetUx_ = Kokkos::View<int*>("NetUx", numNets_);
+  auto hNetUx = Kokkos::create_mirror_view(dNetUx_);
+  dNetUy_ = Kokkos::View<int*>("NetUy", numNets_);
+  auto hNetUy = Kokkos::create_mirror_view(dNetUy_);
+  dNetWidth_ = Kokkos::View<int*>("NetWidth", numNets_);
+  auto hNetWidth = Kokkos::create_mirror_view(dNetWidth_);
+  dNetHeight_ = Kokkos::View<int*>("NetHeight", numNets_);
+  auto hNetHeight = Kokkos::create_mirror_view(dNetHeight_);
 
   // This is for fixed instances
   for (auto& pin : pbc_->pins()) {
@@ -207,117 +247,42 @@ void WirelengthOp::initCUDAKernel()
     hPinOffsetY[pinId] = pin->offsetCy();
   }
 
-  // allocate memory on the device side
-  dPinXPtr_ = setThrustVector<int>(numPins_, dPinX_);
-  dPinYPtr_ = setThrustVector<int>(numPins_, dPinY_);
-  dPinOffsetXPtr_ = setThrustVector<int>(numPins_, dPinOffsetX_);
-  dPinOffsetYPtr_ = setThrustVector<int>(numPins_, dPinOffsetY_);
-  dPinGradXPtr_ = setThrustVector<float>(numPins_, dPinGradX_);
-  dPinGradYPtr_ = setThrustVector<float>(numPins_, dPinGradY_);
-
-  dPinAPosXPtr_ = setThrustVector<float>(numPins_, dPinAPosX_);
-  dPinANegXPtr_ = setThrustVector<float>(numPins_, dPinANegX_);
-  dPinAPosYPtr_ = setThrustVector<float>(numPins_, dPinAPosY_);
-  dPinANegYPtr_ = setThrustVector<float>(numPins_, dPinANegY_);
-  dNetBPosXPtr_ = setThrustVector<float>(numNets_, dNetBPosX_);
-  dNetBNegXPtr_ = setThrustVector<float>(numNets_, dNetBNegX_);
-  dNetBPosYPtr_ = setThrustVector<float>(numNets_, dNetBPosY_);
-  dNetBNegYPtr_ = setThrustVector<float>(numNets_, dNetBNegY_);
-  dNetCPosXPtr_ = setThrustVector<float>(numNets_, dNetCPosX_);
-  dNetCNegXPtr_ = setThrustVector<float>(numNets_, dNetCNegX_);
-  dNetCPosYPtr_ = setThrustVector<float>(numNets_, dNetCPosY_);
-  dNetCNegYPtr_ = setThrustVector<float>(numNets_, dNetCNegY_);
-
-  dNetLxPtr_ = setThrustVector<int>(numNets_, dNetLx_);
-  dNetLyPtr_ = setThrustVector<int>(numNets_, dNetLy_);
-  dNetUxPtr_ = setThrustVector<int>(numNets_, dNetUx_);
-  dNetUyPtr_ = setThrustVector<int>(numNets_, dNetUy_);
-  dNetWidthPtr_ = setThrustVector<int>(numNets_, dNetWidth_);
-  dNetHeightPtr_ = setThrustVector<int>(numNets_, dNetHeight_);
-
   // copy from host to device
-  thrust::copy(hPinX.begin(), hPinX.end(), dPinX_.begin());
-  thrust::copy(hPinY.begin(), hPinY.end(), dPinY_.begin());
-  thrust::copy(hPinOffsetX.begin(), hPinOffsetX.end(), dPinOffsetX_.begin());
-  thrust::copy(hPinOffsetY.begin(), hPinOffsetY.end(), dPinOffsetY_.begin());
-}
-
-void WirelengthOp::freeCUDAKernel()
-{
-  numInsts_ = 0;
-  numPins_ = 0;
-  numNets_ = 0;
-  numPlaceInsts_ = 0;
-
-  pbc_ = nullptr;
-  logger_ = nullptr;
-
-  dInstPinIdxPtr_ = nullptr;
-  dInstPinPosPtr_ = nullptr;
-  dPinInstIdPtr_ = nullptr;
-
-  dNetPinIdxPtr_ = nullptr;
-  dNetPinPosPtr_ = nullptr;
-  dPinNetIdPtr_ = nullptr;
-
-  dPinXPtr_ = nullptr;
-  dPinYPtr_ = nullptr;
-  dPinOffsetXPtr_ = nullptr;
-  dPinOffsetYPtr_ = nullptr;
-  dPinGradXPtr_ = nullptr;
-  dPinGradYPtr_ = nullptr;
-  dPinAPosXPtr_ = nullptr;
-  dPinANegXPtr_ = nullptr;
-  dPinAPosYPtr_ = nullptr;
-  dPinANegYPtr_ = nullptr;
-
-  dNetWidthPtr_ = nullptr;
-  dNetHeightPtr_ = nullptr;
-  dNetLxPtr_ = nullptr;
-  dNetLyPtr_ = nullptr;
-  dNetUxPtr_ = nullptr;
-  dNetUyPtr_ = nullptr;
-  dNetWeightPtr_ = nullptr;
-  dNetVirtualWeightPtr_ = nullptr;
-  dNetBPosXPtr_ = nullptr;
-  dNetBNegXPtr_ = nullptr;
-  dNetBPosYPtr_ = nullptr;
-  dNetBNegYPtr_ = nullptr;
-  dNetCPosXPtr_ = nullptr;
-  dNetCNegXPtr_ = nullptr;
-  dNetCPosYPtr_ = nullptr;
-  dNetCNegYPtr_ = nullptr;
+  Kokkos::deep_copy(dPinX_, hPinX);
+  Kokkos::deep_copy(dPinY_, hPinY);
+  Kokkos::deep_copy(dPinOffsetX_, hPinOffsetX);
+  Kokkos::deep_copy(dPinOffsetY_, hPinOffsetY);
 }
 
 void WirelengthOp::updatePinLocation(const int* instDCx, const int* instDCy)
 {
-  auto dInstPinPosPtr = dInstPinPosPtr_, dInstPinIdxPtr = dInstPinIdxPtr_, dPinXPtr = dPinXPtr_, dPinYPtr = dPinYPtr_,
-       dPinOffsetXPtr = dPinOffsetXPtr_, dPinOffsetYPtr = dPinOffsetYPtr_;
+  auto dInstPinPos = dInstPinPos_, dInstPinIdx = dInstPinIdx_, dPinX = dPinX_, dPinY = dPinY_,
+       dPinOffsetX = dPinOffsetX_, dPinOffsetY = dPinOffsetY_;
   Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instId) {
-    const int pinStart = dInstPinPosPtr[instId];
-    const int pinEnd = dInstPinPosPtr[instId + 1];
+    const int pinStart = dInstPinPos[instId];
+    const int pinEnd = dInstPinPos[instId + 1];
     const float instDCxVal = instDCx[instId];
     const float instDCyVal = instDCy[instId];
     for (int pinId = pinStart; pinId < pinEnd; ++pinId) {
-      const int pinIdx = dInstPinIdxPtr[pinId];
-      dPinXPtr[pinIdx] = instDCxVal + dPinOffsetXPtr[pinIdx];
-      dPinYPtr[pinIdx] = instDCyVal + dPinOffsetYPtr[pinIdx];
+      const int pinIdx = dInstPinIdx[pinId];
+      dPinX[pinIdx] = instDCxVal + dPinOffsetX[pinIdx];
+      dPinY[pinIdx] = instDCyVal + dPinOffsetY[pinIdx];
     }
   });
 
-  auto dNetPinPosPtr = dNetPinPosPtr_, dNetPinIdxPtr = dNetPinIdxPtr_, dNetLxPtr = dNetLxPtr_, dNetLyPtr = dNetLyPtr_,
-       dNetUxPtr = dNetUxPtr_, dNetUyPtr = dNetUyPtr_, dNetWidthPtr = dNetWidthPtr_, dNetHeightPtr = dNetHeightPtr_;
+  auto dNetPinPos = dNetPinPos_, dNetPinIdx = dNetPinIdx_, dNetLx = dNetLx_, dNetLy = dNetLy_,
+       dNetUx = dNetUx_, dNetUy = dNetUy_, dNetWidth = dNetWidth_, dNetHeight = dNetHeight_;
   Kokkos::parallel_for(numNets_, KOKKOS_LAMBDA (const int netId) {
-    const int pinStart = dNetPinPosPtr[netId];
-    const int pinEnd = dNetPinPosPtr[netId + 1];
+    const int pinStart = dNetPinPos[netId];
+    const int pinEnd = dNetPinPos[netId + 1];
     int netLx = INT_MAX;
     int netLy = INT_MAX;
     int netUx = 0;
     int netUy = 0;
     for (int pinId = pinStart; pinId < pinEnd; ++pinId) {
-      const int pinIdx = dNetPinIdxPtr[pinId];
-      const int pinX = dPinXPtr[pinIdx];
-      const int pinY = dPinYPtr[pinIdx];
+      const int pinIdx = dNetPinIdx[pinId];
+      const int pinX = dPinX[pinIdx];
+      const int pinY = dPinY[pinIdx];
       netLx = min(netLx, pinX);
       netLy = min(netLy, pinY);
       netUx = max(netUx, pinX);
@@ -331,12 +296,12 @@ void WirelengthOp::updatePinLocation(const int* instDCx, const int* instDCy)
       netUy = 0;
     }
 
-    dNetLxPtr[netId] = netLx;
-    dNetLyPtr[netId] = netLy;
-    dNetUxPtr[netId] = netUx;
-    dNetUyPtr[netId] = netUy;
-    dNetWidthPtr[netId] = netUx - netLx;
-    dNetHeightPtr[netId] = netUy - netLy;
+    dNetLx[netId] = netLx;
+    dNetLy[netId] = netLy;
+    dNetUx[netId] = netUx;
+    dNetUy[netId] = netUy;
+    dNetWidth[netId] = netUx - netLx;
+    dNetHeight[netId] = netUy - netLy;
   });
 }
 
@@ -351,56 +316,24 @@ struct TypeConvertor
 int64_t WirelengthOp::computeHPWL()
 {
   int64_t hpwl = 0;
-  hpwl = thrust::transform_reduce(dNetWidth_.begin(),
-                                  dNetWidth_.end(),
-                                  TypeConvertor(),
-                                  hpwl,
-                                  thrust::plus<int64_t>());
+  auto dNetWidth = dNetWidth_, dNetHeight = dNetHeight_;
+  Kokkos::parallel_reduce(numNets_, KOKKOS_LAMBDA (const int i, int64_t& hpwl) {
+    hpwl += dNetWidth[i] + dNetHeight[i];
+  }, hpwl);
+  Kokkos::fence();
 
-  hpwl = thrust::transform_reduce(dNetHeight_.begin(),
-                                  dNetHeight_.end(),
-                                  TypeConvertor(),
-                                  hpwl,
-                                  thrust::plus<int64_t>());
   return hpwl;
 }
-
-struct WeightHPWLFunctor
-{
-  float virtualWeightFactor_;
-
-  WeightHPWLFunctor(float virtualWeightFactor)
-      : virtualWeightFactor_(virtualWeightFactor)
-  {
-  }
-
-  __host__ __device__ int64_t
-  operator()(const thrust::tuple<int, int, float, float>& t) const
-  {
-    const int width = thrust::get<0>(t);
-    const int height = thrust::get<1>(t);
-    const float weight = thrust::get<2>(t);
-    const float virtualWeight = thrust::get<3>(t);
-    const float sumWeight = weight + virtualWeight * virtualWeightFactor_;
-    return static_cast<int64_t>(sumWeight * (width + height));
-  }
-};
 
 int64_t WirelengthOp::computeWeightedHPWL(float virtualWeightFactor)
 {
   int64_t hpwl = 0;
-  hpwl = thrust::transform_reduce(
-      thrust::make_zip_iterator(thrust::make_tuple(dNetWidth_.begin(),
-                                                   dNetHeight_.begin(),
-                                                   dNetWeight_.begin(),
-                                                   dNetVirtualWeight_.begin())),
-      thrust::make_zip_iterator(thrust::make_tuple(dNetWidth_.end(),
-                                                   dNetHeight_.end(),
-                                                   dNetWeight_.end(),
-                                                   dNetVirtualWeight_.end())),
-      WeightHPWLFunctor(virtualWeightFactor),
-      hpwl,
-      thrust::plus<int64_t>());
+  auto dNetWidth = dNetWidth_, dNetHeight = dNetHeight_;
+  auto dNetWeight = dNetWeight_, dNetVirtualWeight = dNetVirtualWeight_;
+  Kokkos::parallel_reduce(numNets_, KOKKOS_LAMBDA (const int i, int64_t& hpwl) {
+    hpwl += (dNetWeight[i] + dNetVirtualWeight[i] * virtualWeightFactor) * (dNetWidth[i] + dNetHeight[i]);
+  }, hpwl);
+  Kokkos::fence();
 
   return hpwl;
 }
@@ -411,27 +344,27 @@ void WirelengthOp::computeWireLengthForce(const float wlCoeffX,
                                           float* wirelengthForceX,
                                           float* wirelengthForceY)
 {
-  auto dPinNetIdPtr = dPinNetIdPtr_, dPinXPtr = dPinXPtr_, dPinYPtr = dPinYPtr_, dNetUxPtr = dNetUxPtr_,
-       dNetLxPtr = dNetLxPtr_, dNetUyPtr = dNetUyPtr_, dNetLyPtr = dNetLyPtr_;
-  auto dPinAPosXPtr = dPinAPosXPtr_, dPinANegXPtr = dPinANegXPtr_, dPinAPosYPtr = dPinAPosYPtr_,
-       dPinANegYPtr = dPinANegYPtr_;
+  auto dPinNetId = dPinNetId_, dPinX = dPinX_, dPinY = dPinY_, dNetUx = dNetUx_,
+       dNetLx = dNetLx_, dNetUy = dNetUy_, dNetLy = dNetLy_;
+  auto dPinAPosX = dPinAPosX_, dPinANegX = dPinANegX_, dPinAPosY = dPinAPosY_,
+       dPinANegY = dPinANegY_;
   Kokkos::parallel_for(numPins_, KOKKOS_LAMBDA (const int pinId) {
-    const int netId = dPinNetIdPtr[pinId];
-    dPinAPosXPtr[pinId] = expf(wlCoeffX * (dPinXPtr[pinId] - dNetUxPtr[netId]));
-    dPinANegXPtr[pinId]
-        = expf(-1.0 * wlCoeffX * (dPinXPtr[pinId] - dNetLxPtr[netId]));
-    dPinAPosYPtr[pinId] = expf(wlCoeffY * (dPinYPtr[pinId] - dNetUyPtr[netId]));
-    dPinANegYPtr[pinId]
-        = expf(-1.0 * wlCoeffY * (dPinYPtr[pinId] - dNetLyPtr[netId]));
+    const int netId = dPinNetId[pinId];
+    dPinAPosX[pinId] = expf(wlCoeffX * (dPinX[pinId] - dNetUx[netId]));
+    dPinANegX[pinId]
+        = expf(-1.0 * wlCoeffX * (dPinX[pinId] - dNetLx[netId]));
+    dPinAPosY[pinId] = expf(wlCoeffY * (dPinY[pinId] - dNetUy[netId]));
+    dPinANegY[pinId]
+        = expf(-1.0 * wlCoeffY * (dPinY[pinId] - dNetLy[netId]));
   });
 
-  auto dNetPinPosPtr = dNetPinPosPtr_, dNetPinIdxPtr = dNetPinIdxPtr_, dPinX = dPinXPtr_, dPinY = dPinYPtr_;
-  auto dNetBPosXPtr = dNetBPosXPtr_, dNetBNegXPtr = dNetBNegXPtr_, dNetBPosYPtr = dNetBPosYPtr_,
-       dNetBNegYPtr = dNetBNegYPtr_, dNetCPosXPtr = dNetCPosXPtr_, dNetCNegXPtr = dNetCNegXPtr_,
-       dNetCPosYPtr = dNetCPosYPtr_, dNetCNegYPtr = dNetCNegYPtr_;
+  auto dNetPinPos = dNetPinPos_, dNetPinIdx = dNetPinIdx_;
+  auto dNetBPosX = dNetBPosX_, dNetBNegX = dNetBNegX_, dNetBPosY = dNetBPosY_,
+       dNetBNegY = dNetBNegY_, dNetCPosX = dNetCPosX_, dNetCNegX = dNetCNegX_,
+       dNetCPosY = dNetCPosY_, dNetCNegY = dNetCNegY_;
   Kokkos::parallel_for(numNets_, KOKKOS_LAMBDA (const int netId) {
-    const int pinStart = dNetPinPosPtr[netId];
-    const int pinEnd = dNetPinPosPtr[netId + 1];
+    const int pinStart = dNetPinPos[netId];
+    const int pinEnd = dNetPinPos[netId + 1];
     float bPosX = 0.0;
     float bNegX = 0.0;
     float bPosY = 0.0;
@@ -443,74 +376,74 @@ void WirelengthOp::computeWireLengthForce(const float wlCoeffX,
     float cNegY = 0.0;
 
     for (int pinId = pinStart; pinId < pinEnd; ++pinId) {
-      const int pinIdx = dNetPinIdxPtr[pinId];
-      bPosX += dPinAPosXPtr[pinIdx];
-      bNegX += dPinANegXPtr[pinIdx];
-      bPosY += dPinAPosYPtr[pinIdx];
-      bNegY += dPinANegYPtr[pinIdx];
+      const int pinIdx = dNetPinIdx[pinId];
+      bPosX += dPinAPosX[pinIdx];
+      bNegX += dPinANegX[pinIdx];
+      bPosY += dPinAPosY[pinIdx];
+      bNegY += dPinANegY[pinIdx];
 
-      cPosX += dPinXPtr[pinIdx] * dPinAPosXPtr[pinIdx];
-      cNegX += dPinXPtr[pinIdx] * dPinANegXPtr[pinIdx];
-      cPosY += dPinYPtr[pinIdx] * dPinAPosYPtr[pinIdx];
-      cNegY += dPinYPtr[pinIdx] * dPinANegYPtr[pinIdx];
+      cPosX += dPinX[pinIdx] * dPinAPosX[pinIdx];
+      cNegX += dPinX[pinIdx] * dPinANegX[pinIdx];
+      cPosY += dPinY[pinIdx] * dPinAPosY[pinIdx];
+      cNegY += dPinY[pinIdx] * dPinANegY[pinIdx];
     }
 
-    dNetBPosXPtr[netId] = bPosX;
-    dNetBNegXPtr[netId] = bNegX;
-    dNetBPosYPtr[netId] = bPosY;
-    dNetBNegYPtr[netId] = bNegY;
+    dNetBPosX[netId] = bPosX;
+    dNetBNegX[netId] = bNegX;
+    dNetBPosY[netId] = bPosY;
+    dNetBNegY[netId] = bNegY;
 
-    dNetCPosXPtr[netId] = cPosX;
-    dNetCNegXPtr[netId] = cNegX;
-    dNetCPosYPtr[netId] = cPosY;
-    dNetCNegYPtr[netId] = cNegY;
+    dNetCPosX[netId] = cPosX;
+    dNetCNegX[netId] = cNegX;
+    dNetCPosY[netId] = cPosY;
+    dNetCNegY[netId] = cNegY;
   });
 
-  auto dPinGradXPtr = dPinGradXPtr_, dPinGradYPtr = dPinGradYPtr_;
+  auto dPinGradX = dPinGradX_, dPinGradY = dPinGradY_;
   Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int pinIdx) {
-    const int netId = dPinNetIdPtr[pinIdx];
+    const int netId = dPinNetId[pinIdx];
 
     // TODO:  if we need to remove high-fanout nets,
     // we can remove it here
 
-    float netBNegX2 = dNetBNegXPtr[netId] * dNetBNegXPtr[netId];
-    float netBPosX2 = dNetBPosXPtr[netId] * dNetBPosXPtr[netId];
-    float netBNegY2 = dNetBNegYPtr[netId] * dNetBNegYPtr[netId];
-    float netBPosY2 = dNetBPosYPtr[netId] * dNetBPosYPtr[netId];
+    float netBNegX2 = dNetBNegX[netId] * dNetBNegX[netId];
+    float netBPosX2 = dNetBPosX[netId] * dNetBPosX[netId];
+    float netBNegY2 = dNetBNegY[netId] * dNetBNegY[netId];
+    float netBPosY2 = dNetBPosY[netId] * dNetBPosY[netId];
 
-    float pinXWlCoeffX = dPinXPtr[pinIdx] * wlCoeffX;
-    float pinYWlCoeffY = dPinYPtr[pinIdx] * wlCoeffY;
+    float pinXWlCoeffX = dPinX[pinIdx] * wlCoeffX;
+    float pinYWlCoeffY = dPinY[pinIdx] * wlCoeffY;
 
-    dPinGradXPtr[pinIdx] = ((1.0f - pinXWlCoeffX) * dNetBNegXPtr[netId]
-                            + wlCoeffX * dNetCNegXPtr[netId])
-                               * dPinANegXPtr[pinIdx] / netBNegX2
-                           - ((1.0f + pinXWlCoeffX) * dNetBPosXPtr[netId]
-                              - wlCoeffX * dNetCPosXPtr[netId])
-                                 * dPinAPosXPtr[pinIdx] / netBPosX2;
+    dPinGradX[pinIdx] = ((1.0f - pinXWlCoeffX) * dNetBNegX[netId]
+                            + wlCoeffX * dNetCNegX[netId])
+                               * dPinANegX[pinIdx] / netBNegX2
+                           - ((1.0f + pinXWlCoeffX) * dNetBPosX[netId]
+                              - wlCoeffX * dNetCPosX[netId])
+                                 * dPinAPosX[pinIdx] / netBPosX2;
 
-    dPinGradYPtr[pinIdx] = ((1.0f - pinYWlCoeffY) * dNetBNegYPtr[netId]
-                            + wlCoeffY * dNetCNegYPtr[netId])
-                               * dPinANegYPtr[pinIdx] / netBNegY2
-                           - ((1.0f + pinYWlCoeffY) * dNetBPosYPtr[netId]
-                              - wlCoeffY * dNetCPosYPtr[netId])
-                                 * dPinAPosYPtr[pinIdx] / netBPosY2;
+    dPinGradY[pinIdx] = ((1.0f - pinYWlCoeffY) * dNetBNegY[netId]
+                            + wlCoeffY * dNetCNegY[netId])
+                               * dPinANegY[pinIdx] / netBNegY2
+                           - ((1.0f + pinYWlCoeffY) * dNetBPosY[netId]
+                              - wlCoeffY * dNetCPosY[netId])
+                                 * dPinAPosY[pinIdx] / netBPosY2;
   });
 
   // get the force on each instance
-  auto dInstPinPosPtr = dInstPinPosPtr_, dInstPinIdxPtr = dInstPinIdxPtr_;
-  auto dNetWeightPtr = dNetWeightPtr_, dNetVirtualWeightPtr = dNetVirtualWeightPtr_;
+  auto dInstPinPos = dInstPinPos_, dInstPinIdx = dInstPinIdx_;
+  auto dNetWeight = dNetWeight_, dNetVirtualWeight = dNetVirtualWeight_;
   Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instId) {
-    const int pinStart = dInstPinPosPtr[instId];
-    const int pinEnd = dInstPinPosPtr[instId + 1];
+    const int pinStart = dInstPinPos[instId];
+    const int pinEnd = dInstPinPos[instId + 1];
     float wlGradX = 0.0;
     float wlGradY = 0.0;
     for (int pinId = pinStart; pinId < pinEnd; ++pinId) {
-      const int pinIdx = dInstPinIdxPtr[pinId];
-      const int netId = dPinNetIdPtr[pinIdx];
-      const float weight = dNetWeightPtr[netId]
-                           + dNetVirtualWeightPtr[netId] * virtualWeightFactor;
-      wlGradX += dPinGradXPtr[pinIdx] * weight;
-      wlGradY += dPinGradYPtr[pinIdx] * weight;
+      const int pinIdx = dInstPinIdx[pinId];
+      const int netId = dPinNetId[pinIdx];
+      const float weight = dNetWeight[netId]
+                           + dNetVirtualWeight[netId] * virtualWeightFactor;
+      wlGradX += dPinGradX[pinIdx] * weight;
+      wlGradY += dPinGradY[pinIdx] * weight;
     }
 
     wirelengthForceX[instId] = wlGradX;

@@ -143,11 +143,7 @@ PlacerBaseCommon::PlacerBaseCommon()
       nonPlaceInstsArea_(0),
       macroInstsArea_(0),
       stdCellInstsArea_(0),
-      virtualWeightFactor_(0.0),
-      dInstDCxPtr_(nullptr),
-      dInstDCyPtr_(nullptr),
-      dWLGradXPtr_(nullptr),
-      dWLGradYPtr_(nullptr)
+      virtualWeightFactor_(0.0)
 {
 }
 
@@ -575,11 +571,15 @@ void PlacerBaseCommon::initClusterNetlist()
   printInfo();
 }
 
-void PlacerBaseCommon::initCUDAKernel()
+void PlacerBaseCommon::initDeviceMemory()
 {
+  // allocate the objects on host side
+  dInstDCx_ = Kokkos::View<int*>("InstDCx", numPlaceInsts_);
+  hInstDCx_ = Kokkos::create_mirror_view(dInstDCx_);
+  dInstDCy_ = Kokkos::View<int*>("InstDCy", numPlaceInsts_);
+  hInstDCy_ = Kokkos::create_mirror_view(dInstDCy_);
+
   // calculate the information on the host side
-  hInstDCx_.resize(numPlaceInsts_);
-  hInstDCy_.resize(numPlaceInsts_);
   int instIdx = 0;
   for (auto& inst : placeInsts_) {
     hInstDCx_[instIdx] = inst->cx();
@@ -587,29 +587,18 @@ void PlacerBaseCommon::initCUDAKernel()
     instIdx++;
   }
 
-  // allocate the objects on host side
-  dInstDCxPtr_ = setThrustVector<int>(numPlaceInsts_, dInstDCx_);
-  dInstDCyPtr_ = setThrustVector<int>(numPlaceInsts_, dInstDCy_);
-
   // copy from host to device
-  thrust::copy(hInstDCx_.begin(), hInstDCx_.end(), dInstDCx_.begin());
-  thrust::copy(hInstDCy_.begin(), hInstDCy_.end(), dInstDCy_.begin());
+  Kokkos::deep_copy(dInstDCx_, hInstDCx_);
+  Kokkos::deep_copy(dInstDCy_, hInstDCy_);
 
   // allocate memory on device side
-  dWLGradXPtr_ = setThrustVector<float>(numPlaceInsts_, dWLGradX_);
-  dWLGradYPtr_ = setThrustVector<float>(numPlaceInsts_, dWLGradY_);
+  dWLGradX_ = Kokkos::View<float*>("WLGradX", numPlaceInsts_);
+  auto hWLGradX = Kokkos::create_mirror_view(dWLGradX_);
+  dWLGradY_ = Kokkos::View<float*>("WLGradY", numPlaceInsts_);
+  auto hWLGradY = Kokkos::create_mirror_view(dWLGradY_);
 
   // create the wlGradOp
   wlGradOp_ = new WirelengthOp(this);
-}
-
-void PlacerBaseCommon::freeCUDAKernel()
-{
-  dInstDCxPtr_ = nullptr;
-  dInstDCyPtr_ = nullptr;
-
-  dWLGradXPtr_ = nullptr;
-  dWLGradYPtr_ = nullptr;
 }
 
 // Update the database information
@@ -620,8 +609,8 @@ void PlacerBaseCommon::updateDB()
     return;
   }
 
-  thrust::copy(dInstDCx_.begin(), dInstDCx_.end(), hInstDCx_.begin());
-  thrust::copy(dInstDCy_.begin(), dInstDCy_.end(), hInstDCy_.begin());
+  Kokkos::deep_copy(dInstDCx_, hInstDCx_);
+  Kokkos::deep_copy(dInstDCy_, hInstDCy_);
 
   int manufactureGird = db_->getTech()->getManufacturingGrid();
 
@@ -638,8 +627,8 @@ void PlacerBaseCommon::updateDB()
 
 void PlacerBaseCommon::updateDBCluster()
 {
-  thrust::copy(dInstDCx_.begin(), dInstDCx_.end(), hInstDCx_.begin());
-  thrust::copy(dInstDCy_.begin(), dInstDCy_.end(), hInstDCy_.begin());
+  Kokkos::deep_copy(dInstDCx_, hInstDCx_);
+  Kokkos::deep_copy(dInstDCy_, hInstDCy_);
 
   int manufactureGird = db_->getTech()->getManufacturingGrid();
   odb::dbBlock* block = getBlock();
@@ -688,29 +677,34 @@ void PlacerBaseCommon::updateDBCluster()
 // PlacerBase
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-void PlacerBase::initCUDAKernel()
+void PlacerBase::initDeviceMemory()
 {
   // calculate the information on the host side
-  thrust::host_vector<int> hPlaceInstIds(numPlaceInsts_);
+  dPlaceInstIds_ = Kokkos::View<int*>("PlaceInstIds", numPlaceInsts_);
+  auto hPlaceInstIds = Kokkos::create_mirror_view(dPlaceInstIds_);
   int instIdx = 0;
   for (auto& inst : placeInsts_) {
     hPlaceInstIds[instIdx] = inst->instId();
     instIdx++;
   }
 
-  // allocate the objects on host side
-  dPlaceInstIdsPtr_ = setThrustVector<int>(numPlaceInsts_, dPlaceInstIds_);
-
   // copy from host to device
-  thrust::copy(
-      hPlaceInstIds.begin(), hPlaceInstIds.end(), dPlaceInstIds_.begin());
+  Kokkos::deep_copy(dPlaceInstIds_, hPlaceInstIds);
 
-  thrust::host_vector<int> hInstDDx(numInsts_);
-  thrust::host_vector<int> hInstDDy(numInsts_);
-  thrust::host_vector<int> hInstDCx(numInsts_);
-  thrust::host_vector<int> hInstDCy(numInsts_);
-  thrust::host_vector<float> hWireLengthPrecondi(numInsts_);
-  thrust::host_vector<float> hDensityPrecondi(numInsts_);
+  dInstDDx_ = Kokkos::View<int*>("InstDDx", numInsts_);
+  dInstDDy_ = Kokkos::View<int*>("InstDDy", numInsts_);
+  Kokkos::View<int*>::HostMirror hInstDDx = Kokkos::create_mirror_view(dInstDDx_);
+  Kokkos::View<int*>::HostMirror hInstDDy = Kokkos::create_mirror_view(dInstDDy_);
+
+  dInstDCx_ = Kokkos::View<int*>("InstDCx", numInsts_);
+  dInstDCy_ = Kokkos::View<int*>("InstDCy", numInsts_);
+  Kokkos::View<int*>::HostMirror hInstDCx = Kokkos::create_mirror_view(dInstDCx_);
+  Kokkos::View<int*>::HostMirror hInstDCy = Kokkos::create_mirror_view(dInstDCy_);
+
+  dWireLengthPrecondi_ = Kokkos::View<float*>("WireLengthPrecondi", numInsts_);
+  auto hWireLengthPrecondi = Kokkos::create_mirror_view(dWireLengthPrecondi_);
+  dDensityPrecondi_ = Kokkos::View<float*>("DensityPrecondi", numInsts_);
+  auto hDensityPrecondi = Kokkos::create_mirror_view(dDensityPrecondi_);
 
   // calculate the information on the host side
   instIdx = 0;
@@ -724,93 +718,63 @@ void PlacerBase::initCUDAKernel()
     instIdx++;
   }
 
-  dInstDDxPtr_ = setThrustVector<int>(numInsts_, dInstDDx_);
-  dInstDDyPtr_ = setThrustVector<int>(numInsts_, dInstDDy_);
-  dInstDCxPtr_ = setThrustVector<int>(numInsts_, dInstDCx_);
-  dInstDCyPtr_ = setThrustVector<int>(numInsts_, dInstDCy_);
+  Kokkos::deep_copy(dInstDDx_, hInstDDx);
+  Kokkos::deep_copy(dInstDDy_, hInstDDy);
+  Kokkos::deep_copy(dInstDCx_, hInstDCx);
+  Kokkos::deep_copy(dInstDCy_, hInstDCy);
+  Kokkos::deep_copy(dWireLengthPrecondi_, hWireLengthPrecondi);
+  Kokkos::deep_copy(dDensityPrecondi_, hDensityPrecondi);
 
-  dWireLengthPrecondiPtr_
-      = setThrustVector<float>(numInsts_, dWireLengthPrecondi_);
-  dDensityPrecondiPtr_ = setThrustVector<float>(numInsts_, dDensityPrecondi_);
+  dCurSLPCoordi_ = Kokkos::View<FloatPoint*>("CurSLPCoordi", numInsts_);
+  auto hCurSLPCoordi = Kokkos::create_mirror_view(dCurSLPCoordi_);
+  dCurSLPWireLengthGradX_ = Kokkos::View<float*>("CurSLPWireLengthGradX", numInsts_);
+  auto hCurSLPWireLengthGradX = Kokkos::create_mirror_view(dCurSLPWireLengthGradX_);
+  dCurSLPWireLengthGradY_ = Kokkos::View<float*>("CurSLPWireLengthGradY", numInsts_);
+  auto hCurSLPWireLengthGradY = Kokkos::create_mirror_view(dCurSLPWireLengthGradY_);
+  dCurSLPDensityGradX_ = Kokkos::View<float*>("CurSLPDensityGradX", numInsts_);
+  auto hCurSLPDensityGradX = Kokkos::create_mirror_view(dCurSLPDensityGradX_);
+  dCurSLPDensityGradY_ = Kokkos::View<float*>("CurSLPDensityGradY", numInsts_);
+  auto hCurSLPDensityGradY = Kokkos::create_mirror_view(dCurSLPDensityGradY_);
+  dCurSLPSumGrads_ = Kokkos::View<FloatPoint*>("CurSLPSumGrads", numInsts_);
+  auto hCurSLPSumGrads = Kokkos::create_mirror_view(dCurSLPSumGrads_);
 
-  thrust::copy(hInstDDx.begin(), hInstDDx.end(), dInstDDx_.begin());
-  thrust::copy(hInstDDy.begin(), hInstDDy.end(), dInstDDy_.begin());
-  thrust::copy(hInstDCx.begin(), hInstDCx.end(), dInstDCx_.begin());
-  thrust::copy(hInstDCy.begin(), hInstDCy.end(), dInstDCy_.begin());
-  thrust::copy(hWireLengthPrecondi.begin(),
-               hWireLengthPrecondi.end(),
-               dWireLengthPrecondi_.begin());
-  thrust::copy(hDensityPrecondi.begin(),
-               hDensityPrecondi.end(),
-               dDensityPrecondi_.begin());
+  dPrevSLPCoordi_ = Kokkos::View<FloatPoint*>("PrevSLPCoordi", numInsts_);
+  auto hPrevSLPCoordi = Kokkos::create_mirror_view(dPrevSLPCoordi_);
+  dPrevSLPWireLengthGradX_ = Kokkos::View<float*>("PrevSLPWireLengthGradX", numInsts_);
+  auto hPrevSLPWireLengthGradX = Kokkos::create_mirror_view(dPrevSLPWireLengthGradX_);
+  dPrevSLPWireLengthGradY_ = Kokkos::View<float*>("PrevSLPWireLengthGradY", numInsts_);
+  auto hPrevSLPWireLengthGradY = Kokkos::create_mirror_view(dPrevSLPWireLengthGradY_);
+  dPrevSLPDensityGradX_ = Kokkos::View<float*>("PrevSLPDensityGradX", numInsts_);
+  auto hPrevSLPDensityGradX = Kokkos::create_mirror_view(dPrevSLPDensityGradX_);
+  dPrevSLPDensityGradY_ = Kokkos::View<float*>("PrevSLPDensityGradY", numInsts_);
+  auto hPrevSLPDensityGradY = Kokkos::create_mirror_view(dPrevSLPDensityGradY_);
+  dPrevSLPSumGrads_ = Kokkos::View<FloatPoint*>("PrevSLPSumGrads", numInsts_);
+  auto hPrevSLPSumGrads = Kokkos::create_mirror_view(dPrevSLPSumGrads_);
 
-  dDensityGradXPtr_ = setThrustVector<float>(numInsts_, dDensityGradX_);
-  dDensityGradYPtr_ = setThrustVector<float>(numInsts_, dDensityGradY_);
+  dNextSLPCoordi_ = Kokkos::View<FloatPoint*>("NextSLPCoordi", numInsts_);
+  auto hNextSLPCoordi = Kokkos::create_mirror_view(dNextSLPCoordi_);
+  dNextSLPWireLengthGradX_ = Kokkos::View<float*>("NextSLPWireLengthGradX", numInsts_);
+  auto hNextSLPWireLengthGradX = Kokkos::create_mirror_view(dNextSLPWireLengthGradX_);
+  dNextSLPWireLengthGradY_ = Kokkos::View<float*>("NextSLPWireLengthGradY", numInsts_);
+  auto hNextSLPWireLengthGradY = Kokkos::create_mirror_view(dNextSLPWireLengthGradY_);
+  dNextSLPDensityGradX_ = Kokkos::View<float*>("NextSLPDensityGradX", numInsts_);
+  auto hNextSLPDensityGradX = Kokkos::create_mirror_view(dNextSLPDensityGradX_);
+  dNextSLPDensityGradY_ = Kokkos::View<float*>("NextSLPDensityGradY", numInsts_);
+  auto hNextSLPDensityGradY = Kokkos::create_mirror_view(dNextSLPDensityGradY_);
+  dNextSLPSumGrads_ = Kokkos::View<FloatPoint*>("NextSLPSumGrads", numInsts_);
+  auto hNextSLPSumGrads = Kokkos::create_mirror_view(dNextSLPSumGrads_);
 
-  dCurSLPCoordiPtr_ = setThrustVector<FloatPoint>(numInsts_, dCurSLPCoordi_);
-  dCurSLPWireLengthGradXPtr_
-      = setThrustVector<float>(numInsts_, dCurSLPWireLengthGradX_);
-  dCurSLPWireLengthGradYPtr_
-      = setThrustVector<float>(numInsts_, dCurSLPWireLengthGradY_);
-  dCurSLPDensityGradXPtr_
-      = setThrustVector<float>(numInsts_, dCurSLPDensityGradX_);
-  dCurSLPDensityGradYPtr_
-      = setThrustVector<float>(numInsts_, dCurSLPDensityGradY_);
-  dCurSLPSumGradsPtr_
-      = setThrustVector<FloatPoint>(numInsts_, dCurSLPSumGrads_);
+  dCurCoordi_ = Kokkos::View<FloatPoint*>("CurCoordi", numInsts_);
+  auto hCurCoordi = Kokkos::create_mirror_view(dCurCoordi_);
+  dNextCoordi_ = Kokkos::View<FloatPoint*>("NextCoordi", numInsts_);
+  auto hNextCoordi = Kokkos::create_mirror_view(dNextCoordi_);
 
-  dPrevSLPCoordiPtr_ = setThrustVector<FloatPoint>(numInsts_, dPrevSLPCoordi_);
-  dPrevSLPWireLengthGradXPtr_
-      = setThrustVector<float>(numInsts_, dPrevSLPWireLengthGradX_);
-  dPrevSLPWireLengthGradYPtr_
-      = setThrustVector<float>(numInsts_, dPrevSLPWireLengthGradY_);
-  dPrevSLPDensityGradXPtr_
-      = setThrustVector<float>(numInsts_, dPrevSLPDensityGradX_);
-  dPrevSLPDensityGradYPtr_
-      = setThrustVector<float>(numInsts_, dPrevSLPDensityGradY_);
-  dPrevSLPSumGradsPtr_
-      = setThrustVector<FloatPoint>(numInsts_, dPrevSLPSumGrads_);
-
-  dNextSLPCoordiPtr_ = setThrustVector<FloatPoint>(numInsts_, dNextSLPCoordi_);
-  dNextSLPWireLengthGradXPtr_
-      = setThrustVector<float>(numInsts_, dNextSLPWireLengthGradX_);
-  dNextSLPWireLengthGradYPtr_
-      = setThrustVector<float>(numInsts_, dNextSLPWireLengthGradY_);
-  dNextSLPDensityGradXPtr_
-      = setThrustVector<float>(numInsts_, dNextSLPDensityGradX_);
-  dNextSLPDensityGradYPtr_
-      = setThrustVector<float>(numInsts_, dNextSLPDensityGradY_);
-  dNextSLPSumGradsPtr_
-      = setThrustVector<FloatPoint>(numInsts_, dNextSLPSumGrads_);
-
-  dCurCoordiPtr_ = setThrustVector<FloatPoint>(numInsts_, dCurCoordi_);
-  dNextCoordiPtr_ = setThrustVector<FloatPoint>(numInsts_, dNextCoordi_);
-
-  dSumGradsXPtr_ = setThrustVector<float>(numInsts_, dSumGradsX_);
-  dSumGradsYPtr_ = setThrustVector<float>(numInsts_, dSumGradsY_);
+  dSumGradsX_ = Kokkos::View<float*>("SumGradsX", numInsts_);
+  auto hSumGradsX = Kokkos::create_mirror_view(dSumGradsX_);
+  dSumGradsY_ = Kokkos::View<float*>("SumGradsY", numInsts_);
+  auto hSumGradsY = Kokkos::create_mirror_view(dSumGradsY_);
 
   densityOp_ = new DensityOp(this);
-}
-
-void PlacerBase::freeCUDAKernel()
-{
-  densityOp_ = nullptr;
-  dPlaceInstIdsPtr_ = nullptr;
-
-  dDensityGradXPtr_ = nullptr;
-  dDensityGradYPtr_ = nullptr;
-
-  dCurSLPCoordiPtr_ = nullptr;
-  dCurSLPSumGradsPtr_ = nullptr;
-
-  dPrevSLPCoordiPtr_ = nullptr;
-  dPrevSLPSumGradsPtr_ = nullptr;
-
-  dNextSLPCoordiPtr_ = nullptr;
-  dNextSLPSumGradsPtr_ = nullptr;
-
-  dCurSLPCoordiPtr_ = nullptr;
-  dCurSLPSumGradsPtr_ = nullptr;
 }
 
 // Make sure the instances are within the region
@@ -834,28 +798,27 @@ __host__ __device__ float getDensityCoordiLayoutInside(int instWidth,
 void PlacerBase::initDensity1()
 {
   // update density coordinate for each instance
-  auto dInstDCxPtr = dInstDCxPtr_, dInstDCyPtr = dInstDCyPtr_, dInstDDxPtr = dInstDDxPtr_, dInstDDyPtr = dInstDDyPtr_;
+  auto dInstDCx = dInstDCx_, dInstDCy = dInstDCy_, dInstDDx = dInstDDx_, dInstDDy = dInstDDy_;
   auto coreLx = bg_.lx(), coreLy = bg_.ly(), coreUx = bg_.ux(), coreUy = bg_.uy();
   Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
-    dInstDCxPtr[instIdx] = getDensityCoordiLayoutInside(
-        dInstDDxPtr[instIdx], dInstDCxPtr[instIdx], coreLx, coreUx);
-    dInstDCyPtr[instIdx] = getDensityCoordiLayoutInside(
-        dInstDDyPtr[instIdx], dInstDCyPtr[instIdx], coreLy, coreUy);
+    dInstDCx[instIdx] = getDensityCoordiLayoutInside(
+        dInstDDx[instIdx], dInstDCx[instIdx], coreLx, coreUx);
+    dInstDCy[instIdx] = getDensityCoordiLayoutInside(
+        dInstDDy[instIdx], dInstDCy[instIdx], coreLy, coreUy);
   });
 
-  // initialize the dCurSLPCoordiPtr_, dPrevSLPCoordiPtr_
-  // and dCurCoordiPtr_
+  // initialize dCurSLPCoordi_, dPrevSLPCoordi_ and dCurCoordi_
 
-  auto dCurCoordiPtr = dCurCoordiPtr_, dCurSLPCoordiPtr = dCurSLPCoordiPtr_, dPrevSLPCoordiPtr = dPrevSLPCoordiPtr_;
+  auto dCurCoordi = dCurCoordi_, dCurSLPCoordi = dCurSLPCoordi_, dPrevSLPCoordi = dPrevSLPCoordi_;
   Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
-    const FloatPoint loc(dInstDCxPtr[instIdx], dInstDCyPtr[instIdx]);
-    dCurCoordiPtr[instIdx] = loc;
-    dCurSLPCoordiPtr[instIdx] = loc;
-    dPrevSLPCoordiPtr[instIdx] = loc;
+    const FloatPoint loc(dInstDCx[instIdx], dInstDCy[instIdx]);
+    dCurCoordi[instIdx] = loc;
+    dCurSLPCoordi[instIdx] = loc;
+    dPrevSLPCoordi[instIdx] = loc;
   });
 
   // We need to sync up bewteen pb and pbCommon
-  updateGCellDensityCenterLocation(dCurSLPCoordiPtr_);
+  updateGCellDensityCenterLocation(dCurSLPCoordi_.data());
   pbCommon_->updatePinLocation();
   // calculate the previous hpwl
   // update the location of instances within this region
@@ -967,39 +930,39 @@ float PlacerBase::initDensity2()
   sumOverflowUnscaled_ = static_cast<float>(overflowAreaUnscaled())
                          / static_cast<float>(nesterovInstsArea());
 
-  stepLength_ = getStepLength(dPrevSLPCoordiPtr_,
-                              dPrevSLPSumGradsPtr_,
-                              dCurSLPCoordiPtr_,
-                              dCurSLPSumGradsPtr_);
+  stepLength_ = getStepLength(dPrevSLPCoordi_.data(),
+                              dPrevSLPSumGrads_.data(),
+                              dCurSLPCoordi_.data(),
+                              dCurSLPSumGrads_.data());
 
   return stepLength_;
 }
 
 void PlacerBase::updatePrevGradient()
 {
-  updateGradients(dPrevSLPWireLengthGradXPtr_,
-                  dPrevSLPWireLengthGradYPtr_,
-                  dPrevSLPDensityGradXPtr_,
-                  dPrevSLPDensityGradYPtr_,
-                  dPrevSLPSumGradsPtr_);
+  updateGradients(dPrevSLPWireLengthGradX_.data(),
+                  dPrevSLPWireLengthGradY_.data(),
+                  dPrevSLPDensityGradX_.data(),
+                  dPrevSLPDensityGradY_.data(),
+                  dPrevSLPSumGrads_.data());
 }
 
 void PlacerBase::updateCurGradient()
 {
-  updateGradients(dCurSLPWireLengthGradXPtr_,
-                  dCurSLPWireLengthGradYPtr_,
-                  dCurSLPDensityGradXPtr_,
-                  dCurSLPDensityGradYPtr_,
-                  dCurSLPSumGradsPtr_);
+  updateGradients(dCurSLPWireLengthGradX_.data(),
+                  dCurSLPWireLengthGradY_.data(),
+                  dCurSLPDensityGradX_.data(),
+                  dCurSLPDensityGradY_.data(),
+                  dCurSLPSumGrads_.data());
 }
 
 void PlacerBase::updateNextGradient()
 {
-  updateGradients(dNextSLPWireLengthGradXPtr_,
-                  dNextSLPWireLengthGradYPtr_,
-                  dNextSLPDensityGradXPtr_,
-                  dNextSLPDensityGradYPtr_,
-                  dNextSLPSumGradsPtr_);
+  updateGradients(dNextSLPWireLengthGradX_.data(),
+                  dNextSLPWireLengthGradY_.data(),
+                  dNextSLPDensityGradX_.data(),
+                  dNextSLPDensityGradY_.data(),
+                  dNextSLPSumGrads_.data());
 }
 
 void PlacerBase::updateGradients(float* wireLengthGradientsX,
@@ -1026,8 +989,8 @@ void PlacerBase::updateGradients(float* wireLengthGradientsX,
 
   auto densityPenalty = densityPenalty_;
   auto minPrecondi = npVars_.minPreconditioner;
-  auto wireLengthPrecondi = dWireLengthPrecondiPtr_;
-  auto densityPrecondi = dDensityPrecondiPtr_;
+  auto wireLengthPrecondi = dWireLengthPrecondi_;
+  auto densityPrecondi = dDensityPrecondi_;
   Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
            sumGrads[instIdx].x = wireLengthGradientsX[instIdx]
                           + densityPenalty * densityGradientsX[instIdx];
@@ -1053,33 +1016,33 @@ void PlacerBase::updateGradients(float* wireLengthGradientsX,
 
 void PlacerBase::updateGCellDensityCenterLocation(const FloatPoint* coordis)
 {
-  auto dInstDCxPtr = dInstDCxPtr_, dInstDCyPtr = dInstDCyPtr_;
+  auto dInstDCx = dInstDCx_, dInstDCy = dInstDCy_;
   Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instIdx) {
-    dInstDCxPtr[instIdx] = coordis[instIdx].x;
-    dInstDCyPtr[instIdx] = coordis[instIdx].y;
+    dInstDCx[instIdx] = coordis[instIdx].x;
+    dInstDCy[instIdx] = coordis[instIdx].y;
   });
 
-  auto* dPlaceInstIdsPtr = dPlaceInstIdsPtr_;
+  auto dPlaceInstIds = dPlaceInstIds_;
   int* instDCxCommon = pbCommon_->dInstDCxPtr();
   int* instDCyCommon = pbCommon_->dInstDCyPtr();
   Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instIdx) {
-    int instId = dPlaceInstIdsPtr[instIdx];
-    instDCxCommon[instId] = dInstDCxPtr[instIdx];
-    instDCyCommon[instId] = dInstDCyPtr[instIdx];
+    int instId = dPlaceInstIds[instIdx];
+    instDCxCommon[instId] = dInstDCx[instIdx];
+    instDCyCommon[instId] = dInstDCy[instIdx];
   });
 
-  densityOp_->updateGCellLocation(dInstDCxPtr_, dInstDCyPtr_);
+  densityOp_->updateGCellLocation(dInstDCx_.data(), dInstDCy_.data());
 }
 
 void PlacerBase::getWireLengthGradientWA(float* wireLengthGradientsX,
                                          float* wireLengthGradientsY)
 {
-  auto dPlaceInstIdsPtr = dPlaceInstIdsPtr_;
-  auto dWLGradXCommonPtr = pbCommon_->dWLGradXPtr(), dWLGradYCommonPtr = pbCommon_->dWLGradYPtr();
+  auto dPlaceInstIds = dPlaceInstIds_;
+  auto dWLGradXCommon = pbCommon_->dWLGradXPtr(), dWLGradYCommon = pbCommon_->dWLGradYPtr();
   Kokkos::parallel_for(numPlaceInsts_, KOKKOS_LAMBDA (const int instIdx) {
-    int instId = dPlaceInstIdsPtr[instIdx];
-    wireLengthGradientsX[instIdx] = dWLGradXCommonPtr[instId];
-    wireLengthGradientsY[instIdx] = dWLGradYCommonPtr[instId];
+    int instId = dPlaceInstIds[instIdx];
+    wireLengthGradientsX[instIdx] = dWLGradXCommon[instId];
+    wireLengthGradientsY[instIdx] = dWLGradYCommon[instId];
   });
 }
 
@@ -1095,28 +1058,28 @@ void PlacerBase::nesterovUpdateCoordinates(float coeff)
     return;
   }
 
-  auto curSLPCoordiPtr = dCurSLPCoordiPtr_, curSLPSumGradsPtr = dCurSLPSumGradsPtr_, curCoordiPtr = dCurCoordiPtr_;
-  auto nextCoordiPtr = dNextCoordiPtr_, nextSLPCoordiPtr = dNextSLPCoordiPtr_;
-  auto instDDx = dInstDDxPtr_, instDDy = dInstDDyPtr_;
+  auto curSLPCoordi = dCurSLPCoordi_, curSLPSumGrads = dCurSLPSumGrads_, curCoordi = dCurCoordi_;
+  auto dNextCoordi = dNextCoordi_, dNextSLPCoordi = dNextSLPCoordi_;
+  auto instDDx = dInstDDx_, instDDy = dInstDDy_;
   auto stepLength = stepLength_;
   auto coreLx = bg_.lx(), coreLy = bg_.ly(), coreUx = bg_.ux(), coreUy = bg_.uy();
   Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
     FloatPoint nextCoordi(
-        curSLPCoordiPtr[instIdx].x + stepLength * curSLPSumGradsPtr[instIdx].x,
-        curSLPCoordiPtr[instIdx].y + stepLength * curSLPSumGradsPtr[instIdx].y);
+        curSLPCoordi[instIdx].x + stepLength * curSLPSumGrads[instIdx].x,
+        curSLPCoordi[instIdx].y + stepLength * curSLPSumGrads[instIdx].y);
 
     FloatPoint nextSLPCoordi(
-        nextCoordi.x + coeff * (nextCoordi.x - curCoordiPtr[instIdx].x),
-        nextCoordi.y + coeff * (nextCoordi.y - curCoordiPtr[instIdx].y));
+        nextCoordi.x + coeff * (nextCoordi.x - curCoordi[instIdx].x),
+        nextCoordi.y + coeff * (nextCoordi.y - curCoordi[instIdx].y));
 
     // check the boundary
-    nextCoordiPtr[instIdx]
+    dNextCoordi[instIdx]
         = FloatPoint(getDensityCoordiLayoutInside(
                          instDDx[instIdx], nextCoordi.x, coreLx, coreUx),
                      getDensityCoordiLayoutInside(
                          instDDy[instIdx], nextCoordi.y, coreLy, coreUy));
 
-    nextSLPCoordiPtr[instIdx]
+    dNextSLPCoordi[instIdx]
         = FloatPoint(getDensityCoordiLayoutInside(
                          instDDx[instIdx], nextSLPCoordi.x, coreLx, coreUx),
                      getDensityCoordiLayoutInside(
@@ -1124,29 +1087,29 @@ void PlacerBase::nesterovUpdateCoordinates(float coeff)
   });
 
   // update density
-  updateGCellDensityCenterLocation(dNextSLPCoordiPtr_);
+  updateGCellDensityCenterLocation(dNextSLPCoordi_.data());
   updateDensityForceBin();
 }
 
 void PlacerBase::updateInitialPrevSLPCoordi()
 {
-  auto dCurSLPCoordiPtr = dCurSLPCoordiPtr_, dCurSLPSumGradsPtr = dCurSLPSumGradsPtr_, dPrevSLPCoordiPtr = dPrevSLPCoordiPtr_;
+  auto dCurSLPCoordi = dCurSLPCoordi_, dCurSLPSumGrads = dCurSLPSumGrads_, dPrevSLPCoordi = dPrevSLPCoordi_;
   auto initialPrevCoordiUpdateCoef = npVars_.initialPrevCoordiUpdateCoef;
-  auto instDDx = dInstDDxPtr_, instDDy = dInstDDyPtr_;
+  auto instDDx = dInstDDx_, instDDy = dInstDDy_;
   auto coreLx = bg_.lx(), coreLy = bg_.ly(), coreUx = bg_.ux(), coreUy = bg_.uy();
   Kokkos::parallel_for(numInsts_, KOKKOS_LAMBDA (const int instIdx) {
     const float preCoordiX
-        = dCurSLPCoordiPtr[instIdx].x
-          - initialPrevCoordiUpdateCoef * dCurSLPSumGradsPtr[instIdx].x;
+        = dCurSLPCoordi[instIdx].x
+          - initialPrevCoordiUpdateCoef * dCurSLPSumGrads[instIdx].x;
     const float preCoordiY
-        = dCurSLPCoordiPtr[instIdx].y
-          - initialPrevCoordiUpdateCoef * dCurSLPSumGradsPtr[instIdx].y;
+        = dCurSLPCoordi[instIdx].y
+          - initialPrevCoordiUpdateCoef * dCurSLPSumGrads[instIdx].y;
     const FloatPoint newCoordi(
         getDensityCoordiLayoutInside(
             instDDx[instIdx], preCoordiX, coreLx, coreUx),
         getDensityCoordiLayoutInside(
             instDDy[instIdx], preCoordiY, coreLy, coreUy));
-    dPrevSLPCoordiPtr[instIdx] = newCoordi;
+    dPrevSLPCoordi[instIdx] = newCoordi;
   });
 }
 
@@ -2269,8 +2232,6 @@ void PlacerBaseCommon::reset()
   if (clusterFlag_ == false) {
     clearInstProperty();
   }
-
-  freeCUDAKernel();
 }
 
 // basic information
@@ -2377,7 +2338,7 @@ int64_t PlacerBaseCommon::hpwl() const
 void PlacerBaseCommon::updatePinLocation()
 {
   if (wlGradOp_ != nullptr) {
-    wlGradOp_->updatePinLocation(dInstDCxPtr_, dInstDCyPtr_);
+    wlGradOp_->updatePinLocation(dInstDCx_.data(), dInstDCy_.data());
   }
 }
 
@@ -2388,7 +2349,7 @@ void PlacerBaseCommon::updateWireLengthForce(const float wlCoeffX,
 {
   if (wlGradOp_ != nullptr) {
     wlGradOp_->computeWireLengthForce(
-        wlCoeffX, wlCoeffY, virtualWeightFactor_, dWLGradXPtr_, dWLGradYPtr_);
+        wlCoeffX, wlCoeffY, virtualWeightFactor_, dWLGradX_.data(), dWLGradY_.data());
   }
 }
 
@@ -2423,12 +2384,6 @@ PlacerBase::PlacerBase()
       numFixedInsts_(0),
       numDummyInsts_(0),
       numFillerInsts_(0),
-      dInstDDxPtr_(nullptr),
-      dInstDDyPtr_(nullptr),
-      dInstDCxPtr_(nullptr),
-      dInstDCyPtr_(nullptr),
-      dWireLengthPrecondiPtr_(nullptr),
-      dDensityPrecondiPtr_(nullptr),
       sumPhi_(0.0),
       targetDensity_(0.0),
       uniformTargetDensity_(0.0),
@@ -2446,30 +2401,26 @@ PlacerBase::PlacerBase()
       stepLength_(0.0),
       wireLengthGradSum_(0.0),
       densityGradSum_(0.0),
-      dDensityGradXPtr_(nullptr),
-      dDensityGradYPtr_(nullptr),
-      dWireLengthGradXPtr_(nullptr),
-      dWireLengthGradYPtr_(nullptr),
-      dCurSLPCoordiPtr_(nullptr),
-      dCurSLPWireLengthGradXPtr_(nullptr),
-      dCurSLPWireLengthGradYPtr_(nullptr),
-      dCurSLPDensityGradXPtr_(nullptr),
-      dCurSLPDensityGradYPtr_(nullptr),
-      dCurSLPSumGradsPtr_(nullptr),
-      dPrevSLPCoordiPtr_(nullptr),
-      dPrevSLPWireLengthGradXPtr_(nullptr),
-      dPrevSLPWireLengthGradYPtr_(nullptr),
-      dPrevSLPDensityGradXPtr_(nullptr),
-      dPrevSLPDensityGradYPtr_(nullptr),
-      dPrevSLPSumGradsPtr_(nullptr),
-      dNextSLPCoordiPtr_(nullptr),
-      dNextSLPWireLengthGradXPtr_(nullptr),
-      dNextSLPWireLengthGradYPtr_(nullptr),
-      dNextSLPDensityGradXPtr_(nullptr),
-      dNextSLPDensityGradYPtr_(nullptr),
-      dNextSLPSumGradsPtr_(nullptr),
-      dCurCoordiPtr_(nullptr),
-      dNextCoordiPtr_(nullptr)
+      dCurSLPCoordi_(nullptr),
+      dCurSLPWireLengthGradX_(nullptr),
+      dCurSLPWireLengthGradY_(nullptr),
+      dCurSLPDensityGradX_(nullptr),
+      dCurSLPDensityGradY_(nullptr),
+      dCurSLPSumGrads_(nullptr),
+      dPrevSLPCoordi_(nullptr),
+      dPrevSLPWireLengthGradX_(nullptr),
+      dPrevSLPWireLengthGradY_(nullptr),
+      dPrevSLPDensityGradX_(nullptr),
+      dPrevSLPDensityGradY_(nullptr),
+      dPrevSLPSumGrads_(nullptr),
+      dNextSLPCoordi_(nullptr),
+      dNextSLPWireLengthGradX_(nullptr),
+      dNextSLPWireLengthGradY_(nullptr),
+      dNextSLPDensityGradX_(nullptr),
+      dNextSLPDensityGradY_(nullptr),
+      dNextSLPSumGrads_(nullptr),
+      dCurCoordi_(nullptr),
+      dNextCoordi_(nullptr)
 {
 }
 
@@ -2487,16 +2438,6 @@ PlacerBase::PlacerBase(NesterovBaseVars nbVars,
   pbCommon_ = std::move(pbCommon);
   group_ = group;
   init();
-}
-
-PlacerBase::~PlacerBase()
-{
-  reset();
-}
-
-void PlacerBase::reset()
-{
-  freeCUDAKernel();
 }
 
 void PlacerBase::init()
@@ -2893,10 +2834,10 @@ bool PlacerBase::nesterovUpdateStepLength()
     return true;
   }
 
-  float newStepLength = getStepLength(dCurSLPCoordiPtr_,
-                                      dCurSLPSumGradsPtr_,
-                                      dNextSLPCoordiPtr_,
-                                      dNextSLPSumGradsPtr_);
+  float newStepLength = getStepLength(dCurSLPCoordi_.data(),
+                                      dCurSLPSumGrads_.data(),
+                                      dNextSLPCoordi_.data(),
+                                      dNextSLPSumGrads_.data());
 
   if (isnan(newStepLength) || isinf(newStepLength)) {
     isDiverged_ = true;
@@ -2923,22 +2864,22 @@ bool PlacerBase::nesterovUpdateStepLength()
 // NestrovePlace related functions
 void PlacerBase::updateDensityCenterCur()
 {
-  updateGCellDensityCenterLocation(dCurCoordiPtr_);
+  updateGCellDensityCenterLocation(dCurCoordi_.data());
 }
 
 void PlacerBase::updateDensityCenterCurSLP()
 {
-  updateGCellDensityCenterLocation(dCurSLPCoordiPtr_);
+  updateGCellDensityCenterLocation(dCurSLPCoordi_.data());
 }
 
 void PlacerBase::updateDensityCenterPrevSLP()
 {
-  updateGCellDensityCenterLocation(dPrevSLPCoordiPtr_);
+  updateGCellDensityCenterLocation(dPrevSLPCoordi_.data());
 }
 
 void PlacerBase::updateDensityCenterNextSLP()
 {
-  updateGCellDensityCenterLocation(dNextSLPCoordiPtr_);
+  updateGCellDensityCenterLocation(dNextSLPCoordi_.data());
 }
 
 void PlacerBase::updateDensityForceBin()
@@ -3019,22 +2960,22 @@ void PlacerBase::updateNextIter(int iter)
   }
 
   // Previous <= Current
-  std::swap(dCurSLPCoordiPtr_, dPrevSLPCoordiPtr_);
-  std::swap(dCurSLPSumGradsPtr_, dPrevSLPSumGradsPtr_);
-  std::swap(dCurSLPWireLengthGradXPtr_, dPrevSLPWireLengthGradXPtr_);
-  std::swap(dCurSLPWireLengthGradYPtr_, dPrevSLPWireLengthGradYPtr_);
-  std::swap(dCurSLPDensityGradXPtr_, dPrevSLPDensityGradXPtr_);
-  std::swap(dCurSLPDensityGradYPtr_, dPrevSLPDensityGradYPtr_);
+  std::swap(dCurSLPCoordi_, dPrevSLPCoordi_);
+  std::swap(dCurSLPSumGrads_, dPrevSLPSumGrads_);
+  std::swap(dCurSLPWireLengthGradX_, dPrevSLPWireLengthGradX_);
+  std::swap(dCurSLPWireLengthGradY_, dPrevSLPWireLengthGradY_);
+  std::swap(dCurSLPDensityGradX_, dPrevSLPDensityGradX_);
+  std::swap(dCurSLPDensityGradY_, dPrevSLPDensityGradY_);
 
   // Current <= Next
-  std::swap(dCurSLPCoordiPtr_, dNextSLPCoordiPtr_);
-  std::swap(dCurSLPSumGradsPtr_, dNextSLPSumGradsPtr_);
-  std::swap(dCurSLPWireLengthGradXPtr_, dNextSLPWireLengthGradXPtr_);
-  std::swap(dCurSLPWireLengthGradYPtr_, dNextSLPWireLengthGradYPtr_);
-  std::swap(dCurSLPDensityGradXPtr_, dNextSLPDensityGradXPtr_);
-  std::swap(dCurSLPDensityGradYPtr_, dNextSLPDensityGradYPtr_);
+  std::swap(dCurSLPCoordi_, dNextSLPCoordi_);
+  std::swap(dCurSLPSumGrads_, dNextSLPSumGrads_);
+  std::swap(dCurSLPWireLengthGradX_, dNextSLPWireLengthGradX_);
+  std::swap(dCurSLPWireLengthGradY_, dNextSLPWireLengthGradY_);
+  std::swap(dCurSLPDensityGradX_, dNextSLPDensityGradX_);
+  std::swap(dCurSLPDensityGradY_, dNextSLPDensityGradY_);
 
-  std::swap(dCurCoordiPtr_, dNextCoordiPtr_);
+  std::swap(dCurCoordi_, dNextCoordi_);
 
   // In a macro dominated design like mock-array-big you may be placing
   // very few std cells in a sea of fixed macros. The overflow denominator
