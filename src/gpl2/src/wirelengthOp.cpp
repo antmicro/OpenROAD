@@ -307,7 +307,7 @@ void WirelengthOp::updatePinLocation(const int* instDCx, const int* instDCy)
 
 struct TypeConvertor
 {
-  __host__ __device__ int64_t operator()(const int& x) const
+  DEVICE_FUNC int64_t operator()(const int& x) const
   {
     return static_cast<int64_t>(x);
   }

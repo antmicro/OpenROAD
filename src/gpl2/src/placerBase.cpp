@@ -37,6 +37,14 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <thrust/copy.h>
+#include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
+#include <thrust/fill.h>
+#include <thrust/for_each.h>
+#include <thrust/host_vector.h>
+#include <thrust/sequence.h>
+
 #include <stdio.h>
 #include <cmath>
 #include <iostream>
@@ -778,10 +786,10 @@ void PlacerBase::initDeviceMemory()
 }
 
 // Make sure the instances are within the region
-__host__ __device__ float getDensityCoordiLayoutInside(int instWidth,
-                                              float cx,
-                                              int coreLx,
-                                              int coreUx)
+DEVICE_FUNC float getDensityCoordiLayoutInside(int instWidth,
+                                               float cx,
+                                               int coreLx,
+                                               int coreUx)
 {
   float adjVal = cx;
   if (cx - instWidth / 2 < coreLx) {
@@ -843,7 +851,7 @@ void PlacerBase::initDensity1()
 // getDistance is only defined on the host side
 struct getTupleDistanceFunctor
 {
-  __host__ __device__ float operator()(
+  DEVICE_FUNC float operator()(
       const thrust::tuple<FloatPoint, FloatPoint>& t)
   {
     const FloatPoint& a = thrust::get<0>(t);
@@ -855,7 +863,7 @@ struct getTupleDistanceFunctor
   }
 };
 
-__host__ float getDistance(const FloatPoint* a,
+DEVICE_FUNC float getDistance(const FloatPoint* a,
                            const FloatPoint* b,
                            const int numInsts)
 {
@@ -882,7 +890,7 @@ __host__ float getDistance(const FloatPoint* a,
 template <typename T>
 struct myAbs
 {
-  __host__ __device__ double operator()(const T& x) const
+  DEVICE_FUNC double operator()(const T& x) const
   {
     if (x >= 0)
       return x;
@@ -891,7 +899,7 @@ struct myAbs
   }
 };
 
-__host__ float getAbsGradSum(const float* a, const int numInsts)
+float getAbsGradSum(const float* a, const int numInsts)
 {
   thrust::device_ptr<float> aBegin(const_cast<float*>(a));
   thrust::device_ptr<float> aEnd = aBegin + numInsts;

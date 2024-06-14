@@ -49,7 +49,6 @@ target_sources(gpl2
   PRIVATE
     src/MakeDgReplace.cpp
     src/dg_replace.cpp
-    src/util.cpp
     src/wirelengthOp.cpp
     src/densityOp.cpp
     src/initialPlace.cpp    

@@ -34,25 +34,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
+#define DEVICE_FUNC __host__ __device__
 
 #include <cuda_runtime.h>
 #include <odb/db.h>
-#include <thrust/copy.h>
-#include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
-#include <thrust/fill.h>
-#include <thrust/for_each.h>
-#include <thrust/host_vector.h>
-#include <thrust/sequence.h>
 
 #include <iomanip>
-#include <memory>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "util.h"
 
 namespace odb {
 class dbDatabase;
@@ -496,29 +487,29 @@ struct IntPoint
 {
   int x;
   int y;
-  __host__ __device__ IntPoint() : x(0), y(0) {}
-  __host__ __device__ IntPoint(int _x, int _y) : x(_x), y(_y) {}
+  DEVICE_FUNC IntPoint() : x(0), y(0) {}
+  DEVICE_FUNC IntPoint(int _x, int _y) : x(_x), y(_y) {}
 };
 
 struct FloatPoint
 {
   float x;
   float y;
-  __host__ __device__ FloatPoint() : x(0), y(0) {}
-  __host__ __device__ FloatPoint(float _x, float _y) : x(_x), y(_y) {}
+  DEVICE_FUNC FloatPoint() : x(0), y(0) {}
+  DEVICE_FUNC FloatPoint(float _x, float _y) : x(_x), y(_y) {}
 };
 
 struct Int64Point
 {
   int64_t x;
   int64_t y;
-  __host__ __device__ Int64Point() : x(0), y(0) {}
-  __host__ __device__ Int64Point(int64_t _x, int64_t _y) : x(_x), y(_y) {}
+  DEVICE_FUNC Int64Point() : x(0), y(0) {}
+  DEVICE_FUNC Int64Point(int64_t _x, int64_t _y) : x(_x), y(_y) {}
 };
 
 struct IntRect
 {
-  __host__ __device__ IntRect()
+  DEVICE_FUNC IntRect()
   {
     lx = 0;
     ly = 0;
@@ -526,7 +517,7 @@ struct IntRect
     uy = 0;
   }
 
-  __host__ __device__ IntRect(int _lx, int _ly, int _ux, int _uy)
+  DEVICE_FUNC IntRect(int _lx, int _ly, int _ux, int _uy)
       : lx(_lx), ly(_ly), ux(_ux), uy(_uy)
   {
   }
@@ -659,6 +650,6 @@ int calculateBiVariateNormalCDF(biNormalParameters i);
 
 // numeric operators
 
-__host__ __device__ int fastModulo(const int input, const int ceil);
+DEVICE_FUNC int fastModulo(const int input, const int ceil);
 
 }  // namespace gpl2

@@ -45,7 +45,6 @@
 #include "odb/db.h"
 #include "placerBase.h"
 #include "rsz/Resizer.hh"
-#include "util.h"
 #include "utl/Logger.h"
 
 namespace gpl2 {

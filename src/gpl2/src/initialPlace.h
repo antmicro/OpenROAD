@@ -38,15 +38,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <odb/db.h>
-#include <thrust/copy.h>
-#include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
-#include <thrust/fill.h>
-#include <thrust/for_each.h>
-#include <thrust/host_vector.h>
-#include <thrust/iterator/zip_iterator.h>
-#include <thrust/sequence.h>
-#include <thrust/transform.h>
 
 #include <Eigen/SparseCore>
 #include <iostream>

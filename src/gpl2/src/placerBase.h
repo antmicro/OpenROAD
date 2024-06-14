@@ -33,16 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-// Keep in mind that CUDA is C not C++ !!!
-// To clarify, a device function in CUDA is a function that is executed on the
-// GPU, and it can be called from the host or from the device. Thrust package is
-// called from the host perspective. All the functions should be defined as
-// struct. In our CUDA implementation, we may borrow some implementation from
-// the original c++ implementation, so we always include original definition
-// Compared to original C++ implementation, we merge the placerBase and
-// nesterovBase into general-purpose placer database:  GpuPlacerBase So we just
-// need to maintain one database in cuda.
-
 #pragma once
 
 #include <memory>

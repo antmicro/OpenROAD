@@ -193,19 +193,19 @@ void DensityOp::initDeviceMemory()
   Kokkos::deep_copy(dGCellIsMacro_, hGCellIsMacro);
 }
 
-__host__ __device__ inline IntRect getMinMaxIdxXY(const int numBins,
-                                         const int binSizeX,
-                                         const int binSizeY,
-                                         const int binCntX,
-                                         const int binCntY,
-                                         const int coreLx,
-                                         const int coreLy,
-                                         const int coreUx,
-                                         const int coreUy,
-                                         const int instDCx,
-                                         const int instDCy,
-                                         const float instDDx,
-                                         const float instDDy)
+DEVICE_FUNC inline IntRect getMinMaxIdxXY(const int numBins,
+                                          const int binSizeX,
+                                          const int binSizeY,
+                                          const int binCntX,
+                                          const int binCntY,
+                                          const int coreLx,
+                                          const int coreLy,
+                                          const int coreUx,
+                                          const int coreUy,
+                                          const int instDCx,
+                                          const int instDCy,
+                                          const float instDDx,
+                                          const float instDDy)
 {
   IntRect binRect;
 
@@ -228,10 +228,10 @@ __host__ __device__ inline IntRect getMinMaxIdxXY(const int numBins,
 }
 
 // Utility functions
-__host__ __device__ inline float getOverlapWidth(const float& instDLx,
-                                        const float& instDUx,
-                                        const float& binLx,
-                                        const float& binUx)
+DEVICE_FUNC inline float getOverlapWidth(const float& instDLx,
+                                         const float& instDUx,
+                                         const float& binLx,
+                                         const float& binUx)
 {
   if (instDUx <= binLx || instDLx >= binUx) {
     return 0.0;

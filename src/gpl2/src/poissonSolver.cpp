@@ -44,6 +44,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
+#define DEVICE_FUNC __host__ __device__
 
 #include <stdio.h>
 
@@ -59,8 +60,6 @@
 #include <memory>
 
 #include "poissonSolver.h"
-#include "util.h"
-
 
 namespace gpl2 {
 
@@ -112,13 +111,13 @@ PoissonSolver::~PoissonSolver()
   freeCUDAKernel();
 }
 
-__host__ __device__ void divideByWSquare(const int wID,
-                                const int hID,
-                                const int binCntX,
-                                const int binCntY,
-                                const int binSizeX,
-                                const int binSizeY,
-                                cufftReal* input)
+DEVICE_FUNC void divideByWSquare(const int wID,
+                                 const int hID,
+                                 const int binCntX,
+                                 const int binCntY,
+                                 const int binSizeX,
+                                 const int binSizeY,
+                                 cufftReal* input)
 {
   if (wID < binCntX && hID < binCntY) {
     int binID = wID + hID * binCntX;
@@ -359,7 +358,7 @@ void PoissonSolver::initCUDAKernel()
                                         -Kokkos::sinf((float) PI * wid / (N * 2)));
       expkNForInverse[wid] = W_w_4N;
     }
-  }); 
+  });
 
   cufftPlan2d(&plan_, binCntY_, binCntX_, CUFFT_R2C);
   cufftPlan2d(&planInverse_, binCntY_, binCntX_, CUFFT_C2R);

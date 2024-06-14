@@ -3,10 +3,6 @@
 #include <cuda.h>
 #include <cufft.h>
 #include <stdio.h>
-#include <thrust/device_vector.h>
-#include <thrust/functional.h>
-#include <thrust/host_vector.h>
-#include <thrust/transform_reduce.h>
 
 #define PI (3.141592653589793238462643383279502884197169)
 
@@ -17,25 +13,6 @@
 inline __device__ __host__ bool isPowerOf2(int val)
 {
   return val && (val & (val - 1)) == 0;
-}
-
-template <typename T>
-inline T* setThrustVector(const size_t size, thrust::device_vector<T>& d_vector)
-{
-  d_vector.resize(size);
-  return thrust::raw_pointer_cast(&d_vector[0]);
-}
-
-template <typename T>
-inline const T* getRawPointer(const thrust::device_vector<T>& thrustVector)
-{
-  return thrust::raw_pointer_cast(&thrustVector[0]);
-}
-
-template <typename T>
-inline T* getRawPointer(thrust::device_vector<T>& thrustVector)
-{
-  return thrust::raw_pointer_cast(&thrustVector[0]);
 }
 
 inline void __CUDA_CHECK(cudaError_t status, const char* file, const int line)

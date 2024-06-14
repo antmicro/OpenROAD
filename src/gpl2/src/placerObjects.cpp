@@ -39,30 +39,10 @@
 #include <cuda_runtime.h>
 #include <odb/db.h>
 
-#include <chrono>
 #include <cmath>
 #include <iostream>
-#include <memory>
-#include <numeric>
 
-#include "util.h"
 #include "utl/Logger.h"
-// basic vectors
-#include <thrust/device_free.h>
-#include <thrust/device_malloc.h>
-#include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
-#include <thrust/reduce.h>
-#include <thrust/sequence.h>
-// memory related
-#include <thrust/copy.h>
-#include <thrust/fill.h>
-// algorithm related
-#include <thrust/execution_policy.h>
-#include <thrust/for_each.h>
-#include <thrust/functional.h>
-#include <thrust/replace.h>
-#include <thrust/transform.h>
 
 namespace gpl2 {
 
@@ -629,7 +609,7 @@ int calculateBiVariateNormalCDF(biNormalParameters i)
 }
 
 // https://stackoverflow.com/questions/33333363/built-in-mod-vs-custom-mod-function-improve-the-performance-of-modulus-op
-__host__ __device__ int fastModulo(const int input, const int ceil)
+DEVICE_FUNC int fastModulo(const int input, const int ceil)
 {
   return input >= ceil ? input % ceil : input;
 }

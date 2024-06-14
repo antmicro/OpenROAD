@@ -39,8 +39,6 @@
 #include "gpl2/DgReplace.h"
 #include "ord/OpenRoad.hh"
 #include "sta/StaMain.hh"
-#include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
 
 namespace sta {
 extern const char* gpl2_tcl_inits[];
