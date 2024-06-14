@@ -34,10 +34,6 @@
 #include "densityOp.h"
 
 #include <Kokkos_Core.hpp>
-#include <thrust/device_vector.h>
-#include <thrust/transform_reduce.h>
-
-#include <memory>
 
 #include "placerBase.h"
 #include "placerObjects.h"
@@ -326,9 +322,11 @@ void DensityOp::updateDensityForceBin()
                   - dBinScaledArea[binIdx]);
   });
 
-  auto begin = thrust::device_ptr<float>(dBinOverflowArea_.data());
-  auto end = begin + dBinOverflowArea_.size();
-  sumOverflow_ = thrust::reduce(begin, end, 0.0, thrust::plus<float>());
+  sumOverflow_ = 0.0;
+  Kokkos::parallel_reduce(numBins_, KOKKOS_LAMBDA (const int binIdx, float& sumOverflow) {
+    sumOverflow += dBinOverflowArea[binIdx];
+  }, Kokkos::Sum<float>(sumOverflow_));
+  Kokkos::fence();
 
   // Step 4: solve the poisson equation
   fft_->solvePoisson(dBinDensity_.data(),

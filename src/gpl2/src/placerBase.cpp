@@ -37,14 +37,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <thrust/copy.h>
-#include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
-#include <thrust/fill.h>
-#include <thrust/for_each.h>
-#include <thrust/host_vector.h>
-#include <thrust/sequence.h>
-
 #include <stdio.h>
 #include <cmath>
 #include <iostream>
@@ -847,64 +839,34 @@ void PlacerBase::initDensity1()
                          / static_cast<float>(nesterovInstsArea());
 }
 
-// (a)  // (a) define the get distance method
-// getDistance is only defined on the host side
-struct getTupleDistanceFunctor
-{
-  DEVICE_FUNC float operator()(
-      const thrust::tuple<FloatPoint, FloatPoint>& t)
-  {
-    const FloatPoint& a = thrust::get<0>(t);
-    const FloatPoint& b = thrust::get<1>(t);
-    float dist = 0.0f;
-    dist += (a.x - b.x) * (a.x - b.x);
-    dist += (a.y - b.y) * (a.y - b.y);
-    return dist;
-  }
-};
-
 DEVICE_FUNC float getDistance(const FloatPoint* a,
-                           const FloatPoint* b,
-                           const int numInsts)
+                              const FloatPoint* b,
+                              const int numInsts)
 {
   if (numInsts <= 0) {
     return 0.0;
   }
 
-  thrust::device_ptr<FloatPoint> aBegin(const_cast<FloatPoint*>(a));
-  thrust::device_ptr<FloatPoint> aEnd = aBegin + numInsts;
-
-  thrust::device_ptr<FloatPoint> bBegin(const_cast<FloatPoint*>(b));
-  thrust::device_ptr<FloatPoint> bEnd = bBegin + numInsts;
-
-  float sumDistance = thrust::transform_reduce(
-      thrust::make_zip_iterator(thrust::make_tuple(aBegin, bBegin)),
-      thrust::make_zip_iterator(thrust::make_tuple(aEnd, bEnd)),
-      getTupleDistanceFunctor(),
-      0.0f,
-      thrust::plus<float>());
+  float sumDistance = 0.0;
+  Kokkos::parallel_reduce(numInsts, KOKKOS_LAMBDA (const int instIdx, float& sum) {
+    const FloatPoint& aPoint = a[instIdx];
+    const FloatPoint& bPoint = b[instIdx];
+    sum += (aPoint.x - bPoint.x) * (aPoint.x - bPoint.x);
+    sum += (aPoint.y - bPoint.y) * (aPoint.y - bPoint.y);
+  }, sumDistance);
+  Kokkos::fence();
 
   return std::sqrt(sumDistance / (2.0 * numInsts));
 }
 
-template <typename T>
-struct myAbs
-{
-  DEVICE_FUNC double operator()(const T& x) const
-  {
-    if (x >= 0)
-      return x;
-    else
-      return x * -1;
-  }
-};
-
 float getAbsGradSum(const float* a, const int numInsts)
 {
-  thrust::device_ptr<float> aBegin(const_cast<float*>(a));
-  thrust::device_ptr<float> aEnd = aBegin + numInsts;
-  double sumAbs = thrust::transform_reduce(
-      aBegin, aEnd, myAbs<float>(), 0.0, thrust::plus<double>());
+  double sumAbs = 0.0;
+  Kokkos::parallel_reduce(numInsts, KOKKOS_LAMBDA (const int instIdx, double& sum) {
+    double x = a[instIdx];
+    sum += x >= 0 ? x : -x;
+  }, sumAbs);
+  Kokkos::fence();
   return sumAbs;
 }
 
