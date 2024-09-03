@@ -721,6 +721,9 @@ Usage: $0
                                 # Installs dependencies required to run CI
        $0 -nocert
                                 # Disable certificate checks
+       $0 -constant-build-dir
+                                # Use constant build directory, instead of
+                                #    random one.
 
 EOF
     exit "${1:-1}"
@@ -775,6 +778,14 @@ while [ "$#" -gt 0 ]; do
             fi
             export PREFIX="${HOME}/.local"
             export isLocal="true"
+            ;;
+        -constant-build-dir)
+            baseDir="/tmp/DependencyInstaller-OpenROAD"
+            if [[ -d "$baseDir" ]]; then
+                echo "INFO: removing old building directory $baseDir"
+                rm -r "$baseDir"
+            fi
+            mkdir -p "$baseDir"
             ;;
         -prefix=*)
             if [[ ! -z ${PREFIX} ]]; then
