@@ -32,6 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include <boost/icl/interval_set.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
 
 #include "db/tech/frTechObject.h"
 #include "frDesign.h"
@@ -173,7 +174,7 @@ class GuideProcessor
    */
   void genGuides_split(std::vector<frRect>& rects,
                        const TrackIntervalsByLayer& intvs,
-                       const std::map<Point3D, frBlockObjectSet>& gcell_pin_map,
+                       const boost::unordered_flat_map<Point3D, frBlockObjectSet>& gcell_pin_map,
                        frBlockObjectMap<std::set<Point3D>>& pin_gcell_map,
                        bool via_access_only) const;
   /**
@@ -188,7 +189,7 @@ class GuideProcessor
    */
   void initGCellPinMap(
       const frNet* net,
-      std::map<Point3D, frBlockObjectSet>& gcell_pin_map) const;
+      boost::unordered_flat_map<Point3D, frBlockObjectSet>& gcell_pin_map) const;
   /**
    * Populates gcell_pin_map with the values associated with the passed term
    * based on pin shapes.
@@ -200,7 +201,7 @@ class GuideProcessor
    * @param gcell_pin_map The map to be populated with the results.
    * @param term The current pin we are processing.
    */
-  void mapPinShapesToGCells(std::map<Point3D, frBlockObjectSet>& gcell_pin_map,
+  void mapPinShapesToGCells(boost::unordered_flat_map<Point3D, frBlockObjectSet>& gcell_pin_map,
                             frBlockObject* term) const;
   /**
    * Populates gcell_pin_map with the values associated with the passed pin
@@ -214,7 +215,7 @@ class GuideProcessor
    * @param term The current pin we are processing.
    */
   void mapTermAccessPointsToGCells(
-      std::map<Point3D, frBlockObjectSet>& gcell_pin_map,
+      boost::unordered_flat_map<Point3D, frBlockObjectSet>& gcell_pin_map,
       frBlockObject* pin) const;
 
   void initPinGCellMap(frNet* net,
@@ -423,7 +424,7 @@ class GuidePathFinder
   Logger* logger_{nullptr};
   frNet* net_{nullptr};
   bool force_feed_through_{false};
-  std::map<Point3D, std::set<int>> node_map_;
+  boost::unordered_flat_map<Point3D, std::set<int>> node_map_;
   int guide_count_{0};
   int node_count_{0};
   bool allow_warnings_{false};
