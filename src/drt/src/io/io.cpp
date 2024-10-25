@@ -337,7 +337,9 @@ void io::Parser::setVias(odb::dbBlock* block)
             utl::DRT, 337, "Duplicated via definition for {}", via->getName());
       }
     } else {
-      std::map<frLayerNum, std::set<odb::dbBox*>> lNum2Int;
+      boost::container::flat_map<frLayerNum,
+                                 boost::container::flat_set<odb::dbBox*>>
+          lNum2Int;
       for (auto box : via->getBoxes()) {
         if (tech_->name2layer_.find(box->getTechLayer()->getName())
             == tech_->name2layer_.end()) {
@@ -1181,7 +1183,7 @@ void io::Parser::setBTerms_addPinFig_helper(frBPin* pinIn,
 
 void io::Parser::setAccessPoints(odb::dbDatabase* db)
 {
-  std::map<odb::dbAccessPoint*, frAccessPoint*> ap_map;
+  boost::container::flat_map<odb::dbAccessPoint*, frAccessPoint*> ap_map;
   for (auto& master : design_->getMasters()) {
     auto db_master = db->findMaster(master->getName().c_str());
     for (auto& term : master->getTerms()) {
@@ -1229,7 +1231,7 @@ void io::Parser::setAccessPoints(odb::dbDatabase* db)
       }
 
       auto db_aps = db_term->getPrefAccessPoints();
-      std::map<odb::dbMPin*, odb::dbAccessPoint*> db_aps_map;
+      boost::container::flat_map<odb::dbMPin*, odb::dbAccessPoint*> db_aps_map;
       for (auto db_ap : db_aps) {
         if (ap_map.find(db_ap) == ap_map.end()) {
           logger_->error(DRT,
@@ -1389,7 +1391,7 @@ void io::Parser::setRoutingLayerProperties(odb::dbTechLayer* layer,
     std::string colName("PARALLELRUNLENGTH");
     frCollection<frCoord> rowVals, colVals;
     frCollection<frCollection<frCoord>> tblVals;
-    std::map<frCoord, std::pair<frCoord, frCoord>> ewVals;
+    boost::container::flat_map<frCoord, std::pair<frCoord, frCoord>> ewVals;
     std::map<frUInt4, std::pair<frCoord, frCoord>> _ewVals;
     rule->getTable(rowVals, colVals, tblVals, _ewVals);
     for (auto& [key, value] : _ewVals) {
@@ -2753,7 +2755,7 @@ void io::Parser::setTechViaRules(odb::dbTech* db_tech)
     if (count != 3) {
       logger_->error(DRT, 128, "Unsupported viarule {}.", rule->getName());
     }
-    std::map<frLayerNum, int> lNum2Int;
+    boost::container::flat_map<frLayerNum, int> lNum2Int;
     for (int i = 0; i < count; i++) {
       auto layerRule = rule->getViaLayerRule(i);
       std::string layerName = layerRule->getLayer()->getName();
@@ -2865,7 +2867,7 @@ void io::Parser::setTechViaRules(odb::dbTech* db_tech)
 void io::Parser::setTechVias(odb::dbTech* db_tech)
 {
   for (auto via : db_tech->getVias()) {
-    std::map<frLayerNum, int> lNum2Int;
+    boost::container::flat_map<frLayerNum, int> lNum2Int;
     bool has_unknown_layer = false;
     for (auto box : via->getBoxes()) {
       std::string layerName = box->getTechLayer()->getName();
@@ -3098,7 +3100,8 @@ void io::Writer::splitVia_helper(
     frCoord x,
     frCoord y,
     std::vector<std::vector<
-        std::map<frCoord, std::vector<std::shared_ptr<frPathSeg>>>>>&
+        boost::container::flat_map<frCoord,
+                                   std::vector<std::shared_ptr<frPathSeg>>>>>&
         mergedPathSegs)
 {
   if (layerNum >= 0 && layerNum < (int) (getTech()->getLayers().size())
@@ -3138,11 +3141,14 @@ void io::Writer::mergeSplitConnFigs(
   //   std::cout <<std::endl << "merge and split." <<std::endl;
   // }
   //  initialize pathseg and via map
-  std::map<std::tuple<frLayerNum, bool, frCoord>,
-           std::map<frCoord,
-                    std::vector<std::tuple<std::shared_ptr<frPathSeg>, bool>>>>
+  boost::container::flat_map<
+      std::tuple<frLayerNum, bool, frCoord>,
+      boost::container::flat_map<
+          frCoord,
+          std::vector<std::tuple<std::shared_ptr<frPathSeg>, bool>>>>
       pathSegMergeMap;
-  std::map<std::tuple<frCoord, frCoord, frLayerNum>, std::shared_ptr<frVia>>
+  boost::container::flat_map<std::tuple<frCoord, frCoord, frLayerNum>,
+                             std::shared_ptr<frVia>>
       viaMergeMap;
   for (auto& connFig : connFigs) {
     if (connFig->typeId() == frcPathSeg) {
@@ -3174,11 +3180,14 @@ void io::Writer::mergeSplitConnFigs(
   }
 
   // merge pathSeg
-  std::map<frCoord, std::vector<std::shared_ptr<frPathSeg>>> tmp1;
-  std::vector<std::map<frCoord, std::vector<std::shared_ptr<frPathSeg>>>> tmp2(
-      2, tmp1);
-  std::vector<
-      std::vector<std::map<frCoord, std::vector<std::shared_ptr<frPathSeg>>>>>
+  boost::container::flat_map<frCoord, std::vector<std::shared_ptr<frPathSeg>>>
+      tmp1;
+  std::vector<boost::container::
+                  flat_map<frCoord, std::vector<std::shared_ptr<frPathSeg>>>>
+      tmp2(2, tmp1);
+  std::vector<std::vector<
+      boost::container::flat_map<frCoord,
+                                 std::vector<std::shared_ptr<frPathSeg>>>>>
       mergedPathSegs(getTech()->getLayers().size(), tmp2);
 
   for (auto& it1 : pathSegMergeMap) {
@@ -3237,10 +3246,10 @@ void io::Writer::mergeSplitConnFigs(
   }
 
   // split pathseg from via
-  // mergedPathSegs[layerNum][isHorizontal] is a std::map<frCoord,
-  // std::vector<std::shared_ptr<frPathSeg> > >
-  // map < std::tuple<frCoord, frCoord, frLayerNum>, std::shared_ptr<frVia> >
-  // viaMergeMap;
+  // mergedPathSegs[layerNum][isHorizontal] is a
+  // boost::container::flat_map<frCoord, std::vector<std::shared_ptr<frPathSeg>
+  // > > map < std::tuple<frCoord, frCoord, frLayerNum>, std::shared_ptr<frVia>
+  // > viaMergeMap;
   for (auto& it1 : viaMergeMap) {
     auto x = std::get<0>(it1.first);
     auto y = std::get<1>(it1.first);
@@ -3622,7 +3631,7 @@ void io::Writer::updateDbAccessPoints(odb::dbBlock* block, odb::dbTech* db_tech)
     odb::dbAccessPoint::destroy(ap);
   }
   auto db = block->getDb();
-  std::map<frAccessPoint*, odb::dbAccessPoint*> aps_map;
+  boost::container::flat_map<frAccessPoint*, odb::dbAccessPoint*> aps_map;
   for (auto& master : getDesign()->getMasters()) {
     auto db_master = db->findMaster(master->getName().c_str());
     if (db_master == nullptr) {

@@ -134,7 +134,7 @@ class frLayer
     return secondaryViaDefs_.at(idx);
   }
   bool hasVia2ViaMinStepViol() { return hasMinStepViol_; }
-  std::set<frViaDef*> getViaDefs() const { return viaDefs_; }
+  boost::container::flat_set<frViaDef*> getViaDefs() const { return viaDefs_; }
   dbTechLayerType getType() const
   {
     if (fakeCut_) {
@@ -413,7 +413,7 @@ class frLayer
     }
     return interLayerCutSpacingSamenetConstraints_;
   }
-  const std::map<std::string, frCutSpacingConstraint*>&
+  const boost::container::flat_map<std::string, frCutSpacingConstraint*>&
   getInterLayerCutSpacingConstraintMap(bool samenet = false) const
   {
     if (!samenet) {
@@ -746,17 +746,17 @@ class frLayer
 
   void addLef58EnclosureConstraint(frLef58EnclosureConstraint* con)
   {
-    auto addToLef58EncConstraints
-        = [](std::vector<
-                 std::map<frCoord, std::vector<frLef58EnclosureConstraint*>>>&
-                 lef58EncConstraints,
-             frLef58EnclosureConstraint* con) {
-            int cutClassIdx = con->getCutClassIdx();
-            if (lef58EncConstraints.size() <= cutClassIdx) {
-              lef58EncConstraints.resize(cutClassIdx + 1);
-            }
-            lef58EncConstraints[cutClassIdx][con->getWidth()].push_back(con);
-          };
+    auto addToLef58EncConstraints =
+        [](std::vector<boost::container::flat_map<
+               frCoord,
+               std::vector<frLef58EnclosureConstraint*>>>& lef58EncConstraints,
+           frLef58EnclosureConstraint* con) {
+          int cutClassIdx = con->getCutClassIdx();
+          if (lef58EncConstraints.size() <= cutClassIdx) {
+            lef58EncConstraints.resize(cutClassIdx + 1);
+          }
+          lef58EncConstraints[cutClassIdx][con->getWidth()].push_back(con);
+        };
     if (!con->isAboveOnly()) {
       addToLef58EncConstraints(con->isEol() ? belowLef58EncEolConstraints_
                                             : belowLef58EncConstraints_,
@@ -833,9 +833,9 @@ class frLayer
   std::vector<frViaDef*> secondaryViaDefs_;
   bool hasMinStepViol_{false};
   bool unidirectional_{false};
-  std::set<frViaDef*> viaDefs_;
+  boost::container::flat_set<frViaDef*> viaDefs_;
   std::vector<frLef58CutClass*> cutClasses_;
-  std::map<std::string, int> name2CutClassIdxMap_;
+  boost::container::flat_map<std::string, int> name2CutClassIdxMap_;
   frCollection<frConstraint*> constraints_;
 
   frCollection<frLef58SpacingEndOfLineConstraint*>
@@ -856,9 +856,9 @@ class frLayer
   // vector.size() == layers.size()
   std::vector<frCutSpacingConstraint*> interLayerCutSpacingSamenetConstraints_;
   // temp storage for inter-layer cut spacing before postProcess
-  std::map<std::string, frCutSpacingConstraint*>
+  boost::container::flat_map<std::string, frCutSpacingConstraint*>
       interLayerCutSpacingConstraintsMap_;
-  std::map<std::string, frCutSpacingConstraint*>
+  boost::container::flat_map<std::string, frCutSpacingConstraint*>
       interLayerCutSpacingSamenetConstraintsMap_;
 
   std::vector<frLef58CutSpacingConstraint*> lef58CutSpacingConstraints_;
@@ -901,13 +901,17 @@ class frLayer
   std::vector<frLef58TwoWiresForbiddenSpcConstraint*>
       twForbiddenSpcConstraints_;
   std::vector<frLef58ForbiddenSpcConstraint*> forbiddenSpcConstraints_;
-  std::vector<std::map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
+  std::vector<boost::container::
+                  flat_map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
       aboveLef58EncConstraints_;
-  std::vector<std::map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
+  std::vector<boost::container::
+                  flat_map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
       belowLef58EncConstraints_;
-  std::vector<std::map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
+  std::vector<boost::container::
+                  flat_map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
       aboveLef58EncEolConstraints_;
-  std::vector<std::map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
+  std::vector<boost::container::
+                  flat_map<frCoord, std::vector<frLef58EnclosureConstraint*>>>
       belowLef58EncEolConstraints_;
   // vector of maxspacing constraints
   std::vector<frLef58MaxSpacingConstraint*> maxSpacingConstraints_;

@@ -67,8 +67,9 @@ struct frRegionQuery::Impl
 
   Impl() = default;
   void init();
-  void initOrigGuide(
-      std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& tmpGuides);
+  void initOrigGuide(boost::container::flat_map<frNet*,
+                                                std::vector<frRect>,
+                                                frBlockObjectComp>& tmpGuides);
   void initGuide();
   void initRPin();
   void initGRPin(std::vector<std::pair<frBlockObject*, Point>>& in);
@@ -817,13 +818,15 @@ void frRegionQuery::Impl::init()
 }
 
 void frRegionQuery::initOrigGuide(
-    std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& tmpGuides)
+    boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>&
+        tmpGuides)
 {
   impl_->initOrigGuide(tmpGuides);
 }
 
 void frRegionQuery::Impl::initOrigGuide(
-    std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& tmpGuides)
+    boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>&
+        tmpGuides)
 {
   const frLayerNum numLayers = design_->getTech()->getLayers().size();
   origGuides_.clear();

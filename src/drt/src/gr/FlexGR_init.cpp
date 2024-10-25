@@ -454,8 +454,9 @@ void FlexGRWorker::init()
 
 void FlexGRWorker::initNets()
 {
-  std::set<frNet*, frBlockObjectComp> nets;
-  std::map<frNet*, std::vector<frNode*>, frBlockObjectComp> netRoots;
+  boost::container::flat_set<frNet*, frBlockObjectComp> nets;
+  boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>
+      netRoots;
 
   initNets_roots(nets, netRoots);
   initNets_searchRepair(nets, netRoots);
@@ -464,8 +465,9 @@ void FlexGRWorker::initNets()
 
 // get all roots of subnets
 void FlexGRWorker::initNets_roots(
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>&
+        netRoots)
 {
   std::vector<grBlockObject*> result;
   getRegionQuery()->queryGRObj(routeBox_, result);
@@ -496,8 +498,9 @@ void FlexGRWorker::initNets_roots(
 // root (i.e., outgoing edge)
 void FlexGRWorker::initNetObjs_roots_pathSeg(
     grPathSeg* pathSeg,
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>&
+        netRoots)
 {
   auto net = pathSeg->getNet();
   nets.insert(net);
@@ -522,8 +525,9 @@ void FlexGRWorker::initNetObjs_roots_pathSeg(
 // grandparent is a subnet root
 void FlexGRWorker::initNetObjs_roots_via(
     grVia* via,
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>&
+        netRoots)
 {
   auto net = via->getNet();
   nets.insert(net);
@@ -536,8 +540,9 @@ void FlexGRWorker::initNetObjs_roots_via(
 }
 
 void FlexGRWorker::initNets_searchRepair(
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>&
+        netRoots)
 {
   for (auto net : nets) {
     initNet(net, netRoots[net]);
@@ -546,7 +551,7 @@ void FlexGRWorker::initNets_searchRepair(
 
 void FlexGRWorker::initNet(frNet* net, const std::vector<frNode*>& netRoots)
 {
-  std::set<frNode*, frBlockObjectComp> uniqueRoots;
+  boost::container::flat_set<frNode*, frBlockObjectComp> uniqueRoots;
   for (auto fRoot : netRoots) {
     if (uniqueRoots.find(fRoot) != uniqueRoots.end()) {
       continue;
@@ -573,9 +578,10 @@ void FlexGRWorker::initNet(frNet* net, const std::vector<frNode*>& netRoots)
 void FlexGRWorker::initNet_initNodes(grNet* net, frNode* fRoot)
 {
   // map from loc to gcell node
-  // std::map<std::pair<Point, frlayerNum>, grNode*> loc2GCellNode;
+  // boost::container::flat_map<std::pair<Point, frlayerNum>, grNode*>
+  // loc2GCellNode;
   std::vector<std::pair<frNode*, grNode*>> pinNodePairs;
-  std::map<grNode*, frNode*, frBlockObjectComp> gr2FrPinNode;
+  boost::container::flat_map<grNode*, frNode*, frBlockObjectComp> gr2FrPinNode;
   // parent grNode to children frNode
   std::deque<std::pair<grNode*, frNode*>> nodeQ;
   nodeQ.emplace_back(nullptr, fRoot);
@@ -815,9 +821,10 @@ void FlexGRWorker::initNet_updateCMap(grNet* net, bool isAdd)
 void FlexGRWorker::initNet_initPinGCellNodes(grNet* net)
 {
   std::vector<std::pair<grNode*, grNode*>> pinGCellNodePairs;
-  std::map<grNode*, std::vector<grNode*>, frBlockObjectComp> gcell2PinNodes;
+  boost::container::flat_map<grNode*, std::vector<grNode*>, frBlockObjectComp>
+      gcell2PinNodes;
   std::vector<grNode*> pinGCellNodes;
-  std::map<FlexMazeIdx, grNode*> midx2PinGCellNode;
+  boost::container::flat_map<FlexMazeIdx, grNode*> midx2PinGCellNode;
   grNode* rootGCellNode = nullptr;
 
   std::deque<grNode*> nodeQ;
@@ -1047,7 +1054,8 @@ void FlexGRWorker::initNets_printNet(grNet* net)
 }
 
 void FlexGRWorker::initNets_printFNets(
-    std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots)
+    boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>&
+        netRoots)
 {
   std::cout << std::endl << "printing frNets\n";
   for (auto& [net, roots] : netRoots) {

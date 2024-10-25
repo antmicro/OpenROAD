@@ -1886,7 +1886,8 @@ void FlexDRWorker::identifyCongestionLevel()
 void FlexDRWorker::route_queue_main(std::queue<RouteQueueEntry>& rerouteQueue)
 {
   int gc_version = 1;
-  std::map<frBlockObject*, std::pair<int, int>> obj_gc_version;
+  boost::container::flat_map<frBlockObject*, std::pair<int, int>>
+      obj_gc_version;
   auto& workerRegionQuery = getWorkerRegionQuery();
   while (!rerouteQueue.empty()) {
     auto& entry = rerouteQueue.front();
@@ -2219,12 +2220,14 @@ void FlexDRWorker::modEolCosts_poly(gcNet* net, ModCostType modType)
 
 void FlexDRWorker::routeNet_prep(
     drNet* net,
-    std::set<drPin*, frBlockObjectComp>& unConnPins,
-    std::map<FlexMazeIdx, std::set<drPin*, frBlockObjectComp>>&
+    boost::container::flat_set<drPin*, frBlockObjectComp>& unConnPins,
+    boost::container::flat_map<
+        FlexMazeIdx,
+        boost::container::flat_set<drPin*, frBlockObjectComp>>&
         mazeIdx2unConnPins,
-    std::set<FlexMazeIdx>& apMazeIdx,
-    std::set<FlexMazeIdx>& realPinAPMazeIdx,
-    std::map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox,
+    boost::container::flat_set<FlexMazeIdx>& apMazeIdx,
+    boost::container::flat_set<FlexMazeIdx>& realPinAPMazeIdx,
+    boost::container::flat_map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox,
     std::list<std::pair<drPin*, frBox3D>>& pinTaperBoxes)
 {
   frBox3D* tbx = nullptr;
@@ -2288,8 +2291,10 @@ void FlexDRWorker::routeNet_prep(
 }
 
 void FlexDRWorker::routeNet_setSrc(
-    std::set<drPin*, frBlockObjectComp>& unConnPins,
-    std::map<FlexMazeIdx, std::set<drPin*, frBlockObjectComp>>&
+    boost::container::flat_set<drPin*, frBlockObjectComp>& unConnPins,
+    boost::container::flat_map<
+        FlexMazeIdx,
+        boost::container::flat_set<drPin*, frBlockObjectComp>>&
         mazeIdx2unConnPins,
     std::vector<FlexMazeIdx>& connComps,
     FlexMazeIdx& ccMazeIdx1,
@@ -2387,7 +2392,9 @@ void FlexDRWorker::routeNet_setSrc(
 drPin* FlexDRWorker::routeNet_getNextDst(
     FlexMazeIdx& ccMazeIdx1,
     FlexMazeIdx& ccMazeIdx2,
-    std::map<FlexMazeIdx, std::set<drPin*, frBlockObjectComp>>&
+    boost::container::flat_map<
+        FlexMazeIdx,
+        boost::container::flat_set<drPin*, frBlockObjectComp>>&
         mazeIdx2unConnPins,
     std::list<std::pair<drPin*, frBox3D>>& pinTaperBoxes)
 {
@@ -2436,13 +2443,15 @@ void FlexDRWorker::mazePinInit()
 void FlexDRWorker::routeNet_postAstarUpdate(
     std::vector<FlexMazeIdx>& path,
     std::vector<FlexMazeIdx>& connComps,
-    std::set<drPin*, frBlockObjectComp>& unConnPins,
-    std::map<FlexMazeIdx, std::set<drPin*, frBlockObjectComp>>&
+    boost::container::flat_set<drPin*, frBlockObjectComp>& unConnPins,
+    boost::container::flat_map<
+        FlexMazeIdx,
+        boost::container::flat_set<drPin*, frBlockObjectComp>>&
         mazeIdx2unConnPins,
     bool isFirstConn)
 {
   // first point is dst
-  std::set<FlexMazeIdx> localConnComps;
+  boost::container::flat_set<FlexMazeIdx> localConnComps;
   if (!path.empty()) {
     auto mi = path[0];
     std::vector<drPin*> tmpPins;
@@ -2536,9 +2545,9 @@ void FlexDRWorker::routeNet_postAstarUpdate(
 void FlexDRWorker::routeNet_postAstarWritePath(
     drNet* net,
     std::vector<FlexMazeIdx>& points,
-    const std::set<FlexMazeIdx>& realPinApMazeIdx,
-    std::map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox,
-    const std::set<FlexMazeIdx>& apMazeIdx)
+    const boost::container::flat_set<FlexMazeIdx>& realPinApMazeIdx,
+    boost::container::flat_map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox,
+    const boost::container::flat_set<FlexMazeIdx>& apMazeIdx)
 {
   if (points.empty()) {
     return;
@@ -2873,18 +2882,19 @@ bool FlexDRWorker::splitPathSeg(frMIdx& midX,
   }
   return false;
 }
-void FlexDRWorker::processPathSeg(frMIdx startX,
-                                  frMIdx startY,
-                                  frMIdx endX,
-                                  frMIdx endY,
-                                  frMIdx z,
-                                  const std::set<FlexMazeIdx>& realApMazeIdx,
-                                  drNet* net,
-                                  bool segIsVertical,
-                                  bool taper,
-                                  int i,
-                                  std::vector<FlexMazeIdx>& points,
-                                  const std::set<FlexMazeIdx>& apMazeIdx)
+void FlexDRWorker::processPathSeg(
+    frMIdx startX,
+    frMIdx startY,
+    frMIdx endX,
+    frMIdx endY,
+    frMIdx z,
+    const boost::container::flat_set<FlexMazeIdx>& realApMazeIdx,
+    drNet* net,
+    bool segIsVertical,
+    bool taper,
+    int i,
+    std::vector<FlexMazeIdx>& points,
+    const boost::container::flat_set<FlexMazeIdx>& apMazeIdx)
 {
   Point startLoc, endLoc;
   frLayerNum currLayerNum = gridGraph_.getLayerNum(z);
@@ -2971,11 +2981,12 @@ bool FlexDRWorker::isInWorkerBorder(frCoord x, frCoord y) const
 }
 // checks whether the path segment is connected to an access point and update
 // connectivity info (stored in frSegStyle)
-void FlexDRWorker::checkPathSegStyle(drPathSeg* ps,
-                                     bool isBegin,
-                                     frSegStyle& style,
-                                     const std::set<FlexMazeIdx>& apMazeIdx,
-                                     const FlexMazeIdx& idx)
+void FlexDRWorker::checkPathSegStyle(
+    drPathSeg* ps,
+    bool isBegin,
+    frSegStyle& style,
+    const boost::container::flat_set<FlexMazeIdx>& apMazeIdx,
+    const FlexMazeIdx& idx)
 {
   const Point& pt = (isBegin ? ps->getBeginPoint() : ps->getEndPoint());
   if (apMazeIdx.find(idx) == apMazeIdx.end()
@@ -3028,7 +3039,7 @@ void FlexDRWorker::checkViaConnectivityToAP(
     drVia* via,
     bool isBottom,
     frNet* net,
-    const std::set<FlexMazeIdx>& apMazeIdx,
+    const boost::container::flat_set<FlexMazeIdx>& apMazeIdx,
     const FlexMazeIdx& idx)
 {
   if (apMazeIdx.find(idx) == apMazeIdx.end()
@@ -3154,7 +3165,7 @@ bool FlexDRWorker::isInsideTaperBox(
     frMIdx y,
     frMIdx startZ,
     frMIdx endZ,
-    std::map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox)
+    boost::container::flat_map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox)
 {
   FlexMazeIdx idx(x, y, startZ);
   auto it = mazeIdx2TaperBox.find(idx);
@@ -3202,8 +3213,9 @@ void FlexDRWorker::routeNet_AddCutSpcCost(std::vector<FlexMazeIdx>& path)
   }
 }
 
-void FlexDRWorker::routeNet_prepAreaMap(drNet* net,
-                                        std::map<FlexMazeIdx, frCoord>& areaMap)
+void FlexDRWorker::routeNet_prepAreaMap(
+    drNet* net,
+    boost::container::flat_map<FlexMazeIdx, frCoord>& areaMap)
 {
   for (auto& pin : net->getPins()) {
     for (auto& ap : pin->getAccessPatterns()) {
@@ -3228,14 +3240,17 @@ bool FlexDRWorker::routeNet(drNet* net, std::vector<FlexMazeIdx>& paths)
   if (graphics_) {
     graphics_->show(true);
   }
-  std::set<drPin*, frBlockObjectComp> unConnPins;
-  std::map<FlexMazeIdx, std::set<drPin*, frBlockObjectComp>> mazeIdx2unConnPins;
-  std::map<FlexMazeIdx, frBox3D*>
+  boost::container::flat_set<drPin*, frBlockObjectComp> unConnPins;
+  boost::container::flat_map<
+      FlexMazeIdx,
+      boost::container::flat_set<drPin*, frBlockObjectComp>>
+      mazeIdx2unConnPins;
+  boost::container::flat_map<FlexMazeIdx, frBox3D*>
       mazeIdx2TaperBox;  // access points -> taper box: used to efficiently know
                          // what points are in what taper boxes
   std::list<std::pair<drPin*, frBox3D>> pinTaperBoxes;
-  std::set<FlexMazeIdx> apMazeIdx;
-  std::set<FlexMazeIdx> realPinAPMazeIdx;
+  boost::container::flat_set<FlexMazeIdx> apMazeIdx;
+  boost::container::flat_set<FlexMazeIdx> realPinAPMazeIdx;
   routeNet_prep(net,
                 unConnPins,
                 mazeIdx2unConnPins,
@@ -3244,7 +3259,7 @@ bool FlexDRWorker::routeNet(drNet* net, std::vector<FlexMazeIdx>& paths)
                 mazeIdx2TaperBox,
                 pinTaperBoxes);
   // prep for area map
-  std::map<FlexMazeIdx, frCoord> areaMap;
+  boost::container::flat_map<FlexMazeIdx, frCoord> areaMap;
   if (ENABLE_BOUNDARY_MAR_FIX) {
     routeNet_prepAreaMap(net, areaMap);
   }
@@ -3314,7 +3329,7 @@ bool FlexDRWorker::routeNet(drNet* net, std::vector<FlexMazeIdx>& paths)
 void FlexDRWorker::routeNet_postAstarPatchMinAreaVio(
     drNet* net,
     const std::vector<FlexMazeIdx>& path,
-    const std::map<FlexMazeIdx, frCoord>& areaMap)
+    const boost::container::flat_map<FlexMazeIdx, frCoord>& areaMap)
 {
   if (path.empty()) {
     return;

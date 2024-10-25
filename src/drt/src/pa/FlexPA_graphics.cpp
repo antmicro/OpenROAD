@@ -164,9 +164,10 @@ void FlexPAGraphics::drawLayer(odb::dbTechLayer* layer, gui::Painter& painter)
   }
 }
 
-void FlexPAGraphics::startPin(frMPin* pin,
-                              frInstTerm* inst_term,
-                              std::set<frInst*, frBlockObjectComp>* inst_class)
+void FlexPAGraphics::startPin(
+    frMPin* pin,
+    frInstTerm* inst_term,
+    boost::container::flat_set<frInst*, frBlockObjectComp>* inst_class)
 {
   pin_ = nullptr;
 
@@ -193,9 +194,10 @@ void FlexPAGraphics::startPin(frMPin* pin,
   gui_->pause();
 }
 
-void FlexPAGraphics::startPin(frBPin* pin,
-                              frInstTerm* inst_term,
-                              std::set<frInst*, frBlockObjectComp>* inst_class)
+void FlexPAGraphics::startPin(
+    frBPin* pin,
+    frInstTerm* inst_term,
+    boost::container::flat_set<frInst*, frBlockObjectComp>* inst_class)
 {
   pin_ = nullptr;
 

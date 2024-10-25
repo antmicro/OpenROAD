@@ -171,7 +171,8 @@ void FlexGCWorker::addTargetObj(frBlockObject* in)
   impl_->targetObjs_.insert(in);
 }
 
-void FlexGCWorker::setTargetObjs(const std::set<frBlockObject*>& targetObjs)
+void FlexGCWorker::setTargetObjs(
+    const boost::container::flat_set<frBlockObject*>& targetObjs)
 {
   impl_->targetObjs_ = targetObjs;
 }

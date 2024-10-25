@@ -3705,7 +3705,7 @@ void FlexGCWorker::Impl::patchMetalShape_minStep()
       continue;
     }
     workerRegionQuery.query(markerBBox, lNum, results);
-    std::map<Point, std::vector<drVia*>> vias;
+    boost::container::flat_map<Point, std::vector<drVia*>> vias;
     for (auto& connFig : results) {
       if (connFig->typeId() != drcVia) {
         continue;

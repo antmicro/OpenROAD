@@ -116,7 +116,7 @@ bool isPinCoveredByGuides(const frBlockObject* pin,
  */
 void findIntersectingGuides(const int x,
                             const int y,
-                            std::set<int>& out_guides,
+                            boost::container::flat_set<int>& out_guides,
                             const std::vector<frRect>& guides,
                             frDesign* design)
 {
@@ -139,10 +139,11 @@ void findIntersectingGuides(const int x,
  * intersecting guides with all gcells the pin touches
  * @return The chosen pinShape's gcell index
  */
-Point3D findBestPinLocation(frDesign* design,
-                            frBlockObject* pin,
-                            const std::vector<frRect>& guides,
-                            std::set<int>& candidate_guides_indices)
+Point3D findBestPinLocation(
+    frDesign* design,
+    frBlockObject* pin,
+    const std::vector<frRect>& guides,
+    boost::container::flat_set<int>& candidate_guides_indices)
 {
   Rect pin_bbox = getPinBBox(pin);
   // adjusting pin bounding box as pins tangent to gcell aren't considered as
@@ -205,10 +206,11 @@ Point3D findBestPinLocation(frDesign* design,
  * @param best_pin_loc_coords The gcell center point of the chosen pin shape
  *
  */
-int findClosestGuide(const Point3D& best_pin_loc_coords,
-                     const std::vector<frRect>& guides,
-                     const std::set<int>& candidate_guides_indices,
-                     const frCoord layer_change_penalty)
+int findClosestGuide(
+    const Point3D& best_pin_loc_coords,
+    const std::vector<frRect>& guides,
+    const boost::container::flat_set<int>& candidate_guides_indices,
+    const frCoord layer_change_penalty)
 {
   int closest_guide_idx = -1;
   int dist = 0;
@@ -692,7 +694,7 @@ void GuideProcessor::buildGCellPatterns_helper(frCoord& GCELLGRIDX,
 void GuideProcessor::buildGCellPatterns_getWidth(frCoord& GCELLGRIDX,
                                                  frCoord& GCELLGRIDY)
 {
-  std::map<frCoord, int> guideGridXMap, guideGridYMap;
+  boost::container::flat_map<frCoord, int> guideGridXMap, guideGridYMap;
   // get GCell size information loop
   for (auto& [netName, rects] : tmp_guides_) {
     for (auto& rect : rects) {
@@ -748,7 +750,7 @@ void GuideProcessor::buildGCellPatterns_getOffset(frCoord GCELLGRIDX,
                                                   frCoord& GCELLOFFSETX,
                                                   frCoord& GCELLOFFSETY)
 {
-  std::map<frCoord, int> guideOffsetXMap, guideOffsetYMap;
+  boost::container::flat_map<frCoord, int> guideOffsetXMap, guideOffsetYMap;
   // get GCell offset information loop
   for (auto& [netName, rects] : tmp_guides_) {
     for (auto& rect : rects) {
@@ -934,7 +936,7 @@ void GuideProcessor::patchGuides(frNet* net,
                 "Pin {} not in any guide. Attempting to patch guides to cover "
                 "(at least part of) the pin.",
                 name);
-  std::set<int> candidate_guides_indices;
+  boost::container::flat_set<int> candidate_guides_indices;
   const Point3D best_pin_loc_idx
       = findBestPinLocation(getDesign(), pin, guides, candidate_guides_indices);
   // The x/y/z coordinates of best_pin_loc_idx
@@ -990,15 +992,16 @@ namespace split {
  * @param split_indices The returned set of indices where there exists pins.
  */
 void splitByPins(
-    const std::vector<std::map<frCoord, std::map<frCoord, frBlockObjectSet>>>&
-        pin_helper,
+    const std::vector<boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frCoord, frBlockObjectSet>>>& pin_helper,
     const frLayerNum layer_num,
     const bool is_horizontal,
     const frCoord track_idx,
     const frCoord begin_idx,
     const frCoord end_idx,
-    frBlockObjectMap<std::set<Point3D>>& pin_gcell_map,
-    std::set<frCoord>& split_indices)
+    frBlockObjectMap<boost::container::flat_set<Point3D>>& pin_gcell_map,
+    boost::container::flat_set<frCoord>& split_indices)
 {
   const auto& layer_pins = pin_helper.at(layer_num);
   const auto& track_it = layer_pins.find(track_idx);
@@ -1046,12 +1049,13 @@ void splitByPins(
  * @param split_indices A set to store the indices where intersections are
  * found.
  */
-void splitByLayerIntersection(const frLayerNum layer_num,
-                              const TrackIntervalsByLayer& intvs,
-                              const frCoord track_idx,
-                              const frCoord begin_idx,
-                              const frCoord end_idx,
-                              std::set<frCoord>& split_indices)
+void splitByLayerIntersection(
+    const frLayerNum layer_num,
+    const TrackIntervalsByLayer& intvs,
+    const frCoord track_idx,
+    const frCoord begin_idx,
+    const frCoord end_idx,
+    boost::container::flat_set<frCoord>& split_indices)
 {
   if (layer_num < 0 || layer_num >= intvs.size()) {
     return;
@@ -1107,13 +1111,15 @@ void addSplitRect(const frCoord track_idx,
 void GuideProcessor::genGuides_split(
     std::vector<frRect>& rects,
     const TrackIntervalsByLayer& intvs,
-    const std::map<Point3D, frBlockObjectSet>& gcell_pin_map,
-    frBlockObjectMap<std::set<Point3D>>& pin_gcell_map,
+    const boost::container::flat_map<Point3D, frBlockObjectSet>& gcell_pin_map,
+    frBlockObjectMap<boost::container::flat_set<Point3D>>& pin_gcell_map,
     bool first_iter) const
 {
   rects.clear();
   // layer_num->track_idx->routing_dir_track_idx->set of pins
-  std::vector<std::map<frCoord, std::map<frCoord, frBlockObjectSet>>>
+  std::vector<boost::container::flat_map<
+      frCoord,
+      boost::container::flat_map<frCoord, frBlockObjectSet>>>
       pin_helper(getTech()->getLayers().size());
   for (const auto& [point, pins] : gcell_pin_map) {
     if (getTech()->getLayer(point.z())->getDir()
@@ -1132,7 +1138,7 @@ void GuideProcessor::genGuides_split(
       for (const auto& intv : curr_intvs) {
         auto begin_idx = intv.lower();
         auto end_idx = intv.upper();
-        std::set<frCoord> split_indices;
+        boost::container::flat_set<frCoord> split_indices;
         // hardcode layerNum <= VIA_ACCESS_LAYERNUM not used for GR
         if (first_iter && layer_num <= VIA_ACCESS_LAYERNUM) {
           // split by pin
@@ -1210,7 +1216,7 @@ void GuideProcessor::genGuides_split(
 }
 
 void GuideProcessor::mapPinShapesToGCells(
-    std::map<Point3D, frBlockObjectSet>& gcell_pin_map,
+    boost::container::flat_map<Point3D, frBlockObjectSet>& gcell_pin_map,
     frBlockObject* term) const
 {
   const auto pin_shapes = getPinShapes(term);
@@ -1231,7 +1237,7 @@ void GuideProcessor::mapPinShapesToGCells(
 
 void GuideProcessor::initGCellPinMap(
     const frNet* net,
-    std::map<Point3D, frBlockObjectSet>& gcell_pin_map) const
+    boost::container::flat_map<Point3D, frBlockObjectSet>& gcell_pin_map) const
 {
   for (auto instTerm : net->getInstTerms()) {
     if (DBPROCESSNODE == "GF14_13M_3Mx_2Cx_4Kx_2Hx_2Gx_LB"
@@ -1250,7 +1256,7 @@ void GuideProcessor::initGCellPinMap(
 }
 
 bool GuideProcessor::mapITermAccessPointsToGCells(
-    std::map<Point3D, frBlockObjectSet>& gcell_pin_map,
+    boost::container::flat_map<Point3D, frBlockObjectSet>& gcell_pin_map,
     frInstTerm* inst_term) const
 {
   const size_t num_pins = inst_term->getTerm()->getPins().size();
@@ -1274,7 +1280,7 @@ bool GuideProcessor::mapITermAccessPointsToGCells(
 }
 
 bool GuideProcessor::mapBTermAccessPointsToGCells(
-    std::map<Point3D, frBlockObjectSet>& gcell_pin_map,
+    boost::container::flat_map<Point3D, frBlockObjectSet>& gcell_pin_map,
     frBTerm* term) const
 {
   int pins_covered = 0;
@@ -1298,7 +1304,7 @@ bool GuideProcessor::mapBTermAccessPointsToGCells(
 
 void GuideProcessor::initPinGCellMap(
     frNet* net,
-    frBlockObjectMap<std::set<Point3D>>& pin_gcell_map)
+    frBlockObjectMap<boost::container::flat_set<Point3D>>& pin_gcell_map)
 {
   for (auto& instTerm : net->getInstTerms()) {
     pin_gcell_map[instTerm];
@@ -1367,8 +1373,8 @@ void GuideProcessor::genGuides(frNet* net, std::vector<frRect>& rects)
   }
   genGuides_prep(rects, intvs);
 
-  std::map<Point3D, frBlockObjectSet> gcell_pin_map;
-  frBlockObjectMap<std::set<Point3D>> pin_gcell_map;
+  boost::container::flat_map<Point3D, frBlockObjectSet> gcell_pin_map;
+  frBlockObjectMap<boost::container::flat_set<Point3D>> pin_gcell_map;
   initGCellPinMap(net, gcell_pin_map);
   initPinGCellMap(net, pin_gcell_map);
 
@@ -1439,7 +1445,7 @@ GuidePathFinder::GuidePathFinder(
     frNet* net,
     const bool force_feed_through,
     const std::vector<frRect>& rects,
-    const frBlockObjectMap<std::set<Point3D>>& pin_gcell_map)
+    const frBlockObjectMap<boost::container::flat_set<Point3D>>& pin_gcell_map)
     : design_(design),
       logger_(logger),
       net_(net),
@@ -1454,7 +1460,7 @@ GuidePathFinder::GuidePathFinder(
 
 void GuidePathFinder::buildNodeMap(
     const std::vector<frRect>& rects,
-    const frBlockObjectMap<std::set<Point3D>>& pin_gcell_map)
+    const frBlockObjectMap<boost::container::flat_set<Point3D>>& pin_gcell_map)
 {
   node_map_.clear();
   for (int i = 0; i < (int) rects.size(); i++) {
@@ -1476,7 +1482,7 @@ void GuidePathFinder::buildNodeMap(
 
 std::vector<std::vector<Point3D>> GuidePathFinder::getPinToGCellList(
     const std::vector<frRect>& rects,
-    const frBlockObjectMap<std::set<Point3D>>& pin_gcell_map,
+    const frBlockObjectMap<boost::container::flat_set<Point3D>>& pin_gcell_map,
     const std::vector<frBlockObject*>& pins) const
 {
   std::vector<std::vector<Point3D>> pin_to_gcell(getPinCount());
@@ -1551,7 +1557,7 @@ void GuidePathFinder::updateNodeMap(
 
 void GuidePathFinder::commitPathToGuides(
     std::vector<frRect>& rects,
-    const frBlockObjectMap<std::set<Point3D>>& pin_gcell_map,
+    const frBlockObjectMap<boost::container::flat_set<Point3D>>& pin_gcell_map,
     std::vector<std::pair<frBlockObject*, Point>>& gr_pins)
 {
   std::vector<frBlockObject*> pins;

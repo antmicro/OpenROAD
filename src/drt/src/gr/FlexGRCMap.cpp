@@ -190,7 +190,7 @@ void FlexGRCMap::init()
 
   // update demand for fixed objects (only for pref routing direction)
   cmapLayerIdx = 0;
-  std::set<frCoord> trackLocs;
+  boost::container::flat_set<frCoord> trackLocs;
   std::vector<rq_box_value_t<frBlockObject*>> queryResult;
   auto regionQuery = design_->getRegionQuery();
   unsigned numBlkTracks = 0;
@@ -328,11 +328,11 @@ void FlexGRCMap::init()
 unsigned FlexGRCMap::getNumBlkTracks(
     bool isHorz,
     frLayerNum lNum,
-    const std::set<frCoord>& trackLocs,
+    const boost::container::flat_set<frCoord>& trackLocs,
     const std::vector<rq_box_value_t<frBlockObject*>>& results,
     const frCoord bloatDist = 0)
 {
-  std::set<frCoord> openTrackLocs = trackLocs;
+  boost::container::flat_set<frCoord> openTrackLocs = trackLocs;
   frCoord low, high;
   frCoord actBloatDist;
   auto layer = getDesign()->getTech()->getLayer(lNum);
@@ -414,7 +414,7 @@ unsigned FlexGRCMap::getNumPins(
     const std::vector<rq_box_value_t<frBlockObject*>>& results)
 {
   unsigned numPins = 0;
-  std::set<frBlockObject*> pins;
+  boost::container::flat_set<frBlockObject*> pins;
   for (auto& [box, obj] : results) {
     if (obj->typeId() == frcInstTerm) {
       auto instTerm = static_cast<frInstTerm*>(obj);
@@ -437,7 +437,7 @@ void FlexGRCMap::getTrackLocs(
     bool isHorz,
     frCoord low,
     frCoord high,
-    std::set<frCoord>& trackLocs)
+    boost::container::flat_set<frCoord>& trackLocs)
 {
   for (auto& tp : tps) {
     bool skip = true;

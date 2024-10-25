@@ -1561,9 +1561,9 @@ void FlexGR::initGR_genTopology_net(frNet* net)
   }
 
   std::vector<frNode*> nodes(net->getNodes().size(), nullptr);  // 0 is source
-  std::map<frBlockObject*, std::vector<frNode*>>
+  boost::container::flat_map<frBlockObject*, std::vector<frNode*>>
       pin2Nodes;  // vector order needs to align with map below
-  std::map<frBlockObject*, std::vector<frRPin*>> pin2RPins;
+  boost::container::flat_map<frBlockObject*, std::vector<frRPin*>> pin2RPins;
   unsigned sinkIdx = 1;
 
   auto& netNodes = net->getNodes();
@@ -1641,9 +1641,11 @@ void FlexGR::initGR_genTopology_net(frNet* net)
     }
   }
 
-  // std::map<std::pair<int, int>, std::vector<frNode*> > gcellIdx2Nodes;
+  // boost::container::flat_map<std::pair<int, int>, std::vector<frNode*> >
+  // gcellIdx2Nodes;
   auto& gcellIdx2Nodes = net2GCellIdx2Nodes_[net];
-  // std::map<frNode*, std::vector<frNode*> > gcellNode2RPinNodes;
+  // boost::container::flat_map<frNode*, std::vector<frNode*> >
+  // gcellNode2RPinNodes;
   auto& gcellNode2RPinNodes = net2GCellNode2RPinNodes_[net];
 
   // prep for 2D topology generation in case two nodes are more than one rpin in
@@ -2317,13 +2319,15 @@ void FlexGR::layerAssign_node_commit(
   currNode->setLayerNum((layerNum + 1) * 2);
 
   // tech layer num, not grid layer num
-  std::set<frLayerNum> nodeLayerNums;
-  std::map<frLayerNum, std::vector<frNode*>> layerNum2Children;
+  boost::container::flat_set<frLayerNum> nodeLayerNums;
+  boost::container::flat_map<frLayerNum, std::vector<frNode*>>
+      layerNum2Children;
   // sub nodes are created at same loc as currNode but differnt layerNum
   // since we move from 2d to 3d
-  std::map<frLayerNum, frNode*> layerNum2SubNode;
+  boost::container::flat_map<frLayerNum, frNode*> layerNum2SubNode;
 
-  std::map<frLayerNum, std::vector<frNode*>> layerNum2RPinNodes;
+  boost::container::flat_map<frLayerNum, std::vector<frNode*>>
+      layerNum2RPinNodes;
 
   nodeLayerNums.insert(currNode->getLayerNum());
   for (auto& child : children) {

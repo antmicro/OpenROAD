@@ -47,7 +47,7 @@ void FlexGRGridGraph::init()
 
 void FlexGRGridGraph::initCoords()
 {
-  std::map<frLayerNum, dbTechLayerDir> zMap;
+  boost::container::flat_map<frLayerNum, dbTechLayerDir> zMap;
   Point gcellIdxLL = getGRWorker()->getRouteGCellIdxLL();
   Point gcellIdxUR = getGRWorker()->getRouteGCellIdxUR();
   // xCoords

@@ -102,9 +102,12 @@ void io::Parser::initDefaultVias()
       continue;
     }
     // Check whether viaDefs set is empty
-    std::set<frViaDef*> viaDefs = layer->getViaDefs();
+    boost::container::flat_set<frViaDef*> viaDefs = layer->getViaDefs();
     if (!viaDefs.empty()) {
-      std::map<int, std::map<viaRawPriorityTuple, frViaDef*>> cuts2ViaDefs;
+      boost::container::flat_map<
+          int,
+          boost::container::flat_map<viaRawPriorityTuple, frViaDef*>>
+          cuts2ViaDefs;
       for (auto& viaDef : viaDefs) {
         int cutNum = int(viaDef->getCutFigs().size());
         viaRawPriorityTuple priority;
@@ -273,9 +276,12 @@ void io::Parser::initSecondaryVias()
     if (!has_default_viadef || !has_max_spacing_constraints) {
       continue;
     }
-    std::set<frViaDef*> viadefs = layer->getViaDefs();
+    boost::container::flat_set<frViaDef*> viadefs = layer->getViaDefs();
     if (!viadefs.empty()) {
-      std::map<int, std::map<viaRawPriorityTuple, frViaDef*>> cuts_to_viadefs;
+      boost::container::flat_map<
+          int,
+          boost::container::flat_map<viaRawPriorityTuple, frViaDef*>>
+          cuts_to_viadefs;
       for (auto& viadef : viadefs) {
         int cut_num = int(viadef->getCutFigs().size());
         viaRawPriorityTuple priority;
@@ -715,7 +721,7 @@ inline void getTrackLocs(bool isHorzTracks,
                          frBlock* block,
                          frCoord low,
                          frCoord high,
-                         std::set<frCoord>& trackLocs)
+                         boost::container::flat_set<frCoord>& trackLocs)
 {
   for (auto& tp : block->getTrackPatterns(layer->getLayerNum())) {
     if (tp->isHorizontal() != isHorzTracks) {
@@ -764,7 +770,7 @@ void io::Parser::checkFig(frPinFig* uFig,
       return;
     }
     auto layer = tech_->getLayer(shape->getLayerNum());
-    std::set<int> horzTracks, vertTracks;
+    boost::container::flat_set<int> horzTracks, vertTracks;
     getTrackLocs(true,
                  layer,
                  design_->getTopBlock(),
@@ -822,7 +828,7 @@ void io::Parser::checkFig(frPinFig* uFig,
     poly.set(points.begin(), points.end());
     gtl::get_max_rectangles(rects, poly);
     for (const auto& rect : rects) {
-      std::set<int> horzTracks, vertTracks;
+      boost::container::flat_set<int> horzTracks, vertTracks;
       getTrackLocs(true,
                    layer,
                    design_->getTopBlock(),

@@ -354,14 +354,14 @@ void FlexDR::initGCell2BoundaryPin()
   auto gCellPatterns = topBlock->getGCellPatterns();
   auto& xgp = gCellPatterns.at(0);
   auto& ygp = gCellPatterns.at(1);
-  auto tmpVec = std::vector<std::map<frNet*,
-                                     std::set<std::pair<Point, frLayerNum>>,
-                                     frBlockObjectComp>>((int) ygp.getCount());
-  gcell2BoundaryPin_
-      = std::vector<std::vector<std::map<frNet*,
-                                         std::set<std::pair<Point, frLayerNum>>,
-                                         frBlockObjectComp>>>(
-          (int) xgp.getCount(), tmpVec);
+  auto tmpVec = std::vector<boost::container::flat_map<
+      frNet*,
+      boost::container::flat_set<std::pair<Point, frLayerNum>>,
+      frBlockObjectComp>>((int) ygp.getCount());
+  gcell2BoundaryPin_ = std::vector<std::vector<boost::container::flat_map<
+      frNet*,
+      boost::container::flat_set<std::pair<Point, frLayerNum>>,
+      frBlockObjectComp>>>((int) xgp.getCount(), tmpVec);
   for (auto& net : topBlock->getNets()) {
     auto netPtr = net.get();
     for (auto& guide : net->getGuides()) {
@@ -526,13 +526,19 @@ void FlexDR::removeGCell2BoundaryPin()
   gcell2BoundaryPin_.shrink_to_fit();
 }
 
-std::map<frNet*, std::set<std::pair<Point, frLayerNum>>, frBlockObjectComp>
+boost::container::flat_map<
+    frNet*,
+    boost::container::flat_set<std::pair<Point, frLayerNum>>,
+    frBlockObjectComp>
 FlexDR::initDR_mergeBoundaryPin(int startX,
                                 int startY,
                                 int size,
                                 const Rect& routeBox)
 {
-  std::map<frNet*, std::set<std::pair<Point, frLayerNum>>, frBlockObjectComp>
+  boost::container::flat_map<
+      frNet*,
+      boost::container::flat_set<std::pair<Point, frLayerNum>>,
+      frBlockObjectComp>
       bp;
   auto gCellPatterns = getDesign()->getTopBlock()->getGCellPatterns();
   auto& xgp = gCellPatterns.at(0);
@@ -826,9 +832,11 @@ void FlexDR::searchRepair(const SearchRepairArgs& args)
                   getDesign()->getTopBlock()->getNumMarkers());
     if (getDesign()->getTopBlock()->getNumMarkers() > 0) {
       // report violations
-      std::map<std::string, std::map<frLayerNum, uint>> violations;
-      std::set<frLayerNum> layers;
-      const std::map<std::string, std::string> relabel
+      boost::container::flat_map<std::string,
+                                 boost::container::flat_map<frLayerNum, uint>>
+          violations;
+      boost::container::flat_set<frLayerNum> layers;
+      const boost::container::flat_map<std::string, std::string> relabel
           = {{"Lef58SpacingEndOfLine", "EOL"},
              {"Lef58CutSpacingTable", "CutSpcTbl"},
              {"Lef58EolKeepOut", "eolKeepOut"}};
@@ -1128,7 +1136,7 @@ void FlexDR::reportGuideCoverage()
   const auto numLayers = getTech()->getLayers().size();
   std::vector<uint64_t> totalAreaByLayerNum(numLayers, 0);
   std::vector<uint64_t> totalCoveredAreaByLayerNum(numLayers, 0);
-  std::map<frNet*, std::vector<float>> netsCoverage;
+  boost::container::flat_map<frNet*, std::vector<float>> netsCoverage;
   const auto& nets = getDesign()->getTopBlock()->getNets();
   omp_set_num_threads(MAX_THREADS);
 #pragma omp parallel for schedule(dynamic)
@@ -1348,7 +1356,7 @@ std::vector<frVia*> FlexDR::getLonelyVias(frLayer* layer,
   KDTree tree(via_positions);
   std::vector<std::atomic_bool> visited(via_positions.size());
   std::fill(visited.begin(), visited.end(), false);
-  std::set<int> isolated_via_nodes;
+  boost::container::flat_set<int> isolated_via_nodes;
   omp_set_num_threads(ord::OpenRoad::openRoad()->getThreadCount());
 #pragma omp parallel for schedule(dynamic)
   for (int i = 0; i < via_positions.size(); i++) {
@@ -1553,8 +1561,8 @@ void FlexDRWorker::serialize(Archive& ar, const unsigned int version)
     while (sz--) {
       frBlockObject* obj;
       serializeBlockObject(ar, obj);
-      std::set<std::pair<Point, frLayerNum>> val;
-      (ar) & val;
+      boost::container::flat_set<std::pair<Point, frLayerNum>> val;
+      // (ar) & val; TODO
       boundaryPin_[(frNet*) obj] = std::move(val);
     }
     // owner2nets_
@@ -1569,7 +1577,7 @@ void FlexDRWorker::serialize(Archive& ar, const unsigned int version)
     for (auto& [net, value] : boundaryPin_) {
       frBlockObject* obj = (frBlockObject*) net;
       serializeBlockObject(ar, obj);
-      (ar) & value;
+      // (ar) & value; TODO
     }
   }
 }

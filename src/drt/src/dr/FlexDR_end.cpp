@@ -30,7 +30,8 @@
 
 namespace drt {
 
-void FlexDRWorker::endGetModNets(std::set<frNet*, frBlockObjectComp>& modNets)
+void FlexDRWorker::endGetModNets(
+    boost::container::flat_set<frNet*, frBlockObjectComp>& modNets)
 {
   for (auto& net : nets_) {
     if (net->isModified()) {
@@ -48,7 +49,7 @@ void FlexDRWorker::endGetModNets(std::set<frNet*, frBlockObjectComp>& modNets)
 void FlexDRWorker::endRemoveNets_pathSeg(
     frDesign* design,
     frPathSeg* pathSeg,
-    std::set<std::pair<Point, frLayerNum>>& boundPts)
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& boundPts)
 {
   auto [begin, end] = pathSeg->getPoints();
   auto routeBox = getRouteBox();
@@ -267,9 +268,11 @@ void FlexDRWorker::endRemoveNets_patchWire(frDesign* design, frPatchWire* pwire)
 
 void FlexDRWorker::endRemoveNets(
     frDesign* design,
-    std::set<frNet*, frBlockObjectComp>& modNets,
-    std::map<frNet*, std::set<std::pair<Point, frLayerNum>>, frBlockObjectComp>&
-        boundPts)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& modNets,
+    boost::container::flat_map<
+        frNet*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& boundPts)
 {
   std::vector<frBlockObject*> result;
   design->getRegionQuery()->queryDRObj(getExtBox(), result);
@@ -355,7 +358,7 @@ void FlexDRWorker::endAddNets_patchWire(frDesign* design, drPatchWire* pwire)
 void FlexDRWorker::endAddNets_merge(
     frDesign* design,
     frNet* net,
-    std::set<std::pair<Point, frLayerNum>>& boundPts)
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& boundPts)
 {
   frRegionQuery::Objects<frBlockObject> result;
   std::vector<frBlockObject*> drObjs;
@@ -595,8 +598,10 @@ void FlexDRWorker::endAddNets_updateExtFigs(drNet* net)
 }
 void FlexDRWorker::endAddNets(
     frDesign* design,
-    std::map<frNet*, std::set<std::pair<Point, frLayerNum>>, frBlockObjectComp>&
-        boundPts)
+    boost::container::flat_map<
+        frNet*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& boundPts)
 {
   for (auto& net : nets_) {
     if (!net->isModified()) {
@@ -701,10 +706,13 @@ bool FlexDRWorker::end(frDesign* design)
     return false;
   }
   save_updates_ = dist_on_;
-  std::set<frNet*, frBlockObjectComp> modNets;
+  boost::container::flat_set<frNet*, frBlockObjectComp> modNets;
   endGetModNets(modNets);
   // get lock
-  std::map<frNet*, std::set<std::pair<Point, frLayerNum>>, frBlockObjectComp>
+  boost::container::flat_map<
+      frNet*,
+      boost::container::flat_set<std::pair<Point, frLayerNum>>,
+      frBlockObjectComp>
       boundPts;
   endRemoveNets(design, modNets, boundPts);
   endAddNets(design, boundPts);  // if two subnets have diff isModified()

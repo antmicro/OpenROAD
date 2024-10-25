@@ -923,8 +923,12 @@ class FlexGridGraph
   void init(const frDesign* design,
             const Rect& routeBBox,
             const Rect& extBBox,
-            std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-            std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap,
+            boost::container::flat_map<
+                frCoord,
+                boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+            boost::container::flat_map<
+                frCoord,
+                boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap,
             bool initDR,
             bool followGuide);
   void print() const;
@@ -932,13 +936,14 @@ class FlexGridGraph
   void resetPrevNodeDir();
   void resetSrc();
   void resetDst();
-  bool search(std::vector<FlexMazeIdx>& connComps,
-              drPin* nextPin,
-              std::vector<FlexMazeIdx>& path,
-              FlexMazeIdx& ccMazeIdx1,
-              FlexMazeIdx& ccMazeIdx2,
-              const Point& centerPt,
-              std::map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox);
+  bool search(
+      std::vector<FlexMazeIdx>& connComps,
+      drPin* nextPin,
+      std::vector<FlexMazeIdx>& path,
+      FlexMazeIdx& ccMazeIdx1,
+      FlexMazeIdx& ccMazeIdx2,
+      const Point& centerPt,
+      boost::container::flat_map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox);
   void setCost(frUInt4 drcCostIn,
                frUInt4 markerCostIn,
                frUInt4 FixedShapeCostIn)
@@ -1098,7 +1103,7 @@ class FlexGridGraph
       = nullptr;  // taper box for the current dest pin in the search
 
   // locations of access points. The vector is indexed by layer number.
-  frVector<std::set<Point>> ap_locs_;
+  frVector<boost::container::flat_set<Point>> ap_locs_;
 
   FlexGridGraph() = default;
 
@@ -1262,23 +1267,37 @@ class FlexGridGraph
   }
   // internal init utility
   void initTracks(const frDesign* design,
-                  std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>&
+                  boost::container::flat_map<
+                      frCoord,
+                      boost::container::flat_map<frLayerNum, frTrackPattern*>>&
                       horLoc2TrackPatterns,
-                  std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>&
+                  boost::container::flat_map<
+                      frCoord,
+                      boost::container::flat_map<frLayerNum, frTrackPattern*>>&
                       vertLoc2TrackPatterns,
-                  std::map<frLayerNum, dbTechLayerDir>& layerNum2PreRouteDir,
+                  boost::container::flat_map<frLayerNum, dbTechLayerDir>&
+                      layerNum2PreRouteDir,
                   const Rect& bbox);
   void initGrids(
-      const std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-      const std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap,
-      const std::map<frLayerNum, dbTechLayerDir>& zMap,
+      const boost::container::flat_map<
+          frCoord,
+          boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+      const boost::container::flat_map<
+          frCoord,
+          boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap,
+      const boost::container::flat_map<frLayerNum, dbTechLayerDir>& zMap,
       bool followGuide);
-  void initEdges(const frDesign* design,
-                 std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-                 std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap,
-                 const std::map<frLayerNum, dbTechLayerDir>& zMap,
-                 const Rect& bbox,
-                 bool initDR);
+  void initEdges(
+      const frDesign* design,
+      boost::container::flat_map<
+          frCoord,
+          boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+      boost::container::flat_map<
+          frCoord,
+          boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap,
+      const boost::container::flat_map<frLayerNum, dbTechLayerDir>& zMap,
+      const Rect& bbox,
+      bool initDR);
   frCost getEstCost(const FlexMazeIdx& src,
                     const FlexMazeIdx& dstMazeIdx1,
                     const FlexMazeIdx& dstMazeIdx2,
@@ -1305,8 +1324,9 @@ class FlexGridGraph
               const Point& centerPt);
   bool hasAlignedUpDefTrack(
       frLayerNum layerNum,
-      const std::map<frLayerNum, frTrackPattern*>& xSubMap,
-      const std::map<frLayerNum, frTrackPattern*>& ySubMap) const;
+      const boost::container::flat_map<frLayerNum, frTrackPattern*>& xSubMap,
+      const boost::container::flat_map<frLayerNum, frTrackPattern*>& ySubMap)
+      const;
 
  private:
   bool outOfDieVia(frMIdx x, frMIdx y, frMIdx z, const Rect& dieBox);

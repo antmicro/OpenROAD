@@ -29,6 +29,8 @@
 #pragma once
 
 #include <algorithm>
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -115,7 +117,8 @@ class frLef58CutClassConstraint : public frConstraint
   }
 
  private:
-  std::map<frString, std::shared_ptr<frLef58CutClass>> cutClasses_;
+  boost::container::flat_map<frString, std::shared_ptr<frLef58CutClass>>
+      cutClasses_;
 
   friend class io::Parser;
 };
@@ -1346,7 +1349,7 @@ class frLef58SpacingTableConstraint : public frSpacingTableConstraint
   frLef58SpacingTableConstraint(
       const std::shared_ptr<fr2DLookupTbl<frCoord, frCoord, frCoord>>&
           parallelRunLengthConstraintIn,
-      const std::map<int, std::pair<frCoord, frCoord>>&
+      const boost::container::flat_map<int, std::pair<frCoord, frCoord>>&
           exceptWithinConstraintIn)
       : frSpacingTableConstraint(parallelRunLengthConstraintIn),
         exceptWithinConstraint_(exceptWithinConstraintIn)
@@ -1370,7 +1373,8 @@ class frLef58SpacingTableConstraint : public frSpacingTableConstraint
   frUInt4 getEolWidth() const { return eolWidth_; }
   // setters
   void setExceptWithinConstraint(
-      std::map<int, std::pair<frCoord, frCoord>>& exceptWithinConstraintIn)
+      boost::container::flat_map<int, std::pair<frCoord, frCoord>>&
+          exceptWithinConstraintIn)
   {
     exceptWithinConstraint_ = exceptWithinConstraintIn;
   }
@@ -1402,7 +1406,8 @@ class frLef58SpacingTableConstraint : public frSpacingTableConstraint
   }
 
  protected:
-  std::map<frCoord, std::pair<frCoord, frCoord>> exceptWithinConstraint_;
+  boost::container::flat_map<frCoord, std::pair<frCoord, frCoord>>
+      exceptWithinConstraint_;
   bool wrongDirection_{false};
   bool sameMask_{false};
   bool exceptEol_{false};

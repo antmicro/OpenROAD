@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <memory>
 
 #include "frDesign.h"
@@ -54,7 +56,8 @@ class FlexGCWorker
   gcNet* getTargetNet();
   void resetTargetNet();
   void addTargetObj(frBlockObject* in);
-  void setTargetObjs(const std::set<frBlockObject*>& targetObjs);
+  void setTargetObjs(
+      const boost::container::flat_set<frBlockObject*>& targetObjs);
   void setIgnoreDB();
   void setIgnoreMinArea();
   void setIgnoreLongSideEOL();
@@ -89,7 +92,7 @@ struct MarkerId
   Rect box;
   frLayerNum lNum;
   frConstraint* con;
-  std::set<frBlockObject*> srcs;
+  boost::container::flat_set<frBlockObject*> srcs;
   bool operator<(const MarkerId& rhs) const
   {
     return std::tie(box, lNum, con, srcs)

@@ -213,9 +213,10 @@ std::string TritonRoute::runDRWorker(const std::string& workerStr,
 {
   bool on = debug_->debugDR;
   std::unique_ptr<FlexDRGraphics> graphics_
-      = on && FlexDRGraphics::guiActive() ? std::make_unique<FlexDRGraphics>(
-            debug_.get(), design_.get(), db_, logger_)
-                                          : nullptr;
+      = on && FlexDRGraphics::guiActive()
+            ? std::make_unique<FlexDRGraphics>(
+                  debug_.get(), design_.get(), db_, logger_)
+            : nullptr;
   auto worker
       = FlexDRWorker::load(workerStr, logger_, design_.get(), graphics_.get());
   worker->setViaData(viaData);
@@ -243,9 +244,10 @@ void TritonRoute::debugSingleWorker(const std::string& dumpDir,
   ar >> viaData;
 
   std::unique_ptr<FlexDRGraphics> graphics_
-      = on && FlexDRGraphics::guiActive() ? std::make_unique<FlexDRGraphics>(
-            debug_.get(), design_.get(), db_, logger_)
-                                          : nullptr;
+      = on && FlexDRGraphics::guiActive()
+            ? std::make_unique<FlexDRGraphics>(
+                  debug_.get(), design_.get(), db_, logger_)
+            : nullptr;
   std::ifstream workerFile(fmt::format("{}/worker.bin", dumpDir),
                            std::ios::binary);
   std::string workerStr((std::istreambuf_iterator<char>(workerFile)),
@@ -744,7 +746,7 @@ void TritonRoute::repairPDNVias()
   }
 
   const RTree<odb::dbId<odb::dbSBox>> pdnBlockViaTree(block_vias);
-  std::set<odb::dbId<odb::dbSBox>> removedBoxes;
+  boost::container::flat_set<odb::dbId<odb::dbSBox>> removedBoxes;
   for (const auto& marker : markers) {
     odb::Rect queryBox;
     marker->getBBox().bloat(1, queryBox);
@@ -1088,7 +1090,7 @@ void TritonRoute::getDRCMarkers(frList<std::unique_ptr<frMarker>>& markers,
       workersBatches.back().push_back(std::move(gcWorker));
     }
   }
-  std::map<MarkerId, frMarker*> mapMarkers;
+  boost::container::flat_map<MarkerId, frMarker*> mapMarkers;
   omp_set_num_threads(MAX_THREADS);
   for (auto& workers : workersBatches) {
 #pragma omp parallel for schedule(dynamic)
@@ -1180,7 +1182,7 @@ void TritonRoute::stackVias(odb::dbBTerm* bterm,
 
   odb::dbTech* tech = db_->getTech();
   auto fr_tech = getDesign()->getTech();
-  std::map<int, odb::dbTechVia*> default_vias;
+  boost::container::flat_map<int, odb::dbTechVia*> default_vias;
 
   for (auto layer : tech->getLayers()) {
     if (layer->getType() == odb::dbTechLayerType::CUT) {
@@ -1271,7 +1273,7 @@ bool TritonRoute::netHasStackedVias(odb::dbNet* net)
   odb::dbWire* wire = net->getWire();
 
   odb::dbWirePathItr pitr;
-  std::set<odb::Point> via_points;
+  boost::container::flat_set<odb::Point> via_points;
   for (pitr.begin(wire); pitr.getNextPath(path);) {
     while (pitr.getNextShape(pshape)) {
       via_points.insert(path.point);

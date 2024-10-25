@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <boost/icl/interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
 #include <memory>
@@ -85,15 +87,20 @@ class FlexGR
   std::unique_ptr<FlexGRCMap> cmap2D_;
   Logger* logger_;
   stt::SteinerTreeBuilder* stt_builder_;
-  std::map<frNet*,
-           std::map<std::pair<int, int>, std::vector<frNode*>>,
-           frBlockObjectComp>
+  boost::container::flat_map<
+      frNet*,
+      boost::container::flat_map<std::pair<int, int>, std::vector<frNode*>>,
+      frBlockObjectComp>
       net2GCellIdx2Nodes_;
-  std::map<frNet*, std::vector<frNode*>, frBlockObjectComp> net2GCellNodes_;
-  std::map<frNet*, std::vector<frNode*>, frBlockObjectComp> net2SteinerNodes_;
-  std::map<frNet*,
-           std::map<frNode*, std::vector<frNode*>, frBlockObjectComp>,
-           frBlockObjectComp>
+  boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>
+      net2GCellNodes_;
+  boost::container::flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>
+      net2SteinerNodes_;
+  boost::container::flat_map<frNet*,
+                             boost::container::flat_map<frNode*,
+                                                        std::vector<frNode*>,
+                                                        frBlockObjectComp>,
+                             frBlockObjectComp>
       net2GCellNode2RPinNodes_;
   std::vector<frCoord> trackPitches_;
   std::vector<frCoord> line2ViaPitches_;
@@ -226,14 +233,18 @@ class FlexGR
   void genSTTopology_build_tree_mergeSeg(
       std::vector<frNode*>& pinNodes,
       std::vector<bool>& isU,
-      std::map<frCoord, boost::icl::interval_set<frCoord>>& horzIntvs,
-      std::map<frCoord, boost::icl::interval_set<frCoord>>& vertIntvs);
+      boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+          horzIntvs,
+      boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+          vertIntvs);
   void genSTTopology_build_tree_splitSeg(
       std::vector<frNode*>& pinNodes,
-      std::map<Point, frNode*>& pinGCell2Nodes,
-      std::map<frCoord, boost::icl::interval_set<frCoord>>& horzIntvs,
-      std::map<frCoord, boost::icl::interval_set<frCoord>>& vertIntvs,
-      std::map<Point, frNode*>& steinerGCell2Nodes,
+      boost::container::flat_map<Point, frNode*>& pinGCell2Nodes,
+      boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+          horzIntvs,
+      boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+          vertIntvs,
+      boost::container::flat_map<Point, frNode*>& steinerGCell2Nodes,
       std::vector<frNode*>& steinerNodes);
   // utility
   void writeToGuide();
@@ -358,7 +369,8 @@ class FlexGRWorker
 
   // local storage
   std::vector<std::unique_ptr<grNet>> nets_;
-  std::map<frNet*, std::vector<grNet*>, frBlockObjectComp> owner2nets_;
+  boost::container::flat_map<frNet*, std::vector<grNet*>, frBlockObjectComp>
+      owner2nets_;
 
   FlexGRGridGraph gridGraph_;
   FlexGRWorkerRegionQuery rq_;
@@ -377,19 +389,23 @@ class FlexGRWorker
   void init();
   void initNets();
   void initNets_roots(
-      std::set<frNet*, frBlockObjectComp>& nets,
-      std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
+      boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+      boost::container::
+          flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
   void initNetObjs_roots_pathSeg(
       grPathSeg* pathSeg,
-      std::set<frNet*, frBlockObjectComp>& nets,
-      std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
+      boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+      boost::container::
+          flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
   void initNetObjs_roots_via(
       grVia* via,
-      std::set<frNet*, frBlockObjectComp>& nets,
-      std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
+      boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+      boost::container::
+          flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
   void initNets_searchRepair(
-      std::set<frNet*, frBlockObjectComp>& nets,
-      std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
+      boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+      boost::container::
+          flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
   void initNet(frNet* net, const std::vector<frNode*>& netRoots);
   void initNet_initNodes(grNet* net, frNode* fRoot);
   void initNet_initRoot(grNet* net);
@@ -405,7 +421,8 @@ class FlexGRWorker
   void initNets_printNets();
   void initNets_printNet(grNet* net);
   void initNets_printFNets(
-      std::map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
+      boost::container::
+          flat_map<frNet*, std::vector<frNode*>, frBlockObjectComp>& netRoots);
   void initNets_printFNet(frNode* root);
 
   // route
@@ -421,32 +438,38 @@ class FlexGRWorker
   void modCong_pathSeg(grPathSeg* pathSeg, bool isAdd);
   void mazeNetInit_removeNetNodes(grNet* net);
   bool routeNet(grNet* net);
-  void routeNet_prep(grNet* net,
-                     std::set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
-                     std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode,
-                     std::map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode);
-  void routeNet_setSrc(
+  void routeNet_prep(
       grNet* net,
-      std::set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
-      std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode,
-      std::vector<FlexMazeIdx>& connComps,
-      FlexMazeIdx& ccMazeIdx1,
-      FlexMazeIdx& ccMazeIdx2,
-      Point& centerPt);
-  grNode* routeNet_getNextDst(
-      FlexMazeIdx& ccMazeIdx1,
-      FlexMazeIdx& ccMazeIdx2,
-      std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode);
+      boost::container::flat_set<grNode*, frBlockObjectComp>&
+          unConnPinGCellNodes,
+      boost::container::flat_map<FlexMazeIdx, grNode*>&
+          mazeIdx2unConnPinGCellNode,
+      boost::container::flat_map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode);
+  void routeNet_setSrc(grNet* net,
+                       boost::container::flat_set<grNode*, frBlockObjectComp>&
+                           unConnPinGCellNodes,
+                       boost::container::flat_map<FlexMazeIdx, grNode*>&
+                           mazeIdx2unConnPinGCellNode,
+                       std::vector<FlexMazeIdx>& connComps,
+                       FlexMazeIdx& ccMazeIdx1,
+                       FlexMazeIdx& ccMazeIdx2,
+                       Point& centerPt);
+  grNode* routeNet_getNextDst(FlexMazeIdx& ccMazeIdx1,
+                              FlexMazeIdx& ccMazeIdx2,
+                              boost::container::flat_map<FlexMazeIdx, grNode*>&
+                                  mazeIdx2unConnPinGCellNode);
   grNode* routeNet_postAstarUpdate(
       std::vector<FlexMazeIdx>& path,
       std::vector<FlexMazeIdx>& connComps,
-      std::set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
-      std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode);
+      boost::container::flat_set<grNode*, frBlockObjectComp>&
+          unConnPinGCellNodes,
+      boost::container::flat_map<FlexMazeIdx, grNode*>&
+          mazeIdx2unConnPinGCellNode);
   void routeNet_postAstarWritePath(
       grNet* net,
       std::vector<FlexMazeIdx>& points,
       grNode* leaf,
-      std::map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode);
+      boost::container::flat_map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode);
   grNode* routeNet_postAstarWritePath_splitPathSeg(grNode* child,
                                                    grNode* parent,
                                                    const Point& breakPt);
@@ -454,15 +477,20 @@ class FlexGRWorker
   void route_decayHistCost();
 
   // end
-  void endGetModNets(std::set<frNet*, frBlockObjectComp>& modNets);
-  void endRemoveNets(const std::set<frNet*, frBlockObjectComp>& modNets);
-  void endRemoveNets_objs(const std::set<frNet*, frBlockObjectComp>& modNets);
+  void endGetModNets(
+      boost::container::flat_set<frNet*, frBlockObjectComp>& modNets);
+  void endRemoveNets(
+      const boost::container::flat_set<frNet*, frBlockObjectComp>& modNets);
+  void endRemoveNets_objs(
+      const boost::container::flat_set<frNet*, frBlockObjectComp>& modNets);
   void endRemoveNets_pathSeg(grPathSeg* pathSeg);
   void endRemoveNets_via(grVia* via);
-  void endRemoveNets_nodes(const std::set<frNet*, frBlockObjectComp>& modNets);
+  void endRemoveNets_nodes(
+      const boost::container::flat_set<frNet*, frBlockObjectComp>& modNets);
   void endRemoveNets_nodes_net(grNet* net, frNet* fnet);
   void endRemoveNets_node(frNode* node);
-  void endAddNets(std::set<frNet*, frBlockObjectComp>& modNets);
+  void endAddNets(
+      boost::container::flat_set<frNet*, frBlockObjectComp>& modNets);
   void endAddNets_stitchRouteBound(grNet* net);
   void endAddNets_stitchRouteBound_node(grNode* node);
   void endAddNets_addNet(grNet* net, frNet* fnet);

@@ -51,13 +51,13 @@ bool FlexDRWorker::isRouteVia(const frVia* via) const
 
 void FlexDRWorker::initNetObjs_pathSeg(
     frPathSeg* pathSeg,
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netRouteObjs,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netExtObjs)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netRouteObjs,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netExtObjs)
 {
   const auto [begin, end] = pathSeg->getPoints();
   auto net = pathSeg->getNet();
@@ -159,13 +159,13 @@ void FlexDRWorker::initNetObjs_pathSeg(
 
 void FlexDRWorker::initNetObjs_via(
     const frVia* via,
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netRouteObjs,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netExtObjs)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netRouteObjs,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netExtObjs)
 {
   auto net = via->getNet();
   nets.insert(net);
@@ -180,13 +180,13 @@ void FlexDRWorker::initNetObjs_via(
 
 void FlexDRWorker::initNetObjs_patchWire(
     frPatchWire* pwire,
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netRouteObjs,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netExtObjs)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netRouteObjs,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netExtObjs)
 {
   auto net = pwire->getNet();
   nets.insert(net);
@@ -206,15 +206,17 @@ void FlexDRWorker::initNetObjs_patchWire(
 // the same criterion above
 void FlexDRWorker::initNetObjs(
     const frDesign* design,
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netRouteObjs,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netExtObjs,
-    std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& netOrigGuides,
-    std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& netGuides)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netRouteObjs,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netExtObjs,
+    boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>&
+        netOrigGuides,
+    boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>&
+        netGuides)
 {
   std::vector<frBlockObject*> result;
   design->getRegionQuery()->queryDRObj(getExtBox(), result);
@@ -345,7 +347,7 @@ void FlexDRWorker::initNets_segmentTerms(const Point& bp,
 
 namespace {
 void dfs(const int start,
-         const std::map<int, std::vector<int>>& adj_list,
+         const boost::container::flat_map<int, std::vector<int>>& adj_list,
          std::vector<bool>& visited,
          std::vector<int>& component)
 {
@@ -497,7 +499,7 @@ void FlexDRWorker::initNets_initDR_helper(
     }
     nodes.emplace_back(Node::TERM, i, rect);
   }
-  std::map<int, std::vector<int>> nodeMap;
+  boost::container::flat_map<int, std::vector<int>> nodeMap;
   for (int i = 0; i < nodes.size(); i++) {
     for (int j = i + 1; j < nodes.size(); j++) {
       if (nodes[i].rect.intersects(nodes[j].rect)) {
@@ -648,17 +650,20 @@ void FlexDRWorker::initNets_initDR_helper(
 // inits nets based on the pins
 void FlexDRWorker::initNets_initDR(
     const frDesign* design,
-    std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netRouteObjs,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netExtObjs,
-    std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& netOrigGuides,
-    std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& netGuides)
+    boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netRouteObjs,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netExtObjs,
+    boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>&
+        netOrigGuides,
+    boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>&
+        netGuides)
 {
-  std::map<frNet*, frBlockObjectSet, frBlockObjectComp> netTerms;
+  boost::container::flat_map<frNet*, frBlockObjectSet, frBlockObjectComp>
+      netTerms;
   std::vector<frBlockObject*> result;
   design->getRegionQuery()->queryGRPin(getRouteBox(), result);
   for (auto obj : result) {
@@ -733,9 +738,10 @@ void FlexDRWorker::initNets_searchRepair_pin2epMap_helper(
     const frNet* net,
     const Point& bp,
     const frLayerNum lNum,
-    std::map<frBlockObject*,
-             std::set<std::pair<Point, frLayerNum>>,
-             frBlockObjectComp>& pin2epMap)
+    boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap)
 {
   frRegionQuery::Objects<frBlockObject> result;
   design->getRegionQuery()->query({bp, bp}, lNum, result);
@@ -765,9 +771,10 @@ void FlexDRWorker::initNets_searchRepair_pin2epMap(
     const frDesign* design,
     const frNet* net,
     const std::vector<std::unique_ptr<drConnFig>>& netRouteObjs,
-    std::map<frBlockObject*,
-             std::set<std::pair<Point, frLayerNum>>,
-             frBlockObjectComp>& pin2epMap)
+    boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap)
 {
   // should not count extObjs in union find
   for (auto& uPtr : netRouteObjs) {
@@ -813,7 +820,8 @@ void FlexDRWorker::initNets_searchRepair_pin2epMap(
 // maps begin/end points of shapes to their shapes
 void FlexDRWorker::initNets_searchRepair_nodeMap_routeObjEnd(
     const std::vector<std::unique_ptr<drConnFig>>& netRouteObjs,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   for (int i = 0; i < (int) netRouteObjs.size(); i++) {
     auto connFig = netRouteObjs[i].get();
@@ -847,9 +855,12 @@ void FlexDRWorker::initNets_searchRepair_nodeMap_routeObjSplit_helper(
     const frCoord trackCoord,
     const frCoord splitCoord,
     const frLayerNum lNum,
-    std::vector<std::map<frCoord, std::map<frCoord, std::pair<frCoord, int>>>>&
+    std::vector<boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frCoord, std::pair<frCoord, int>>>>&
         mergeHelper,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   auto it1 = mergeHelper[lNum].find(trackCoord);
   if (it1 == mergeHelper[lNum].end()) {
@@ -873,12 +884,17 @@ void FlexDRWorker::initNets_searchRepair_nodeMap_routeObjSplit_helper(
 // shapes, to their shapes
 void FlexDRWorker::initNets_searchRepair_nodeMap_routeObjSplit(
     const std::vector<std::unique_ptr<drConnFig>>& netRouteObjs,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   const int num_layers = getTech()->getLayers().size();
-  std::vector<std::map<frCoord, std::map<frCoord, std::pair<frCoord, int>>>>
+  std::vector<boost::container::flat_map<
+      frCoord,
+      boost::container::flat_map<frCoord, std::pair<frCoord, int>>>>
       horzMergeHelper(num_layers);
-  std::vector<std::map<frCoord, std::map<frCoord, std::pair<frCoord, int>>>>
+  std::vector<boost::container::flat_map<
+      frCoord,
+      boost::container::flat_map<frCoord, std::pair<frCoord, int>>>>
       vertMergeHelper(num_layers);
   for (int i = 0; i < (int) netRouteObjs.size(); i++) {
     auto connFig = netRouteObjs[i].get();
@@ -939,10 +955,12 @@ void FlexDRWorker::initNets_searchRepair_nodeMap_routeObjSplit(
 void FlexDRWorker::initNets_searchRepair_nodeMap_pin(
     const std::vector<std::unique_ptr<drConnFig>>& netRouteObjs,
     std::vector<frBlockObject*>& netPins,
-    const std::map<frBlockObject*,
-                   std::set<std::pair<Point, frLayerNum>>,
-                   frBlockObjectComp>& pin2epMap,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    const boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap,
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   int currCnt = (int) netRouteObjs.size();
   netPins.reserve(pin2epMap.size());
@@ -960,10 +978,12 @@ void FlexDRWorker::initNets_searchRepair_nodeMap_pin(
 void FlexDRWorker::initNets_searchRepair_nodeMap(
     const std::vector<std::unique_ptr<drConnFig>>& netRouteObjs,
     std::vector<frBlockObject*>& netPins,
-    const std::map<frBlockObject*,
-                   std::set<std::pair<Point, frLayerNum>>,
-                   frBlockObjectComp>& pin2epMap,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    const boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap,
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   initNets_searchRepair_nodeMap_routeObjEnd(netRouteObjs, nodeMap);
   initNets_searchRepair_nodeMap_routeObjSplit(netRouteObjs, nodeMap);
@@ -973,7 +993,8 @@ void FlexDRWorker::initNets_searchRepair_nodeMap(
 // maps routeObjs to sub-nets
 void FlexDRWorker::initNets_searchRepair_connComp(
     frNet* net,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap,
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap,
     std::vector<int>& compIdx)
 {
   const int nCnt = (int) compIdx.size();  // total node cnt
@@ -1033,14 +1054,15 @@ void FlexDRWorker::initNets_searchRepair_connComp(
 
 void FlexDRWorker::initNets_searchRepair(
     const frDesign* design,
-    const std::set<frNet*, frBlockObjectComp>& nets,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netRouteObjs,
-    std::map<frNet*,
-             std::vector<std::unique_ptr<drConnFig>>,
-             frBlockObjectComp>& netExtObjs,
-    std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& netOrigGuides)
+    const boost::container::flat_set<frNet*, frBlockObjectComp>& nets,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netRouteObjs,
+    boost::container::flat_map<frNet*,
+                               std::vector<std::unique_ptr<drConnFig>>,
+                               frBlockObjectComp>& netExtObjs,
+    boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>&
+        netOrigGuides)
 {
   for (auto net : nets) {
     if (isInitDR() && getRipupMode() == RipUpMode::INCR
@@ -1049,14 +1071,17 @@ void FlexDRWorker::initNets_searchRepair(
     }
     // build big graph;
     // node number : routeObj, pins
-    std::map<frBlockObject*,
-             std::set<std::pair<Point, frLayerNum>>,
-             frBlockObjectComp>
+    boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>
         pin2epMap;
     initNets_searchRepair_pin2epMap(design, net, netRouteObjs[net], pin2epMap);
 
     std::vector<frBlockObject*> netPins;
-    std::map<std::pair<Point, frLayerNum>, std::set<int>> nodeMap;
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>
+        nodeMap;
     initNets_searchRepair_nodeMap(
         netRouteObjs[net], netPins, pin2epMap, nodeMap);
 
@@ -1116,8 +1141,8 @@ void FlexDRWorker::initNets_searchRepair(
 bool FlexDRWorker::findAPTracks(const frLayerNum startLayerNum,
                                 const frLayerNum endLayerNum,
                                 const Rectangle& pinRect,
-                                std::set<frCoord>& xLocs,
-                                std::set<frCoord>& yLocs)
+                                boost::container::flat_set<frCoord>& xLocs,
+                                boost::container::flat_set<frCoord>& yLocs)
 {
   const int inc = (startLayerNum < endLayerNum ? 2 : -2);
 
@@ -1164,7 +1189,7 @@ void FlexDRWorker::initNet_termGenAp(const frDesign* design, drPin* dPin)
       for (auto& uPinFig : pin->getFigs()) {
         auto pinFig = uPinFig.get();
         // horizontal tracks == yLocs
-        std::set<frCoord> xLocs, yLocs;
+        boost::container::flat_set<frCoord> xLocs, yLocs;
         if (pinFig->typeId() == frcRect) {
           auto rpinRect = static_cast<frRect*>(pinFig);
           const frLayerNum currLayerNum = rpinRect->getLayerNum();
@@ -1253,7 +1278,7 @@ void FlexDRWorker::initNet_termGenAp(const frDesign* design, drPin* dPin)
       for (auto& uPinFig : pin->getFigs()) {
         auto pinFig = uPinFig.get();
         // horizontal tracks == yLocs
-        std::set<frCoord> xLocs, yLocs;
+        boost::container::flat_set<frCoord> xLocs, yLocs;
         if (pinFig->typeId() == frcRect) {
           auto rpinRect = static_cast<frRect*>(pinFig);
           frLayerNum currLayerNum = rpinRect->getLayerNum();
@@ -1385,7 +1410,7 @@ void FlexDRWorker::initNet_termGenAp(const frDesign* design, drPin* dPin)
       for (auto& uPinFig : pin->getFigs()) {
         auto pinFig = uPinFig.get();
         // horizontal tracks == yLocs
-        std::set<frCoord> xLocs, yLocs;
+        boost::container::flat_set<frCoord> xLocs, yLocs;
         if (pinFig->typeId() == frcRect) {
           auto rpinRect = static_cast<frRect*>(pinFig);
           frLayerNum currLayerNum = rpinRect->getLayerNum();
@@ -1531,7 +1556,7 @@ void FlexDRWorker::initNet_termGenAp(const frDesign* design, drPin* dPin)
         for (auto& uPinFig : pin->getFigs()) {
           auto pinFig = uPinFig.get();
           // horizontal tracks == yLocs
-          std::set<frCoord> xLocs, yLocs;
+          boost::container::flat_set<frCoord> xLocs, yLocs;
           if (pinFig->typeId() == frcRect) {
             auto rpinRect = static_cast<frRect*>(pinFig);
             frLayerNum currLayerNum = rpinRect->getLayerNum();
@@ -1609,7 +1634,7 @@ void FlexDRWorker::getTrackLocs(const bool isHorzTracks,
                                 const frLayerNum currLayerNum,
                                 const frCoord low,
                                 const frCoord high,
-                                std::set<frCoord>& trackLocs)
+                                boost::container::flat_set<frCoord>& trackLocs)
 {
   // Consecutive metal layers always have opposite routing directions (H & V)
   for (auto& tp : design_->getTopBlock()->getTrackPatterns(currLayerNum)) {
@@ -1745,7 +1770,7 @@ void FlexDRWorker::initNet_boundary(
 {
   const auto gridBBox = getRouteBox();
   // location to area
-  std::map<std::pair<Point, frLayerNum>, frCoord> extBounds;
+  boost::container::flat_map<std::pair<Point, frLayerNum>, frCoord> extBounds;
   frCoord currArea = 0;
   bool initFromExtObjs = isInitDR() ? (getRipupMode() == RipUpMode::INCR
                                        && dNet->getFrNet()->hasInitialRouting())
@@ -1992,7 +2017,7 @@ void FlexDRWorker::initNets_boundaryArea()
 
 void FlexDRWorker::initRipUpNetsFromMarkers()
 {
-  std::set<drNet*> ripUpNets;
+  boost::container::flat_set<drNet*> ripUpNets;
   for (auto& marker : markers_) {
     const auto bloatDist
         = getTech()->getLayer(marker.getLayerNum())->getWidth() * 2;
@@ -2009,13 +2034,19 @@ void FlexDRWorker::initRipUpNetsFromMarkers()
 
 void FlexDRWorker::initNets(const frDesign* design)
 {
-  std::set<frNet*, frBlockObjectComp> nets;
-  std::map<frNet*, std::vector<std::unique_ptr<drConnFig>>, frBlockObjectComp>
+  boost::container::flat_set<frNet*, frBlockObjectComp> nets;
+  boost::container::flat_map<frNet*,
+                             std::vector<std::unique_ptr<drConnFig>>,
+                             frBlockObjectComp>
       netRouteObjs;
-  std::map<frNet*, std::vector<std::unique_ptr<drConnFig>>, frBlockObjectComp>
+  boost::container::flat_map<frNet*,
+                             std::vector<std::unique_ptr<drConnFig>>,
+                             frBlockObjectComp>
       netExtObjs;
-  std::map<frNet*, std::vector<frRect>, frBlockObjectComp> netOrigGuides;
-  std::map<frNet*, std::vector<frRect>, frBlockObjectComp> netGuides;
+  boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>
+      netOrigGuides;
+  boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>
+      netGuides;
   // get lock
   initNetObjs(design, nets, netRouteObjs, netExtObjs, netOrigGuides, netGuides);
   // release lock
@@ -2048,8 +2079,12 @@ void FlexDRWorker::initNets(const frDesign* design)
 
 void FlexDRWorker::initTrackCoords_route(
     drNet* net,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap)
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap)
 {
   // add for routes
   std::vector<drConnFig*> allObjs;
@@ -2157,8 +2192,12 @@ void FlexDRWorker::initTrackCoords_route(
 
 void FlexDRWorker::initTrackCoords_pin(
     drNet* net,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap)
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap)
 {
   // add for aps
   for (auto& pin : net->getPins()) {
@@ -2191,8 +2230,12 @@ void FlexDRWorker::initTrackCoords_pin(
 }
 
 void FlexDRWorker::initTrackCoords(
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap)
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap)
 {
   // add boundary points
   // lNum = -10 to indicate routeBox and extBox frCoord
@@ -2216,8 +2259,12 @@ void FlexDRWorker::initTrackCoords(
 void FlexDRWorker::initGridGraph(const frDesign* design)
 {
   // get all track coords based on existing objs and aps
-  std::map<frCoord, std::map<frLayerNum, frTrackPattern*>> xMap;
-  std::map<frCoord, std::map<frLayerNum, frTrackPattern*>> yMap;
+  boost::container::
+      flat_map<frCoord, boost::container::flat_map<frLayerNum, frTrackPattern*>>
+          xMap;
+  boost::container::
+      flat_map<frCoord, boost::container::flat_map<frLayerNum, frTrackPattern*>>
+          yMap;
   initTrackCoords(xMap, yMap);
   gridGraph_.setCost(workerDRCCost_, workerMarkerCost_, workerFixedShapeCost_);
   gridGraph_.init(design,
@@ -2514,8 +2561,9 @@ void FlexDRWorker::initMazeCost_ap()
 void FlexDRWorker::initMazeCost_marker_route_queue_addHistoryCost(
     const frMarker& marker)
 {
-  std::set<drNet*> vioNets;  // for self-violation, only add cost for one side
-                             // (experiment with self cut spacing)
+  boost::container::flat_set<drNet*>
+      vioNets;  // for self-violation, only add cost for one side
+                // (experiment with self cut spacing)
 
   const Rect mBox = marker.getBBox();
   const auto lNum = marker.getLayerNum();
@@ -2709,25 +2757,22 @@ void FlexDRWorker::route_queue_resetRipup()
 
 void FlexDRWorker::route_queue_markerCostDecay()
 {
-  for (auto it = planarHistoryMarkers_.begin();
-       it != planarHistoryMarkers_.end();) {
-    auto currIt = it;
-    const auto& mi = *currIt;
-    ++it;
-    if (gridGraph_.decayMarkerCostPlanar(
+  boost::container::flat_set<FlexMazeIdx> planarHistoryMarkers;
+  for (auto& mi : planarHistoryMarkers_) {
+    if (!gridGraph_.decayMarkerCostPlanar(
             mi.x(), mi.y(), mi.z(), workerMarkerDecay_)) {
-      planarHistoryMarkers_.erase(currIt);
+      planarHistoryMarkers.insert(mi);
     }
   }
-  for (auto it = viaHistoryMarkers_.begin(); it != viaHistoryMarkers_.end();) {
-    auto currIt = it;
-    const auto& mi = *currIt;
-    ++it;
-    if (gridGraph_.decayMarkerCostVia(
+  std::swap(planarHistoryMarkers_, planarHistoryMarkers);
+  boost::container::flat_set<FlexMazeIdx> viaHistoryMarkers;
+  for (auto& mi : viaHistoryMarkers_) {
+    if (!gridGraph_.decayMarkerCostVia(
             mi.x(), mi.y(), mi.z(), workerMarkerDecay_)) {
-      viaHistoryMarkers_.erase(currIt);
+      viaHistoryMarkers.insert(mi);
     }
   }
+  std::swap(viaHistoryMarkers_, viaHistoryMarkers);
 }
 
 void FlexDRWorker::route_queue_addMarkerCost(
@@ -2750,8 +2795,8 @@ void FlexDRWorker::route_queue_addMarkerCost()
 void FlexDRWorker::route_queue_init_queue(
     std::queue<RouteQueueEntry>& rerouteQueue)
 {
-  std::set<frBlockObject*> uniqueVictims;
-  std::set<frBlockObject*> uniqueAggressors;
+  boost::container::flat_set<frBlockObject*> uniqueVictims;
+  boost::container::flat_set<frBlockObject*> uniqueAggressors;
   std::vector<RouteQueueEntry> checks;
   std::vector<RouteQueueEntry> routes;
 
@@ -2787,7 +2832,7 @@ void FlexDRWorker::route_queue_init_queue(
       }
     }
     int currId = ripupNets.size();
-    std::set<drNet*> addedNets;
+    boost::container::flat_set<drNet*> addedNets;
     for (auto& marker : markers_) {
       for (auto net : ripupNets) {
         if (marker.getSrcs().find(net->getFrNet()) != marker.getSrcs().end()) {
@@ -2862,8 +2907,8 @@ void FlexDRWorker::route_queue_update_queue(
 //*****************************************************************************************//
 void FlexDRWorker::route_queue_update_from_marker(
     frMarker* marker,
-    std::set<frBlockObject*>& uniqueVictims,
-    std::set<frBlockObject*>& uniqueAggressors,
+    boost::container::flat_set<frBlockObject*>& uniqueVictims,
+    boost::container::flat_set<frBlockObject*>& uniqueAggressors,
     std::vector<RouteQueueEntry>& checks,
     std::vector<RouteQueueEntry>& routes,
     frBlockObject* checkingObj)
@@ -2893,8 +2938,8 @@ void FlexDRWorker::route_queue_update_from_marker(
   std::vector<frBlockObject*> uniqueAggressorOwners;  // to maintain order
 
   auto& markerAggressors = marker->getAggressors();
-  std::set<frNet*> movableAggressorNets;
-  std::set<frBlockObject*> movableAggressorOwners;
+  boost::container::flat_set<frNet*> movableAggressorNets;
+  boost::container::flat_set<frBlockObject*> movableAggressorOwners;
 
   for (auto& aggressorPair : markerAggressors) {
     auto& aggressor = aggressorPair.first;
@@ -2938,7 +2983,7 @@ void FlexDRWorker::route_queue_update_from_marker(
   }
 
   if (hasRerouteNet) {
-    std::set<frBlockObject*> checkDRCOwners;
+    boost::container::flat_set<frBlockObject*> checkDRCOwners;
     for (auto& src : marker->getSrcs()) {
       if (movableAggressorOwners.find(src) == movableAggressorOwners.end()) {
         if (src) {
@@ -2956,7 +3001,7 @@ void FlexDRWorker::route_queue_update_from_marker(
       }
     }
   } else {
-    std::set<frBlockObject*> owners, otherOwners, routeOwners;
+    boost::container::flat_set<frBlockObject*> owners, otherOwners, routeOwners;
     auto& srcs = marker->getSrcs();
     for (auto& src : srcs) {
       if (src) {
@@ -2990,7 +3035,7 @@ void FlexDRWorker::route_queue_update_from_marker(
       }
     }
     if (hasRerouteNet) {
-      std::set<frBlockObject*> checkDRCOwners;
+      boost::container::flat_set<frBlockObject*> checkDRCOwners;
       for (auto& src : marker->getSrcs()) {
         if (routeOwners.find(src) == routeOwners.end()) {
           if (src) {
@@ -3048,9 +3093,10 @@ void FlexDRWorker::route_queue_update_from_marker(
   }
 }
 
-void FlexDRWorker::getRipUpNetsFromMarker(frMarker* marker,
-                                          std::set<drNet*>& nets,
-                                          const frCoord bloatDist)
+void FlexDRWorker::getRipUpNetsFromMarker(
+    frMarker* marker,
+    boost::container::flat_set<drNet*>& nets,
+    const frCoord bloatDist)
 {
   // if shapes don't overlap routeBox, ignore violation
   if (!getRouteBox().intersects(marker->getBBox())) {
@@ -3097,8 +3143,8 @@ void FlexDRWorker::route_queue_update_queue(
     std::queue<RouteQueueEntry>& rerouteQueue,
     frBlockObject* checkingObj)
 {
-  std::set<frBlockObject*> uniqueVictims;
-  std::set<frBlockObject*> uniqueAggressors;
+  boost::container::flat_set<frBlockObject*> uniqueVictims;
+  boost::container::flat_set<frBlockObject*> uniqueAggressors;
   std::vector<RouteQueueEntry> checks;
   std::vector<RouteQueueEntry> routes;
   if (checkingObj != nullptr
@@ -3145,7 +3191,8 @@ void FlexDRWorker::initMazeCost_fixedObj(const frDesign* design)
 {
   frRegionQuery::Objects<frBlockObject> result;
   frMIdx zIdx = 0;
-  std::map<frNet*, std::set<frBlockObject*>> frNet2Terms;
+  boost::container::flat_map<frNet*, boost::container::flat_set<frBlockObject*>>
+      frNet2Terms;
   for (auto layerNum = getTech()->getBottomLayerNum();
        layerNum <= getTech()->getTopLayerNum();
        ++layerNum) {
@@ -3263,10 +3310,14 @@ void FlexDRWorker::initMazeCost_fixedObj(const frDesign* design)
 
   // assign terms to each subnet
   for (auto& [net, objs] : frNet2Terms) {
-    for (auto dNet : owner2nets_[net]) {
-      dNet->setFrNetTerms(objs);
+    std::set<frBlockObject*> terms;
+    for (auto obj : objs) {
+      terms.insert(obj);  // TODO
     }
-    initMazeCost_terms(objs, true);
+    for (auto dNet : owner2nets_[net]) {
+      dNet->setFrNetTerms(terms);
+    }
+    initMazeCost_terms(terms, true);
   }
 }
 

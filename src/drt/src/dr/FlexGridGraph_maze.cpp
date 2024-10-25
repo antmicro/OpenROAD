@@ -653,13 +653,14 @@ void FlexGridGraph::traceBackPath(const FlexWavefrontGrid& currGrid,
   }
 }
 
-bool FlexGridGraph::search(std::vector<FlexMazeIdx>& connComps,
-                           drPin* nextPin,
-                           std::vector<FlexMazeIdx>& path,
-                           FlexMazeIdx& ccMazeIdx1,
-                           FlexMazeIdx& ccMazeIdx2,
-                           const Point& centerPt,
-                           std::map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox)
+bool FlexGridGraph::search(
+    std::vector<FlexMazeIdx>& connComps,
+    drPin* nextPin,
+    std::vector<FlexMazeIdx>& path,
+    FlexMazeIdx& ccMazeIdx1,
+    FlexMazeIdx& ccMazeIdx2,
+    const Point& centerPt,
+    boost::container::flat_map<FlexMazeIdx, frBox3D*>& mazeIdx2TaperBox)
 {
   if (drWorker_->getDRIter() >= debugMazeIter) {
     std::cout << "INIT search: target pin " << nextPin->getName()

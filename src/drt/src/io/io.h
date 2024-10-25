@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <boost/icl/interval_set.hpp>
 #include <list>
 #include <memory>
@@ -157,13 +159,17 @@ class Parser
   // temporary variables
   int readLayerCnt_;
   odb::dbTechLayer* masterSliceLayer_;
-  std::map<frNet*, std::vector<frRect>, frBlockObjectComp> tmpGuides_;
+  boost::container::flat_map<frNet*, std::vector<frRect>, frBlockObjectComp>
+      tmpGuides_;
   std::vector<std::pair<frBlockObject*, Point>> tmpGRPins_;
-  std::map<frMaster*,
-           std::map<dbOrientType,
-                    std::map<std::vector<frCoord>,
-                             std::set<frInst*, frBlockObjectComp>>>,
-           frBlockObjectComp>
+  boost::container::flat_map<
+      frMaster*,
+      boost::container::flat_map<
+          dbOrientType,
+          boost::container::flat_map<
+              std::vector<frCoord>,
+              boost::container::flat_set<frInst*, frBlockObjectComp>>>,
+      frBlockObjectComp>
       trackOffsetMap_;
   std::vector<frTrackPattern*> prefTrackPatterns_;
 };
@@ -196,7 +202,8 @@ class Writer
       frCoord x,
       frCoord y,
       std::vector<std::vector<
-          std::map<frCoord, std::vector<std::shared_ptr<frPathSeg>>>>>&
+          boost::container::flat_map<frCoord,
+                                     std::vector<std::shared_ptr<frPathSeg>>>>>&
           mergedPathSegs);
   void updateDbConn(odb::dbBlock* block, odb::dbTech* db_tech, bool snapshot);
   void writeViaDefToODB(odb::dbBlock* block,
@@ -210,7 +217,7 @@ class Writer
 
   drt::TritonRoute* router_;
   Logger* logger_;
-  std::map<frString, std::list<std::shared_ptr<frConnFig>>>
+  boost::container::flat_map<frString, std::list<std::shared_ptr<frConnFig>>>
       connFigs_;  // all connFigs ready to def
   std::vector<frViaDef*> viaDefs_;
 };

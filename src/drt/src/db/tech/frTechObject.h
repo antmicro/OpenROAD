@@ -349,16 +349,18 @@ class frTechObject
   frUInt4 dbUnit_{0};
   frUInt4 manufacturingGrid_{0};
 
-  std::map<frString, frLayer*> name2layer_;
+  boost::container::flat_map<frString, frLayer*> name2layer_;
   std::vector<std::unique_ptr<frLayer>> layers_;
 
-  std::map<frString, frViaDef*> name2via_;
+  boost::container::flat_map<frString, frViaDef*> name2via_;
   std::vector<std::unique_ptr<frViaDef>> vias_;
 
-  std::vector<std::map<frString, frLef58CutClass*>> layer2Name2CutClass_;
+  std::vector<boost::container::flat_map<frString, frLef58CutClass*>>
+      layer2Name2CutClass_;
   std::vector<std::vector<std::unique_ptr<frLef58CutClass>>> layerCutClass_;
 
-  std::map<frString, frViaRuleGenerate*> name2viaRuleGenerate_;
+  boost::container::flat_map<frString, frViaRuleGenerate*>
+      name2viaRuleGenerate_;
   std::vector<std::unique_ptr<frViaRuleGenerate>> viaRuleGenerates_;
 
   std::vector<std::unique_ptr<frConstraint>> uConstraints_;
@@ -421,7 +423,7 @@ class frTechObject
   bool hasVia2viaMinStep_ = false;
   bool hasCornerSpacingConstraint_ = false;
   // unidirectional layers
-  std::set<odb::dbTechLayer*> unidirectional_layers_;
+  boost::container::flat_set<odb::dbTechLayer*> unidirectional_layers_;
 
   friend class FlexRP;
 };

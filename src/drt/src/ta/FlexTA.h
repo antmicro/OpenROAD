@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <memory>
 #include <set>
 
@@ -75,9 +77,10 @@ class FlexTAWorkerRegionQuery
 
   void add(taPinFig* fig);
   void remove(taPinFig* fig);
-  void query(const Rect& box,
-             frLayerNum layerNum,
-             std::set<taPin*, frBlockObjectComp>& result) const;
+  void query(
+      const Rect& box,
+      frLayerNum layerNum,
+      boost::container::flat_set<taPin*, frBlockObjectComp>& result) const;
 
   void addCost(const Rect& box,
                frLayerNum layerNum,
@@ -127,7 +130,7 @@ class FlexTAWorker
         numAssigned_(0),
         totCost_(0),
         maxRetry_(1),
-        hardIroutesMode(false){};
+        hardIroutesMode(false) {};
   // setters
   void setRouteBox(const Rect& boxIn) { routeBox_ = boxIn; }
   void setExtBox(const Rect& boxIn) { extBox_ = boxIn; }
@@ -206,7 +209,7 @@ class FlexTAWorker
   std::vector<std::unique_ptr<taPin>> iroutes_;  // unsorted iroutes
   std::vector<std::unique_ptr<taPin>> extIroutes_;
   std::vector<std::vector<frCoord>> trackLocs_;
-  std::set<taPin*, taPinComp>
+  boost::container::flat_set<taPin*, taPinComp>
       reassignIroutes_;  // iroutes to be assigned in sorted order
   int numAssigned_;
   int totCost_;
@@ -234,25 +237,27 @@ class FlexTAWorker
   void initIroute_helper(frGuide* guide,
                          frCoord& maxBegin,
                          frCoord& minEnd,
-                         std::set<frCoord>& downViaCoordSet,
-                         std::set<frCoord>& upViaCoordSet,
+                         boost::container::flat_set<frCoord>& downViaCoordSet,
+                         boost::container::flat_set<frCoord>& upViaCoordSet,
                          int& nextIrouteDir,
                          frCoord& pinCoord);
-  void initIroute_helper_generic(frGuide* guide,
-                                 frCoord& minBegin,
-                                 frCoord& maxEnd,
-                                 std::set<frCoord>& downViaCoordSet,
-                                 std::set<frCoord>& upViaCoordSet,
-                                 int& nextIrouteDir,
-                                 frCoord& pinCoord);
+  void initIroute_helper_generic(
+      frGuide* guide,
+      frCoord& minBegin,
+      frCoord& maxEnd,
+      boost::container::flat_set<frCoord>& downViaCoordSet,
+      boost::container::flat_set<frCoord>& upViaCoordSet,
+      int& nextIrouteDir,
+      frCoord& pinCoord);
   void initIroute_helper_generic_helper(frGuide* guide, frCoord& pinCoord);
-  bool initIroute_helper_pin(frGuide* guide,
-                             frCoord& maxBegin,
-                             frCoord& minEnd,
-                             std::set<frCoord>& downViaCoordSet,
-                             std::set<frCoord>& upViaCoordSet,
-                             int& nextIrouteDir,
-                             frCoord& pinCoord);
+  bool initIroute_helper_pin(
+      frGuide* guide,
+      frCoord& maxBegin,
+      frCoord& minEnd,
+      boost::container::flat_set<frCoord>& downViaCoordSet,
+      boost::container::flat_set<frCoord>& upViaCoordSet,
+      int& nextIrouteDir,
+      frCoord& pinCoord);
   void initCosts();
   void sortIroutes();
 
@@ -262,37 +267,42 @@ class FlexTAWorker
                                       frCoord& dx,
                                       frCoord& dy);
   void addCost(taPinFig* fig,
-               std::set<taPin*, frBlockObjectComp>* pinS = nullptr);
+               boost::container::flat_set<taPin*, frBlockObjectComp>* pinS
+               = nullptr);
   void subCost(taPinFig* fig,
-               std::set<taPin*, frBlockObjectComp>* pinS = nullptr);
+               boost::container::flat_set<taPin*, frBlockObjectComp>* pinS
+               = nullptr);
   void modCost(taPinFig* fig,
                bool isAddCost,
-               std::set<taPin*, frBlockObjectComp>* pinS = nullptr);
-  void modMinSpacingCostPlanar(const Rect& box,
-                               frLayerNum lNum,
-                               taPinFig* fig,
-                               bool isAddCost,
-                               std::set<taPin*, frBlockObjectComp>* pinS
-                               = nullptr);
-  void modMinSpacingCostVia(const Rect& box,
-                            frLayerNum lNum,
-                            taPinFig* fig,
-                            bool isAddCost,
-                            bool isUpperVia,
-                            bool isCurrPs,
-                            std::set<taPin*, frBlockObjectComp>* pinS
-                            = nullptr);
-  void modCutSpacingCost(const Rect& box,
-                         frLayerNum lNum,
-                         taPinFig* fig,
-                         bool isAddCost,
-                         std::set<taPin*, frBlockObjectComp>* pinS = nullptr);
+               boost::container::flat_set<taPin*, frBlockObjectComp>* pinS
+               = nullptr);
+  void modMinSpacingCostPlanar(
+      const Rect& box,
+      frLayerNum lNum,
+      taPinFig* fig,
+      bool isAddCost,
+      boost::container::flat_set<taPin*, frBlockObjectComp>* pinS = nullptr);
+  void modMinSpacingCostVia(
+      const Rect& box,
+      frLayerNum lNum,
+      taPinFig* fig,
+      bool isAddCost,
+      bool isUpperVia,
+      bool isCurrPs,
+      boost::container::flat_set<taPin*, frBlockObjectComp>* pinS = nullptr);
+  void modCutSpacingCost(
+      const Rect& box,
+      frLayerNum lNum,
+      taPinFig* fig,
+      bool isAddCost,
+      boost::container::flat_set<taPin*, frBlockObjectComp>* pinS = nullptr);
 
   // initTA
   void assign();
   void assignIroute(taPin* iroute);
-  void assignIroute_init(taPin* iroute,
-                         std::set<taPin*, frBlockObjectComp>* pinS);
+  void assignIroute_init(
+      taPin* iroute,
+      boost::container::flat_set<taPin*, frBlockObjectComp>* pinS);
   void assignIroute_availTracks(taPin* iroute,
                                 frLayerNum& lNum,
                                 int& idx1,
@@ -318,10 +328,12 @@ class FlexTAWorker
   frUInt4 assignIroute_getDRCCost_helper(taPin* iroute,
                                          Rect& box,
                                          frLayerNum lNum);
-  void assignIroute_updateIroute(taPin* iroute,
-                                 frCoord bestTrackLoc,
-                                 std::set<taPin*, frBlockObjectComp>* pinS);
-  void assignIroute_updateOthers(std::set<taPin*, frBlockObjectComp>& pinS);
+  void assignIroute_updateIroute(
+      taPin* iroute,
+      frCoord bestTrackLoc,
+      boost::container::flat_set<taPin*, frBlockObjectComp>* pinS);
+  void assignIroute_updateOthers(
+      boost::container::flat_set<taPin*, frBlockObjectComp>& pinS);
 
   // end
   void end();

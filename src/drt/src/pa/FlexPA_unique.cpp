@@ -61,7 +61,7 @@ std::vector<frTrackPattern*> UniqueInsts::getPrefTrackPatterns()
 UniqueInsts::MasterLayerRange UniqueInsts::initMasterToPinLayerRange()
 {
   MasterLayerRange master_to_pin_layer_range;
-  std::set<frString> masters;
+  boost::container::flat_set<frString> masters;
   for (odb::dbInst* inst : target_insts_) {
     masters.insert(inst->getMaster()->getName());
   }
@@ -136,7 +136,7 @@ void UniqueInsts::computeUnique(
     const MasterLayerRange& master_to_pin_layer_range,
     const std::vector<frTrackPattern*>& pref_track_patterns)
 {
-  std::set<frInst*> target_frinsts;
+  boost::container::flat_set<frInst*> target_frinsts;
   for (auto inst : target_insts_) {
     target_frinsts.insert(design_->getTopBlock()->findInst(inst->getName()));
   }
@@ -294,7 +294,8 @@ void UniqueInsts::report() const
   logger_->report("#unique  instances     = {}", unique_.size());
 }
 
-std::set<frInst*, frBlockObjectComp>* UniqueInsts::getClass(frInst* inst) const
+boost::container::flat_set<frInst*, frBlockObjectComp>* UniqueInsts::getClass(
+    frInst* inst) const
 {
   return inst_to_class_.at(inst);
 }

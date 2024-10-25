@@ -52,7 +52,7 @@ void FlexTAWorker::modMinSpacingCostPlanar(
     frLayerNum lNum,
     taPinFig* fig,
     bool isAddCost,
-    std::set<taPin*, frBlockObjectComp>* pinS)
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   // obj1 = curr obj
   frCoord width1 = box.minDXDY();
@@ -138,7 +138,7 @@ void FlexTAWorker::modMinSpacingCostVia(
     bool isAddCost,
     bool isUpperVia,
     bool isCurrPs,
-    std::set<taPin*, frBlockObjectComp>* pinS)
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   // obj1 = curr obj
   frCoord width1 = box.minDXDY();
@@ -315,11 +315,12 @@ void FlexTAWorker::modMinSpacingCostVia(
   }
 }
 
-void FlexTAWorker::modCutSpacingCost(const Rect& box,
-                                     frLayerNum lNum,
-                                     taPinFig* fig,
-                                     bool isAddCost,
-                                     std::set<taPin*, frBlockObjectComp>* pinS)
+void FlexTAWorker::modCutSpacingCost(
+    const Rect& box,
+    frLayerNum lNum,
+    taPinFig* fig,
+    bool isAddCost,
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   if (!getDesign()->getTech()->getLayer(lNum)->hasCutSpacing()) {
     return;
@@ -516,21 +517,24 @@ void FlexTAWorker::modCutSpacingCost(const Rect& box,
   }
 }
 
-void FlexTAWorker::addCost(taPinFig* fig,
-                           std::set<taPin*, frBlockObjectComp>* pinS)
+void FlexTAWorker::addCost(
+    taPinFig* fig,
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   modCost(fig, true, pinS);
 }
 
-void FlexTAWorker::subCost(taPinFig* fig,
-                           std::set<taPin*, frBlockObjectComp>* pinS)
+void FlexTAWorker::subCost(
+    taPinFig* fig,
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   modCost(fig, false, pinS);
 }
 
-void FlexTAWorker::modCost(taPinFig* fig,
-                           bool isAddCost,
-                           std::set<taPin*, frBlockObjectComp>* pinS)
+void FlexTAWorker::modCost(
+    taPinFig* fig,
+    bool isAddCost,
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   if (fig->typeId() == tacPathSeg) {
     auto obj = static_cast<taPathSeg*>(fig);
@@ -905,7 +909,7 @@ frUInt4 FlexTAWorker::assignIroute_getAlignCost(taPin* iroute, frCoord trackLoc)
       auto lNum = obj->getLayerNum();
       pitch = getDesign()->getTech()->getLayer(lNum)->getPitch();
       auto& workerRegionQuery = getWorkerRegionQuery();
-      std::set<taPin*, frBlockObjectComp> result;
+      boost::container::flat_set<taPin*, frBlockObjectComp> result;
       Rect box;
       if (isH) {
         box.init(bp.x(), trackLoc, ep.x(), trackLoc);
@@ -1122,7 +1126,7 @@ int FlexTAWorker::assignIroute_bestTrack(taPin* iroute,
 void FlexTAWorker::assignIroute_updateIroute(
     taPin* iroute,
     frCoord bestTrackLoc,
-    std::set<taPin*, frBlockObjectComp>* pinS)
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   auto& workerRegionQuery = getWorkerRegionQuery();
   bool isH = (getDir() == dbTechLayerDir::HORIZONTAL);
@@ -1163,8 +1167,9 @@ void FlexTAWorker::assignIroute_updateIroute(
   iroute->addNumAssigned();
 }
 
-void FlexTAWorker::assignIroute_init(taPin* iroute,
-                                     std::set<taPin*, frBlockObjectComp>* pinS)
+void FlexTAWorker::assignIroute_init(
+    taPin* iroute,
+    boost::container::flat_set<taPin*, frBlockObjectComp>* pinS)
 {
   auto& workerRegionQuery = getWorkerRegionQuery();
   // subCost
@@ -1178,7 +1183,7 @@ void FlexTAWorker::assignIroute_init(taPin* iroute,
 }
 
 void FlexTAWorker::assignIroute_updateOthers(
-    std::set<taPin*, frBlockObjectComp>& pinS)
+    boost::container::flat_set<taPin*, frBlockObjectComp>& pinS)
 {
   bool isH = (getDir() == dbTechLayerDir::HORIZONTAL);
   if (isInitTA()) {
@@ -1222,7 +1227,7 @@ void FlexTAWorker::assignIroute_updateOthers(
 
 void FlexTAWorker::assignIroute(taPin* iroute)
 {
-  std::set<taPin*, frBlockObjectComp> pinS;
+  boost::container::flat_set<taPin*, frBlockObjectComp> pinS;
   assignIroute_init(iroute, &pinS);
   frLayerNum lNum;
   int idx1, idx2;

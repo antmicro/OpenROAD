@@ -33,7 +33,7 @@ namespace drt {
 
 void FlexGRWorker::end()
 {
-  std::set<frNet*, frBlockObjectComp> modNets;
+  boost::container::flat_set<frNet*, frBlockObjectComp> modNets;
   endGetModNets(modNets);
   endRemoveNets(modNets);
   endAddNets(modNets);
@@ -44,7 +44,8 @@ void FlexGRWorker::end()
   cleanup();
 }
 
-void FlexGRWorker::endGetModNets(std::set<frNet*, frBlockObjectComp>& modNets)
+void FlexGRWorker::endGetModNets(
+    boost::container::flat_set<frNet*, frBlockObjectComp>& modNets)
 {
   for (auto& net : nets_) {
     if (net->isModified()) {
@@ -60,14 +61,14 @@ void FlexGRWorker::endGetModNets(std::set<frNet*, frBlockObjectComp>& modNets)
 }
 
 void FlexGRWorker::endRemoveNets(
-    const std::set<frNet*, frBlockObjectComp>& modNets)
+    const boost::container::flat_set<frNet*, frBlockObjectComp>& modNets)
 {
   endRemoveNets_objs(modNets);
   endRemoveNets_nodes(modNets);
 }
 
 void FlexGRWorker::endRemoveNets_objs(
-    const std::set<frNet*, frBlockObjectComp>& modNets)
+    const boost::container::flat_set<frNet*, frBlockObjectComp>& modNets)
 {
   // remove pathSeg and via (all nets based)
   std::vector<grBlockObject*> result;
@@ -115,7 +116,7 @@ void FlexGRWorker::endRemoveNets_via(grVia* via)
 }
 
 void FlexGRWorker::endRemoveNets_nodes(
-    const std::set<frNet*, frBlockObjectComp>& modNets)
+    const boost::container::flat_set<frNet*, frBlockObjectComp>& modNets)
 {
   for (auto fnet : modNets) {
     for (auto net : owner2nets_[fnet]) {
@@ -165,7 +166,8 @@ void FlexGRWorker::endRemoveNets_nodes_net(grNet* net, frNet* fnet)
   }
 }
 
-void FlexGRWorker::endAddNets(std::set<frNet*, frBlockObjectComp>& modNets)
+void FlexGRWorker::endAddNets(
+    boost::container::flat_set<frNet*, frBlockObjectComp>& modNets)
 {
   for (auto fnet : modNets) {
     for (auto net : owner2nets_[fnet]) {

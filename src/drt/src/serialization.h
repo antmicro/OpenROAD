@@ -442,7 +442,7 @@ void registerTypes(Archive& ar)
   ar.template register_type<drVia>();
   ar.template register_type<drPatchWire>();
 
-  ar.template register_type<drMazeMarker>();
+  // ar.template register_type<drMazeMarker>(); TODO
   ar.template register_type<drNet>();
   ar.template register_type<drPin>();
 

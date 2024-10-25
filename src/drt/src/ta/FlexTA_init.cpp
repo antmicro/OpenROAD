@@ -35,7 +35,7 @@ void FlexTAWorker::initTracks()
   trackLocs_.clear();
   const int numLayers = getDesign()->getTech()->getLayers().size();
   trackLocs_.resize(numLayers);
-  std::vector<std::set<frCoord>> trackCoordSets(numLayers);
+  std::vector<boost::container::flat_set<frCoord>> trackCoordSets(numLayers);
   // uPtr for tp
   for (int lNum = 0; lNum < (int) numLayers; lNum++) {
     auto layer = getDesign()->getTech()->getLayer(lNum);
@@ -81,13 +81,14 @@ void FlexTAWorker::initTracks()
 }
 
 // use prefAp, otherwise return false
-bool FlexTAWorker::initIroute_helper_pin(frGuide* guide,
-                                         frCoord& maxBegin,
-                                         frCoord& minEnd,
-                                         std::set<frCoord>& downViaCoordSet,
-                                         std::set<frCoord>& upViaCoordSet,
-                                         int& nextIrouteDir,
-                                         frCoord& pinCoord)
+bool FlexTAWorker::initIroute_helper_pin(
+    frGuide* guide,
+    frCoord& maxBegin,
+    frCoord& minEnd,
+    boost::container::flat_set<frCoord>& downViaCoordSet,
+    boost::container::flat_set<frCoord>& upViaCoordSet,
+    int& nextIrouteDir,
+    frCoord& pinCoord)
 {
   auto [bp, ep] = guide->getPoints();
   if (bp != ep) {
@@ -209,13 +210,14 @@ bool FlexTAWorker::initIroute_helper_pin(frGuide* guide,
   return false;
 }
 
-void FlexTAWorker::initIroute_helper(frGuide* guide,
-                                     frCoord& maxBegin,
-                                     frCoord& minEnd,
-                                     std::set<frCoord>& downViaCoordSet,
-                                     std::set<frCoord>& upViaCoordSet,
-                                     int& nextIrouteDir,
-                                     frCoord& pinCoord)
+void FlexTAWorker::initIroute_helper(
+    frGuide* guide,
+    frCoord& maxBegin,
+    frCoord& minEnd,
+    boost::container::flat_set<frCoord>& downViaCoordSet,
+    boost::container::flat_set<frCoord>& upViaCoordSet,
+    int& nextIrouteDir,
+    frCoord& pinCoord)
 {
   if (!initIroute_helper_pin(guide,
                              maxBegin,
@@ -321,13 +323,14 @@ void FlexTAWorker::initIroute_helper_generic_helper(frGuide* guide,
   }
 }
 
-void FlexTAWorker::initIroute_helper_generic(frGuide* guide,
-                                             frCoord& minBegin,
-                                             frCoord& maxEnd,
-                                             std::set<frCoord>& downViaCoordSet,
-                                             std::set<frCoord>& upViaCoordSet,
-                                             int& nextIrouteDir,
-                                             frCoord& pinCoord)
+void FlexTAWorker::initIroute_helper_generic(
+    frGuide* guide,
+    frCoord& minBegin,
+    frCoord& maxEnd,
+    boost::container::flat_set<frCoord>& downViaCoordSet,
+    boost::container::flat_set<frCoord>& upViaCoordSet,
+    int& nextIrouteDir,
+    frCoord& pinCoord)
 {
   auto net = guide->getNet();
   auto layerNum = guide->getBeginLayerNum();
@@ -441,7 +444,7 @@ void FlexTAWorker::initIroute(frGuide* guide)
   }
 
   frCoord maxBegin, minEnd;
-  std::set<frCoord> downViaCoordSet, upViaCoordSet;
+  boost::container::flat_set<frCoord> downViaCoordSet, upViaCoordSet;
   int nextIrouteDir = 0;
   frCoord pinCoord = std::numeric_limits<frCoord>::max();
   initIroute_helper(guide,

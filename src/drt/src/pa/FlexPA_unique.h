@@ -27,6 +27,9 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
+
 #include "frDesign.h"
 
 namespace drt {
@@ -44,7 +47,7 @@ namespace drt {
 class UniqueInsts
 {
  public:
-  using InstSet = std::set<frInst*, frBlockObjectComp>;
+  using InstSet = boost::container::flat_set<frInst*, frBlockObjectComp>;
   // if target_insts is non-empty then analysis is limited to
   // those instances.
   UniqueInsts(frDesign* design,
@@ -73,7 +76,8 @@ class UniqueInsts
 
  private:
   using LayerRange = std::pair<frLayerNum, frLayerNum>;
-  using MasterLayerRange = std::map<frMaster*, LayerRange, frBlockObjectComp>;
+  using MasterLayerRange
+      = boost::container::flat_map<frMaster*, LayerRange, frBlockObjectComp>;
 
   frDesign* getDesign() const { return design_; }
   frTechObject* getTech() const { return design_->getTech(); }
@@ -154,17 +158,21 @@ class UniqueInsts
   // All the unique instances
   std::vector<frInst*> unique_;
   // Mapp all instances to their representative unique instance
-  std::map<frInst*, frInst*, frBlockObjectComp> inst_to_unique_;
+  boost::container::flat_map<frInst*, frInst*, frBlockObjectComp>
+      inst_to_unique_;
   // Maps all instances to the set of instances with the same unique inst
   std::unordered_map<frInst*, InstSet*> inst_to_class_;
   // Maps a unique instance to its pin access index
-  std::map<frInst*, int, frBlockObjectComp> unique_to_pa_idx_;
+  boost::container::flat_map<frInst*, int, frBlockObjectComp> unique_to_pa_idx_;
   // Maps a unique instance to its index in unique_
-  std::map<frInst*, int, frBlockObjectComp> unique_to_idx_;
+  boost::container::flat_map<frInst*, int, frBlockObjectComp> unique_to_idx_;
   // master orient track-offset to instances
-  std::map<frMaster*,
-           std::map<dbOrientType, std::map<std::vector<frCoord>, InstSet>>,
-           frBlockObjectComp>
+  boost::container::flat_map<
+      frMaster*,
+      boost::container::flat_map<
+          dbOrientType,
+          boost::container::flat_map<std::vector<frCoord>, InstSet>>,
+      frBlockObjectComp>
       master_orient_trackoffset_to_insts_;
 };
 

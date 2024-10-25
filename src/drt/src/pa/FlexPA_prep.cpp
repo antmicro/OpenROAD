@@ -131,12 +131,12 @@ FlexPA::mergePinShapes(T* pin, frInstTerm* inst_term, const bool is_shrink)
  * This function doesn't seem to be getting the best access point.
  * it iterates through every track contained between low and high
  * and takes the first one (closest to low) not the best one (lowest cost).
- * note that std::map.insert() will not override and entry.
+ * note that boost::container::flat_map.insert() will not override and entry.
  * it should prioritize OnGrid access points
  */
 void FlexPA::genAPOnTrack(
-    std::map<frCoord, frAccessPointEnum>& coords,
-    const std::map<frCoord, frAccessPointEnum>& track_coords,
+    boost::container::flat_map<frCoord, frAccessPointEnum>& coords,
+    const boost::container::flat_map<frCoord, frAccessPointEnum>& track_coords,
     const frCoord low,
     const frCoord high,
     const bool use_nearby_grid)
@@ -163,10 +163,11 @@ void FlexPA::genAPOnTrack(
  * If false it created and access points in the middle point between [low, high]
  */
 
-void FlexPA::genAPCentered(std::map<frCoord, frAccessPointEnum>& coords,
-                           const frLayerNum layer_num,
-                           const frCoord low,
-                           const frCoord high)
+void FlexPA::genAPCentered(
+    boost::container::flat_map<frCoord, frAccessPointEnum>& coords,
+    const frLayerNum layer_num,
+    const frCoord low,
+    const frCoord high)
 {
   // if touching two tracks, then no center??
   int candidates_on_grid = 0;
@@ -200,10 +201,11 @@ void FlexPA::genAPCentered(std::map<frCoord, frAccessPointEnum>& coords,
  * This is the worst access point adressed in the paper
  */
 
-void FlexPA::genAPEnclosedBoundary(std::map<frCoord, frAccessPointEnum>& coords,
-                                   const gtl::rectangle_data<frCoord>& rect,
-                                   const frLayerNum layer_num,
-                                   const bool is_curr_layer_horz)
+void FlexPA::genAPEnclosedBoundary(
+    boost::container::flat_map<frCoord, frAccessPointEnum>& coords,
+    const gtl::rectangle_data<frCoord>& rect,
+    const frLayerNum layer_num,
+    const bool is_curr_layer_horz)
 {
   const auto rect_width = gtl::delta(rect, gtl::HORIZONTAL);
   const auto rect_height = gtl::delta(rect, gtl::VERTICAL);
@@ -246,7 +248,7 @@ void FlexPA::genAPEnclosedBoundary(std::map<frCoord, frAccessPointEnum>& coords,
 // Responsible for checking if an AP is valid and configuring it
 void FlexPA::gen_createAccessPoint(
     std::vector<std::unique_ptr<frAccessPoint>>& aps,
-    std::set<std::pair<Point, frLayerNum>>& apset,
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& apset,
     const gtl::rectangle_data<frCoord>& maxrect,
     const frCoord x,
     const frCoord y,
@@ -353,14 +355,14 @@ void FlexPA::gen_createAccessPoint(
 
 void FlexPA::gen_initializeAccessPoints(
     std::vector<std::unique_ptr<frAccessPoint>>& aps,
-    std::set<std::pair<Point, frLayerNum>>& apset,
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& apset,
     const gtl::rectangle_data<frCoord>& rect,
     const frLayerNum layer_num,
     const bool allow_planar,
     const bool allow_via,
     const bool is_layer1_horz,
-    const std::map<frCoord, frAccessPointEnum>& x_coords,
-    const std::map<frCoord, frAccessPointEnum>& y_coords,
+    const boost::container::flat_map<frCoord, frAccessPointEnum>& x_coords,
+    const boost::container::flat_map<frCoord, frAccessPointEnum>& y_coords,
     const frAccessPointEnum lower_type,
     const frAccessPointEnum upper_type)
 {
@@ -436,15 +438,16 @@ bool FlexPA::enclosesOnTrackPlanarAccess(
  * @details Generates all necessary access points from a rectangle shape
  * In this case a rectangle is one of the pin shapes of the pin
  */
-void FlexPA::genAPsFromRect(std::vector<std::unique_ptr<frAccessPoint>>& aps,
-                            std::set<std::pair<Point, frLayerNum>>& apset,
-                            const gtl::rectangle_data<frCoord>& rect,
-                            const frLayerNum layer_num,
-                            const bool allow_planar,
-                            const bool allow_via,
-                            frAccessPointEnum lower_type,
-                            const frAccessPointEnum upper_type,
-                            const bool is_macro_cell_pin)
+void FlexPA::genAPsFromRect(
+    std::vector<std::unique_ptr<frAccessPoint>>& aps,
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& apset,
+    const gtl::rectangle_data<frCoord>& rect,
+    const frLayerNum layer_num,
+    const bool allow_planar,
+    const bool allow_via,
+    frAccessPointEnum lower_type,
+    const frAccessPointEnum upper_type,
+    const bool is_macro_cell_pin)
 {
   auto layer = getDesign()->getTech()->getLayer(layer_num);
   const auto min_width_layer1 = layer->getMinWidth();
@@ -467,8 +470,8 @@ void FlexPA::genAPsFromRect(std::vector<std::unique_ptr<frAccessPoint>>& aps,
   auto& layer2_track_coords = track_coords_[second_layer_num];
   const bool is_layer1_horz = (layer->getDir() == dbTechLayerDir::HORIZONTAL);
 
-  std::map<frCoord, frAccessPointEnum> x_coords;
-  std::map<frCoord, frAccessPointEnum> y_coords;
+  boost::container::flat_map<frCoord, frAccessPointEnum> x_coords;
+  boost::container::flat_map<frCoord, frAccessPointEnum> y_coords;
   int hwidth = layer->getWidth() / 2;
   bool use_center_line = false;
   if (is_macro_cell_pin) {
@@ -586,7 +589,7 @@ void FlexPA::genAPsFromRect(std::vector<std::unique_ptr<frAccessPoint>>& aps,
 
 void FlexPA::genAPsFromLayerShapes(
     std::vector<std::unique_ptr<frAccessPoint>>& aps,
-    std::set<std::pair<Point, frLayerNum>>& apset,
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& apset,
     frInstTerm* inst_term,
     const gtl::polygon_90_set_data<frCoord>& layer_shapes,
     const frLayerNum layer_num,
@@ -657,7 +660,7 @@ void FlexPA::genAPsFromLayerShapes(
 template <typename T>
 void FlexPA::genAPsFromPinShapes(
     std::vector<std::unique_ptr<frAccessPoint>>& aps,
-    std::set<std::pair<Point, frLayerNum>>& apset,
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& apset,
     T* pin,
     frInstTerm* inst_term,
     const std::vector<gtl::polygon_90_set_data<frCoord>>& pin_shapes,
@@ -964,7 +967,8 @@ void FlexPA::check_addViaAccess(
     }
   }
 
-  std::set<std::tuple<frCoord, int, frViaDef*>> valid_via_defs;
+  boost::container::flat_set<std::tuple<frCoord, int, frViaDef*>>
+      valid_via_defs;
   for (auto& [idx, via_def] : via_defs) {
     auto via = std::make_unique<frVia>(via_def);
     via->setOrigin(begin_point);
@@ -1260,7 +1264,7 @@ void FlexPA::updatePinStats(
 template <typename T>
 bool FlexPA::initPinAccessCostBounded(
     std::vector<std::unique_ptr<frAccessPoint>>& aps,
-    std::set<std::pair<Point, frLayerNum>>& apset,
+    boost::container::flat_set<std::pair<Point, frLayerNum>>& apset,
     std::vector<gtl::polygon_90_set_data<frCoord>>& pin_shapes,
     T* pin,
     frInstTerm* inst_term,
@@ -1363,7 +1367,7 @@ int FlexPA::initPinAccess(T* pin, frInstTerm* inst_term)
   // aps are after xform
   // before checkPoints, ap->hasAccess(dir) indicates whether to check drc
   std::vector<std::unique_ptr<frAccessPoint>> aps;
-  std::set<std::pair<Point, frLayerNum>> apset;
+  boost::container::flat_set<std::pair<Point, frLayerNum>> apset;
   bool is_std_cell_pin = false;
   bool is_macro_cell_pin = false;
   if (inst_term) {
@@ -1381,7 +1385,8 @@ int FlexPA::initPinAccess(T* pin, frInstTerm* inst_term)
   }
 
   if (graphics_) {
-    std::set<frInst*, frBlockObjectComp>* inst_class = nullptr;
+    boost::container::flat_set<frInst*, frBlockObjectComp>* inst_class
+        = nullptr;
     if (inst_term) {
       inst_class = unique_insts_.getClass(inst_term->getInst());
     }
@@ -2132,7 +2137,7 @@ void FlexPA::addAccessPatternObj(
 
 void FlexPA::getInsts(std::vector<frInst*>& insts)
 {
-  std::set<frInst*> target_frinsts;
+  boost::container::flat_set<frInst*> target_frinsts;
   for (auto inst : target_insts_) {
     target_frinsts.insert(design_->getTopBlock()->findInst(inst->getName()));
   }
@@ -2265,9 +2270,9 @@ int FlexPA::genPatterns(
   }
 
   // moved for mt
-  std::set<std::vector<int>> inst_access_patterns;
-  std::set<std::pair<int, int>> used_access_points;
-  std::set<std::pair<int, int>> viol_access_points;
+  boost::container::flat_set<std::vector<int>> inst_access_patterns;
+  boost::container::flat_set<std::pair<int, int>> used_access_points;
+  boost::container::flat_set<std::pair<int, int>> viol_access_points;
   int num_valid_pattern = 0;
 
   num_valid_pattern += FlexPA::genPatterns_helper(pins,
@@ -2294,9 +2299,9 @@ int FlexPA::genPatterns(
 
 int FlexPA::genPatterns_helper(
     const std::vector<std::pair<frMPin*, frInstTerm*>>& pins,
-    std::set<std::vector<int>>& inst_access_patterns,
-    std::set<std::pair<int, int>>& used_access_points,
-    std::set<std::pair<int, int>>& viol_access_points,
+    boost::container::flat_set<std::vector<int>>& inst_access_patterns,
+    boost::container::flat_set<std::pair<int, int>>& used_access_points,
+    boost::container::flat_set<std::pair<int, int>>& viol_access_points,
     const int curr_unique_inst_idx,
     const int max_access_point_size)
 {
@@ -2346,9 +2351,9 @@ int FlexPA::genPatterns_helper(
 void FlexPA::genPatternsInit(
     std::vector<FlexDPNode>& nodes,
     const std::vector<std::pair<frMPin*, frInstTerm*>>& pins,
-    std::set<std::vector<int>>& inst_access_patterns,
-    std::set<std::pair<int, int>>& used_access_points,
-    std::set<std::pair<int, int>>& viol_access_points,
+    boost::container::flat_set<std::vector<int>>& inst_access_patterns,
+    boost::container::flat_set<std::pair<int, int>>& used_access_points,
+    boost::container::flat_set<std::pair<int, int>>& viol_access_points,
     int max_access_point_size)
 {
   // clear temp storage and flag
@@ -2396,10 +2401,10 @@ void FlexPA::genPatterns_reset(
 }
 
 bool FlexPA::genPatterns_gc(
-    const std::set<frBlockObject*>& target_objs,
+    const boost::container::flat_set<frBlockObject*>& target_objs,
     const std::vector<std::pair<frConnFig*, frBlockObject*>>& objs,
     const PatternType pattern_type,
-    std::set<frBlockObject*>* owners)
+    boost::container::flat_set<frBlockObject*>* owners)
 {
   if (objs.empty()) {
     if (VERBOSE > 1) {
@@ -2459,8 +2464,8 @@ void FlexPA::genPatterns_perform(
     std::vector<FlexDPNode>& nodes,
     const std::vector<std::pair<frMPin*, frInstTerm*>>& pins,
     std::vector<int>& vio_edges,
-    const std::set<std::pair<int, int>>& used_access_points,
-    const std::set<std::pair<int, int>>& viol_access_points,
+    const boost::container::flat_set<std::pair<int, int>>& used_access_points,
+    const boost::container::flat_set<std::pair<int, int>>& viol_access_points,
     const int curr_unique_inst_idx,
     const int max_access_point_size)
 {
@@ -2507,8 +2512,8 @@ int FlexPA::getEdgeCost(
     const std::vector<FlexDPNode>& nodes,
     const std::vector<std::pair<frMPin*, frInstTerm*>>& pins,
     std::vector<int>& vio_edges,
-    const std::set<std::pair<int, int>>& used_access_points,
-    const std::set<std::pair<int, int>>& viol_access_points,
+    const boost::container::flat_set<std::pair<int, int>>& used_access_points,
+    const boost::container::flat_set<std::pair<int, int>>& viol_access_points,
     const int curr_unique_inst_idx,
     const int max_access_point_size)
 {
@@ -2631,9 +2636,9 @@ bool FlexPA::genPatterns_commit(
     const std::vector<FlexDPNode>& nodes,
     const std::vector<std::pair<frMPin*, frInstTerm*>>& pins,
     bool& is_valid,
-    std::set<std::vector<int>>& inst_access_patterns,
-    std::set<std::pair<int, int>>& used_access_points,
-    std::set<std::pair<int, int>>& viol_access_points,
+    boost::container::flat_set<std::vector<int>>& inst_access_patterns,
+    boost::container::flat_set<std::pair<int, int>>& used_access_points,
+    boost::container::flat_set<std::pair<int, int>>& viol_access_points,
     const int curr_unique_inst_idx,
     const int max_access_point_size)
 {
@@ -2666,7 +2671,7 @@ bool FlexPA::genPatterns_commit(
     inst_access_patterns.insert(access_pattern);
     // create new access pattern and push to uniqueInstances
     auto pin_access_pattern = std::make_unique<FlexPinAccessPattern>();
-    std::map<frMPin*, frAccessPoint*> pin_to_access_pattern;
+    boost::container::flat_map<frMPin*, frAccessPoint*> pin_to_access_pattern;
     // check DRC for the whole pattern
     std::vector<std::pair<frConnFig*, frBlockObject*>> objs;
     std::vector<std::unique_ptr<frVia>> temp_vias;
@@ -2738,7 +2743,7 @@ bool FlexPA::genPatterns_commit(
     pin_access_pattern->setBoundaryAP(true, leftAP);
     pin_access_pattern->setBoundaryAP(false, rightAP);
 
-    std::set<frBlockObject*> owners;
+    boost::container::flat_set<frBlockObject*> owners;
     if (target_obj != nullptr
         && genPatterns_gc({target_obj}, objs, Commit, &owners)) {
       pin_access_pattern->updateCost();

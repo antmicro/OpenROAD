@@ -66,7 +66,9 @@ struct frBlockObjectComp
   }
 };
 
-using frBlockObjectSet = std::set<frBlockObject*, frBlockObjectComp>;
+using frBlockObjectSet
+    = boost::container::flat_set<frBlockObject*, frBlockObjectComp>;
 template <typename T>
-using frBlockObjectMap = std::map<frBlockObject*, T, frBlockObjectComp>;
+using frBlockObjectMap
+    = boost::container::flat_map<frBlockObject*, T, frBlockObjectComp>;
 }  // namespace drt

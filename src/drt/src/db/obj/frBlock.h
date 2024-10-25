@@ -29,6 +29,8 @@
 #pragma once
 
 #include <algorithm>
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <type_traits>
 
 #include "db/obj/frBTerm.h"
@@ -409,16 +411,16 @@ class frBlock : public frBlockObject
   frString name_;
   frUInt4 dbUnit_{0};
 
-  std::map<std::string, frInst*> name2inst_;
+  boost::container::flat_map<std::string, frInst*> name2inst_;
   std::vector<std::unique_ptr<frInst>> insts_;
 
-  std::map<std::string, frBTerm*> name2term_;
+  boost::container::flat_map<std::string, frBTerm*> name2term_;
   std::vector<std::unique_ptr<frBTerm>> terms_;
 
-  std::map<std::string, frNet*> name2net_;
+  boost::container::flat_map<std::string, frNet*> name2net_;
   std::vector<std::unique_ptr<frNet>> nets_;
 
-  std::map<std::string, frNet*> name2snet_;
+  boost::container::flat_map<std::string, frNet*> name2snet_;
   std::vector<std::unique_ptr<frNet>> snets_;
 
   std::vector<std::unique_ptr<frBlockage>> blockages_;

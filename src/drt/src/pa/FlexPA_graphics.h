@@ -66,13 +66,15 @@ class FlexPAGraphics : public gui::Renderer
                  odb::dbDatabase* db,
                  Logger* logger);
 
-  void startPin(frBPin* pin,
-                frInstTerm* inst_term,
-                std::set<frInst*, frBlockObjectComp>* inst_class);
+  void startPin(
+      frBPin* pin,
+      frInstTerm* inst_term,
+      boost::container::flat_set<frInst*, frBlockObjectComp>* inst_class);
 
-  void startPin(frMPin* pin,
-                frInstTerm* inst_term,
-                std::set<frInst*, frBlockObjectComp>* inst_class);
+  void startPin(
+      frMPin* pin,
+      frInstTerm* inst_term,
+      boost::container::flat_set<frInst*, frBlockObjectComp>* inst_class);
 
   void setAPs(const std::vector<std::unique_ptr<frAccessPoint>>& aps,
               frAccessPointEnum lower_type,

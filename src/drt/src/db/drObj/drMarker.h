@@ -28,6 +28,9 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
+
 #include "db/drObj/drBlockObject.h"
 
 namespace drt {
@@ -66,7 +69,10 @@ class drMazeMarker : public drBlockObject
   // getters
   frConstraint* getConstraint() const { return constraint_; }
   drNet* getTrigNet() const { return trigNets_.cbegin()->first; }
-  const std::map<drNet*, int>& getTrigNets() const { return trigNets_; }
+  const boost::container::flat_map<drNet*, int>& getTrigNets() const
+  {
+    return trigNets_;
+  }
   int getCnt() const { return cnt_; }
   // others
   frBlockObjectEnum typeId() const override { return drcMazeMarker; }
@@ -77,7 +83,7 @@ class drMazeMarker : public drBlockObject
 
  private:
   frConstraint* constraint_{nullptr};
-  std::map<drNet*, int> trigNets_;
+  boost::container::flat_map<drNet*, int> trigNets_;
   int cnt_{0};
 
   template <class Archive>

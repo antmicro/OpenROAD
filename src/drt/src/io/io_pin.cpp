@@ -53,8 +53,9 @@ void io::Parser::instAnalysis()
   }
 
   int numLayers = design_->getTech()->getLayers().size();
-  std::map<frMaster*, std::tuple<frLayerNum, frLayerNum>, frBlockObjectComp>
-      masterPinLayerRange;
+  boost::container::
+      flat_map<frMaster*, std::tuple<frLayerNum, frLayerNum>, frBlockObjectComp>
+          masterPinLayerRange;
   for (auto& uMaster : design_->getMasters()) {
     auto master = uMaster.get();
     frLayerNum minLayerNum = numLayers;

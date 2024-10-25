@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <set>
 #include <tuple>
 
@@ -82,9 +84,15 @@ class frMarker : public frFig
   Rect getBBox() const override { return bbox_; }
   frLayerNum getLayerNum() const { return layerNum_; }
 
-  const std::set<frBlockObject*>& getSrcs() const { return srcs_; }
+  const boost::container::flat_set<frBlockObject*>& getSrcs() const
+  {
+    return srcs_;
+  }
 
-  void setSrcs(const std::set<frBlockObject*>& srcs) { srcs_ = srcs; }
+  void setSrcs(const boost::container::flat_set<frBlockObject*>& srcs)
+  {
+    srcs_ = srcs;
+  }
 
   std::vector<std::pair<frBlockObject*, std::tuple<frLayerNum, Rect, bool>>>&
   getAggressors()
@@ -120,7 +128,7 @@ class frMarker : public frFig
   frConstraint* constraint_{nullptr};
   Rect bbox_;
   frLayerNum layerNum_{0};
-  std::set<frBlockObject*> srcs_;
+  boost::container::flat_set<frBlockObject*> srcs_;
   std::vector<std::pair<frBlockObject*, std::tuple<frLayerNum, Rect, bool>>>
       victims_;  // obj, isFixed
   std::vector<std::pair<frBlockObject*, std::tuple<frLayerNum, Rect, bool>>>

@@ -54,8 +54,11 @@ void FlexGR::genSTTopology_FLUTE(std::vector<frNode*>& pinGCellNodes,
   stt_builder_->setAlpha(0);
   auto fluteTree = stt_builder_->makeSteinerTree(xs, ys, 0);
 
-  std::map<Point, frNode*> pinGCell2Nodes, steinerGCell2Nodes;
-  std::map<frNode*, std::set<frNode*, frBlockObjectComp>, frBlockObjectComp>
+  boost::container::flat_map<Point, frNode*> pinGCell2Nodes, steinerGCell2Nodes;
+  boost::container::flat_map<
+      frNode*,
+      boost::container::flat_set<frNode*, frBlockObjectComp>,
+      frBlockObjectComp>
       adjacencyList;
 
   for (auto pinNode : pinGCellNodes) {
@@ -128,7 +131,7 @@ void FlexGR::genSTTopology_FLUTE(std::vector<frNode*>& pinGCellNodes,
   }
 
   // build tree
-  std::set<frNode*> visitedNodes;
+  boost::container::flat_set<frNode*> visitedNodes;
   std::deque<frNode*> nodeQueue;
 
   nodeQueue.push_front(root);
@@ -340,9 +343,13 @@ unsigned FlexGR::genSTTopology_HVW_levelOvlp(frNode* currNode,
                                              unsigned comb)
 {
   unsigned overlap = 0;
-  std::map<frCoord, boost::icl::interval_map<frCoord, std::set<frNode*>>>
+  boost::container::flat_map<
+      frCoord,
+      boost::icl::interval_map<frCoord, boost::container::flat_set<frNode*>>>
       horzIntvMaps;  // denoted by children node index
-  std::map<frCoord, boost::icl::interval_map<frCoord, std::set<frNode*>>>
+  boost::container::flat_map<
+      frCoord,
+      boost::icl::interval_map<frCoord, boost::container::flat_set<frNode*>>>
       vertIntvMaps;
 
   std::pair<frCoord, frCoord> horzIntv, vertIntv;
@@ -353,7 +360,7 @@ unsigned FlexGR::genSTTopology_HVW_levelOvlp(frNode* currNode,
   if (parent) {
     genSTTopology_HVW_levelOvlp_helper(
         parent, currNode, isCurrU, horzIntv, vertIntv, turnLoc);
-    std::set<frNode*> currNodeSet;
+    boost::container::flat_set<frNode*> currNodeSet;
     currNodeSet.insert(currNode);
     if (horzIntv.first != horzIntv.second) {
       horzIntvMaps[turnLoc.y()] += std::make_pair(
@@ -373,7 +380,7 @@ unsigned FlexGR::genSTTopology_HVW_levelOvlp(frNode* currNode,
     bool isCurrU = (comb >> combIdx) & 1;
     genSTTopology_HVW_levelOvlp_helper(
         currNode, child, isCurrU, horzIntv, vertIntv, turnLoc);
-    std::set<frNode*> childSet;
+    boost::container::flat_set<frNode*> childSet;
     childSet.insert(child);
     if (horzIntv.first != horzIntv.second) {
       horzIntvMaps[turnLoc.y()] += std::make_pair(
@@ -495,8 +502,9 @@ void FlexGR::genSTTopology_build_tree(std::vector<frNode*>& pinNodes,
                                       std::vector<bool>& isU,
                                       std::vector<frNode*>& steinerNodes)
 {
-  std::map<frCoord, boost::icl::interval_set<frCoord>> horzIntvs, vertIntvs;
-  std::map<Point, frNode*> pinGCell2Nodes, steinerGCell2Nodes;
+  boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>
+      horzIntvs, vertIntvs;
+  boost::container::flat_map<Point, frNode*> pinGCell2Nodes, steinerGCell2Nodes;
 
   genSTTopology_build_tree_mergeSeg(pinNodes, isU, horzIntvs, vertIntvs);
 
@@ -530,8 +538,10 @@ void FlexGR::genSTTopology_build_tree(std::vector<frNode*>& pinNodes,
 void FlexGR::genSTTopology_build_tree_mergeSeg(
     std::vector<frNode*>& pinNodes,
     std::vector<bool>& isU,
-    std::map<frCoord, boost::icl::interval_set<frCoord>>& horzIntvs,
-    std::map<frCoord, boost::icl::interval_set<frCoord>>& vertIntvs)
+    boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+        horzIntvs,
+    boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+        vertIntvs)
 {
   Point turnLoc;
   std::pair<frCoord, frCoord> horzIntv, vertIntv;
@@ -555,21 +565,29 @@ void FlexGR::genSTTopology_build_tree_mergeSeg(
 
 void FlexGR::genSTTopology_build_tree_splitSeg(
     std::vector<frNode*>& pinNodes,
-    std::map<Point, frNode*>& pinGCell2Nodes,
-    std::map<frCoord, boost::icl::interval_set<frCoord>>& horzIntvs,
-    std::map<frCoord, boost::icl::interval_set<frCoord>>& vertIntvs,
-    std::map<Point, frNode*>& steinerGCell2Nodes,
+    boost::container::flat_map<Point, frNode*>& pinGCell2Nodes,
+    boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+        horzIntvs,
+    boost::container::flat_map<frCoord, boost::icl::interval_set<frCoord>>&
+        vertIntvs,
+    boost::container::flat_map<Point, frNode*>& steinerGCell2Nodes,
     std::vector<frNode*>& steinerNodes)
 {
-  std::map<frCoord, std::set<std::pair<frCoord, frCoord>>> horzSegs, vertSegs;
-  std::map<frNode*, std::set<frNode*, frBlockObjectComp>, frBlockObjectComp>
+  boost::container::
+      flat_map<frCoord, boost::container::flat_set<std::pair<frCoord, frCoord>>>
+          horzSegs, vertSegs;
+  boost::container::flat_map<
+      frNode*,
+      boost::container::flat_set<frNode*, frBlockObjectComp>,
+      frBlockObjectComp>
       adjacencyList;
 
   auto root = pinNodes[0];
   auto net = root->getNet();
 
   // horz first dimension is y coord, second dimension is x coord
-  std::map<frCoord, std::set<frCoord>> horzPinHelper, vertPinHelper;
+  boost::container::flat_map<frCoord, boost::container::flat_set<frCoord>>
+      horzPinHelper, vertPinHelper;
   // init
   for (const auto& [loc, node] : pinGCell2Nodes) {
     horzPinHelper[loc.y()].insert(loc.x());
@@ -579,7 +597,7 @@ void FlexGR::genSTTopology_build_tree_splitSeg(
   // trackIdx == y coord
   for (auto& [trackIdx, currIntvs] : horzIntvs) {
     for (auto& intv : currIntvs) {
-      std::set<frCoord> lineIdx;
+      boost::container::flat_set<frCoord> lineIdx;
       auto beginIdx = intv.lower();
       auto endIdx = intv.upper();
       // split by vertSeg
@@ -621,7 +639,7 @@ void FlexGR::genSTTopology_build_tree_splitSeg(
   // trackIdx == x coord
   for (auto& [trackIdx, currIntvs] : vertIntvs) {
     for (auto& intv : currIntvs) {
-      std::set<frCoord> lineIdx;
+      boost::container::flat_set<frCoord> lineIdx;
       auto beginIdx = intv.lower();
       auto endIdx = intv.upper();
       // split by horzSeg
@@ -791,7 +809,7 @@ void FlexGR::genSTTopology_build_tree_splitSeg(
     node->reset();
   }
 
-  std::set<frNode*, frBlockObjectComp> visitedNodes;
+  boost::container::flat_set<frNode*, frBlockObjectComp> visitedNodes;
   std::deque<frNode*> nodeQueue;
 
   nodeQueue.push_front(root);

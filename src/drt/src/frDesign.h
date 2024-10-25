@@ -124,7 +124,7 @@ class frDesign
 
  private:
   std::unique_ptr<frBlock> topBlock_;
-  std::map<frString, frMaster*> name2master_;
+  boost::container::flat_map<frString, frMaster*> name2master_;
   std::vector<std::unique_ptr<frMaster>> masters_;
   std::unique_ptr<frTechObject> tech_;
   std::unique_ptr<frRegionQuery> rq_;

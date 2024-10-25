@@ -53,9 +53,13 @@ bool FlexGridGraph::isAccessPointLocation(frLayerNum layer_num,
   return layer_maze_locs.find(Point(x_coord, y_coord)) != layer_maze_locs.end();
 }
 void FlexGridGraph::initGrids(
-    const std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-    const std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap,
-    const std::map<frLayerNum, dbTechLayerDir>& zMap,
+    const boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+    const boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap,
+    const boost::container::flat_map<frLayerNum, dbTechLayerDir>& zMap,
     bool followGuide)
 {
   // initialize coord vectors
@@ -176,8 +180,9 @@ bool FlexGridGraph::isWorkerBorder(frMIdx v, bool isVert)
 }
 bool FlexGridGraph::hasAlignedUpDefTrack(
     frLayerNum layerNum,
-    const std::map<frLayerNum, frTrackPattern*>& xSubMap,
-    const std::map<frLayerNum, frTrackPattern*>& ySubMap) const
+    const boost::container::flat_map<frLayerNum, frTrackPattern*>& xSubMap,
+    const boost::container::flat_map<frLayerNum, frTrackPattern*>& ySubMap)
+    const
 {
   for (frLayerNum lNum = layerNum + 2;
        lNum < (int) getTech()->getLayers().size();
@@ -200,9 +205,13 @@ bool FlexGridGraph::hasAlignedUpDefTrack(
 
 void FlexGridGraph::initEdges(
     const frDesign* design,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap,
-    const std::map<frLayerNum, dbTechLayerDir>& zMap,
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap,
+    const boost::container::flat_map<frLayerNum, dbTechLayerDir>& zMap,
     const Rect& bbox,
     bool initDR)
 {
@@ -393,8 +402,12 @@ void FlexGridGraph::init(
     const frDesign* design,
     const Rect& routeBBox,
     const Rect& extBBox,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& xMap,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>& yMap,
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& xMap,
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>& yMap,
     bool initDR,
     bool followGuide)
 {
@@ -402,7 +415,7 @@ void FlexGridGraph::init(
   halfViaEncArea_ = &via_data->halfViaEncArea;
 
   // get tracks intersecting with the Maze bbox
-  std::map<frLayerNum, dbTechLayerDir> zMap;
+  boost::container::flat_map<frLayerNum, dbTechLayerDir> zMap;
   initTracks(design, xMap, yMap, zMap, extBBox);
   initGrids(xMap, yMap, zMap, followGuide);  // buildGridGraph
   initEdges(
@@ -414,11 +427,16 @@ void FlexGridGraph::init(
 // get all tracks intersecting with the Maze bbox, left/bottom are inclusive
 void FlexGridGraph::initTracks(
     const frDesign* design,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>&
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>&
         horLoc2TrackPatterns,
-    std::map<frCoord, std::map<frLayerNum, frTrackPattern*>>&
+    boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frLayerNum, frTrackPattern*>>&
         vertLoc2TrackPatterns,
-    std::map<frLayerNum, dbTechLayerDir>& layerNum2PreRouteDir,
+    boost::container::flat_map<frLayerNum, dbTechLayerDir>&
+        layerNum2PreRouteDir,
     const Rect& bbox)
 {
   for (auto& layer : getTech()->getLayers()) {

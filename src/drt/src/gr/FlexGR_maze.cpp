@@ -236,7 +236,7 @@ void FlexGRWorker::mazeNetInit(grNet* net)
 void FlexGRWorker::mazeNetInit_addHistCost(grNet* net)
 {
   // add history cost for all gcells that this net previously visited
-  std::set<FlexMazeIdx> pts;
+  boost::container::flat_set<FlexMazeIdx> pts;
   for (auto& uptr : net->getRouteConnFigs()) {
     if (uptr->typeId() == grcPathSeg) {
       auto cptr = static_cast<grPathSeg*>(uptr.get());
@@ -275,7 +275,7 @@ void FlexGRWorker::mazeNetInit_addHistCost(grNet* net)
 void FlexGRWorker::mazeNetInit_decayHistCost(grNet* net)
 {
   // decay history cost for all gcells that this net previously visited
-  std::set<FlexMazeIdx> pts;
+  boost::container::flat_set<FlexMazeIdx> pts;
   for (auto& uptr : net->getRouteConnFigs()) {
     if (uptr->typeId() == grcPathSeg) {
       auto cptr = static_cast<grPathSeg*>(uptr.get());
@@ -363,7 +363,7 @@ void FlexGRWorker::mazeNetInit_removeNetNodes(grNet* net)
 {
   // remove non-terminal gcell nodes
   std::deque<grNode*> nodeQ;
-  std::set<grNode*> terminalNodes;
+  boost::container::flat_set<grNode*> terminalNodes;
   grNode* root = nullptr;
 
   for (auto& [pinNode, gcellNode] : net->getPinGCellNodePairs()) {
@@ -427,9 +427,9 @@ bool FlexGRWorker::routeNet(grNet* net)
     return true;
   }
 
-  std::set<grNode*, frBlockObjectComp> unConnPinGCellNodes;
-  std::map<FlexMazeIdx, grNode*> mazeIdx2unConnPinGCellNode;
-  std::map<FlexMazeIdx, grNode*> mazeIdx2endPointNode;
+  boost::container::flat_set<grNode*, frBlockObjectComp> unConnPinGCellNodes;
+  boost::container::flat_map<FlexMazeIdx, grNode*> mazeIdx2unConnPinGCellNode;
+  boost::container::flat_map<FlexMazeIdx, grNode*> mazeIdx2endPointNode;
   routeNet_prep(net,
                 unConnPinGCellNodes,
                 mazeIdx2unConnPinGCellNode,
@@ -475,9 +475,10 @@ bool FlexGRWorker::routeNet(grNet* net)
 
 void FlexGRWorker::routeNet_prep(
     grNet* net,
-    std::set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
-    std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode,
-    std::map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode)
+    boost::container::flat_set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
+    boost::container::flat_map<FlexMazeIdx, grNode*>&
+        mazeIdx2unConnPinGCellNode,
+    boost::container::flat_map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode)
 {
   for (auto pinGCellNode : net->getPinGCellNodes()) {
     auto loc = pinGCellNode->getLoc();
@@ -550,8 +551,9 @@ void FlexGRWorker::routeNet_printNet(grNet* net)
 // current set subnet root to be src with the absence of reroot
 void FlexGRWorker::routeNet_setSrc(
     grNet* net,
-    std::set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
-    std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode,
+    boost::container::flat_set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
+    boost::container::flat_map<FlexMazeIdx, grNode*>&
+        mazeIdx2unConnPinGCellNode,
     std::vector<FlexMazeIdx>& connComps,
     FlexMazeIdx& ccMazeIdx1,
     FlexMazeIdx& ccMazeIdx2,
@@ -599,7 +601,8 @@ void FlexGRWorker::routeNet_setSrc(
 grNode* FlexGRWorker::routeNet_getNextDst(
     FlexMazeIdx& ccMazeIdx1,
     FlexMazeIdx& ccMazeIdx2,
-    std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode)
+    boost::container::flat_map<FlexMazeIdx, grNode*>&
+        mazeIdx2unConnPinGCellNode)
 {
   Point pt;
   Point ll, ur;
@@ -647,10 +650,11 @@ grNode* FlexGRWorker::routeNet_getNextDst(
 grNode* FlexGRWorker::routeNet_postAstarUpdate(
     std::vector<FlexMazeIdx>& path,
     std::vector<FlexMazeIdx>& connComps,
-    std::set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
-    std::map<FlexMazeIdx, grNode*>& mazeIdx2unConnPinGCellNode)
+    boost::container::flat_set<grNode*, frBlockObjectComp>& unConnPinGCellNodes,
+    boost::container::flat_map<FlexMazeIdx, grNode*>&
+        mazeIdx2unConnPinGCellNode)
 {
-  std::set<FlexMazeIdx> localConnComps;
+  boost::container::flat_set<FlexMazeIdx> localConnComps;
   grNode* leaf = nullptr;
   if (!path.empty()) {
     auto mi = path[0];
@@ -719,7 +723,7 @@ void FlexGRWorker::routeNet_postAstarWritePath(
     grNet* net,
     std::vector<FlexMazeIdx>& points,
     grNode* leaf,
-    std::map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode)
+    boost::container::flat_map<FlexMazeIdx, grNode*>& mazeIdx2endPointNode)
 {
   if (points.empty()) {
   }

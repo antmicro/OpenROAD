@@ -142,11 +142,12 @@ class FlexGCWorker::Impl
   Rect extBox_;
   Rect drcBox_;
 
-  std::map<frBlockObject*, gcNet*> owner2nets_;  // no order is assumed
+  boost::container::flat_map<frBlockObject*, gcNet*>
+      owner2nets_;  // no order is assumed
   std::vector<std::unique_ptr<gcNet>> nets_;
 
   std::vector<std::unique_ptr<frMarker>> markers_;
-  std::map<MarkerId, frMarker*> mapMarkers_;
+  boost::container::flat_map<MarkerId, frMarker*> mapMarkers_;
   std::vector<std::unique_ptr<drPatchWire>> pwires_;
 
   FlexGCWorkerRegionQuery rq_;
@@ -161,7 +162,7 @@ class FlexGCWorker::Impl
   frLayerNum maxLayerNum_;
 
   // for pin prep
-  std::set<frBlockObject*> targetObjs_;
+  boost::container::flat_set<frBlockObject*> targetObjs_;
   bool ignoreDB_;
   bool ignoreMinArea_;
   bool ignoreLongSideEOL_;
@@ -189,31 +190,36 @@ class FlexGCWorker::Impl
   void initNet_pins_polygonEdges(gcNet* net);
   void initNet_pins_polygonEdges_getFixedPolygonEdges(
       gcNet* net,
-      std::vector<std::set<std::pair<Point, Point>>>& fixedPolygonEdges);
+      std::vector<boost::container::flat_set<std::pair<Point, Point>>>&
+          fixedPolygonEdges);
   void initNet_pins_polygonEdges_helper_outer(
       gcNet* net,
       gcPin* pin,
       gcPolygon* poly,
       frLayerNum i,
-      const std::vector<std::set<std::pair<Point, Point>>>& fixedPolygonEdges);
+      const std::vector<boost::container::flat_set<std::pair<Point, Point>>>&
+          fixedPolygonEdges);
   void initNet_pins_polygonEdges_helper_inner(
       gcNet* net,
       gcPin* pin,
       const gtl::polygon_90_data<frCoord>& hole_poly,
       frLayerNum i,
-      const std::vector<std::set<std::pair<Point, Point>>>& fixedPolygonEdges);
+      const std::vector<boost::container::flat_set<std::pair<Point, Point>>>&
+          fixedPolygonEdges);
   void initNet_pins_polygonCorners(gcNet* net);
   void initNet_pins_polygonCorners_helper(gcNet* net, gcPin* pin);
   void initNet_pins_maxRectangles(gcNet* net);
   void initNet_pins_maxRectangles_getFixedMaxRectangles(
       gcNet* net,
-      std::vector<std::set<std::pair<Point, Point>>>& fixedMaxRectangles);
+      std::vector<boost::container::flat_set<std::pair<Point, Point>>>&
+          fixedMaxRectangles);
   void initNet_pins_maxRectangles_helper(
       gcNet* net,
       gcPin* pin,
       const gtl::rectangle_data<frCoord>& rect,
       frLayerNum i,
-      const std::vector<std::set<std::pair<Point, Point>>>& fixedMaxRectangles);
+      const std::vector<boost::container::flat_set<std::pair<Point, Point>>>&
+          fixedMaxRectangles);
 
   void initRegionQuery();
 

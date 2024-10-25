@@ -66,7 +66,10 @@ class FlexGRCMap
 
   frLayerNum getNumLayers() { return numLayers_; }
 
-  std::map<frLayerNum, dbTechLayerDir> getZMap() { return zMap_; }
+  boost::container::flat_map<frLayerNum, dbTechLayerDir> getZMap()
+  {
+    return zMap_;
+  }
 
   unsigned getSupply(unsigned x,
                      unsigned y,
@@ -524,7 +527,7 @@ class FlexGRCMap
   // [15-8] cong history
   // [3] block E [2] block N [1] overflow E; [0] overflow N
   std::vector<uint64_t> bits_;
-  std::map<frLayerNum, dbTechLayerDir> zMap_;
+  boost::container::flat_map<frLayerNum, dbTechLayerDir> zMap_;
   std::vector<frCoord> layerTrackPitches_;
   std::vector<frCoord> layerLine2ViaPitches_;
   std::vector<frCoord> layerPitches_;
@@ -644,14 +647,14 @@ class FlexGRCMap
   unsigned getNumBlkTracks(
       bool isHorz,
       frLayerNum lNum,
-      const std::set<frCoord>& trackLocs,
+      const boost::container::flat_set<frCoord>& trackLocs,
       const std::vector<rq_box_value_t<frBlockObject*>>& results,
       frCoord bloatDist);
   void getTrackLocs(const std::vector<std::unique_ptr<frTrackPattern>>& tps,
                     bool isHorz,
                     frCoord low,
                     frCoord high,
-                    std::set<frCoord>& trackLocs);
+                    boost::container::flat_set<frCoord>& trackLocs);
   unsigned getNumPins(
       const std::vector<rq_box_value_t<frBlockObject*>>& results);
   frCoord calcBloatDist(frBlockObject* obj,

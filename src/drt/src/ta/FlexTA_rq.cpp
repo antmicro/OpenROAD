@@ -99,13 +99,13 @@ void FlexTAWorkerRegionQuery::remove(taPinFig* fig)
 void FlexTAWorkerRegionQuery::query(
     const Rect& box,
     const frLayerNum layerNum,
-    std::set<taPin*, frBlockObjectComp>& result) const
+    boost::container::flat_set<taPin*, frBlockObjectComp>& result) const
 {
   std::vector<rq_box_value_t<taPinFig*>> temp;
   auto& tree = impl_->shapes_.at(layerNum);
   transform(tree.qbegin(bgi::intersects(box)),
             tree.qend(),
-            inserter(result, result.end()),
+            std::inserter(result, result.end()),
             [](const auto& box_fig) { return box_fig.second->getPin(); });
 }
 

@@ -122,8 +122,9 @@ class frRegionQuery
   // init
   void init();
   void initGuide();
-  void initOrigGuide(
-      std::map<frNet*, std::vector<frRect>, frBlockObjectComp>& tmpGuides);
+  void initOrigGuide(boost::container::flat_map<frNet*,
+                                                std::vector<frRect>,
+                                                frBlockObjectComp>& tmpGuides);
   void initGRPin(std::vector<std::pair<frBlockObject*, odb::Point>>& in);
   void initRPin();
   void initDRObj();

@@ -58,9 +58,10 @@ void FlexDRConnectivityChecker::pin2epMap_helper(
     const frNet* net,
     const Point& pt,
     const frLayerNum lNum,
-    std::map<frBlockObject*,
-             std::set<std::pair<Point, frLayerNum>>,
-             frBlockObjectComp>& pin2epMap)
+    boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap)
 {
   auto regionQuery = getRegionQuery();
   frRegionQuery::Objects<frBlockObject> result;
@@ -91,12 +92,13 @@ void FlexDRConnectivityChecker::pin2epMap_helper(
 void FlexDRConnectivityChecker::buildPin2epMap(
     const frNet* net,
     const NetRouteObjs& netRouteObjs,
-    std::map<frBlockObject*,
-             std::set<std::pair<Point, frLayerNum>>,
-             frBlockObjectComp>& pin2epMap)
+    boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap)
 {
   // to avoid delooping fake planar ep in pin
-  std::set<std::pair<Point, frLayerNum>> extEndPoints;
+  boost::container::flat_set<std::pair<Point, frLayerNum>> extEndPoints;
   for (auto& connFig : netRouteObjs) {
     if (connFig->typeId() != frcPathSeg) {
       continue;
@@ -154,7 +156,8 @@ void FlexDRConnectivityChecker::initRouteObjs(const frNet* net,
 void FlexDRConnectivityChecker::nodeMap_routeObjEnd(
     const frNet* net,
     const std::vector<frConnFig*>& netRouteObjs,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   for (int i = 0; i < (int) netRouteObjs.size(); i++) {
     const auto connFig = netRouteObjs[i];
@@ -180,16 +183,19 @@ void FlexDRConnectivityChecker::nodeMap_routeObjSplit_helper(
     const frCoord trackCoord,
     const frCoord splitCoord,
     const frLayerNum lNum,
-    const std::vector<
-        std::map<frCoord, std::map<frCoord, std::pair<frCoord, int>>>>&
+    const std::vector<boost::container::flat_map<
+        frCoord,
+        boost::container::flat_map<frCoord, std::pair<frCoord, int>>>>&
         mergeHelper,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   auto it1 = mergeHelper[lNum].find(trackCoord);
   if (it1 == mergeHelper[lNum].end()) {
     return;
   }
-  auto& mp = it1->second;  // std::map<ep, std::pair<bp, objIdx>>
+  auto& mp
+      = it1->second;  // boost::container::flat_map<ep, std::pair<bp, objIdx>>
   auto it2 = mp.lower_bound(splitCoord);
   if (it2 == mp.end()) {
     return;
@@ -204,13 +210,18 @@ void FlexDRConnectivityChecker::nodeMap_routeObjSplit_helper(
 void FlexDRConnectivityChecker::nodeMap_routeObjSplit(
     const frNet* net,
     const std::vector<frConnFig*>& netRouteObjs,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   const int numLayers = getTech()->getLayers().size();
   // lNum -> track -> ep -> (bp, segIdx)
-  std::vector<std::map<frCoord, std::map<frCoord, std::pair<frCoord, int>>>>
+  std::vector<boost::container::flat_map<
+      frCoord,
+      boost::container::flat_map<frCoord, std::pair<frCoord, int>>>>
       horzMergeHelper(numLayers);
-  std::vector<std::map<frCoord, std::map<frCoord, std::pair<frCoord, int>>>>
+  std::vector<boost::container::flat_map<
+      frCoord,
+      boost::container::flat_map<frCoord, std::pair<frCoord, int>>>>
       vertMergeHelper(numLayers);
   for (int i = 0; i < (int) netRouteObjs.size(); i++) {
     const auto connFig = netRouteObjs[i];
@@ -274,10 +285,12 @@ void FlexDRConnectivityChecker::nodeMap_routeObjSplit(
 void FlexDRConnectivityChecker::nodeMap_pin(
     const std::vector<frConnFig*>& netRouteObjs,
     std::vector<frBlockObject*>& netPins,
-    const std::map<frBlockObject*,
-                   std::set<std::pair<Point, frLayerNum>>,
-                   frBlockObjectComp>& pin2epMap,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    const boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap,
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   int currCnt = (int) netRouteObjs.size();
   for (auto& [obj, locS] : pin2epMap) {
@@ -293,10 +306,12 @@ void FlexDRConnectivityChecker::buildNodeMap(
     const frNet* net,
     const NetRouteObjs& netRouteObjs,
     std::vector<frBlockObject*>& netPins,
-    const std::map<frBlockObject*,
-                   std::set<std::pair<Point, frLayerNum>>,
-                   frBlockObjectComp>& pin2epMap,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    const boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>& pin2epMap,
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   nodeMap_routeObjEnd(net, netRouteObjs, nodeMap);
   nodeMap_routeObjSplit(net, netRouteObjs, nodeMap);
@@ -307,7 +322,8 @@ bool FlexDRConnectivityChecker::astar(
     const frNet* net,
     std::vector<char>& adjVisited,
     std::vector<int>& adjPrevIdx,
-    const std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap,
+    const boost::container::flat_map<std::pair<Point, frLayerNum>,
+                                     boost::container::flat_set<int>>& nodeMap,
     const NetRouteObjs& netRouteObjs,
     const int nNetRouteObjs,
     const int nNetObjs)
@@ -413,12 +429,15 @@ void FlexDRConnectivityChecker::finish(
     const std::vector<char>& adjVisited,
     const int gCnt,
     const int nCnt,
-    std::map<std::pair<Point, frLayerNum>, std::set<int>>& nodeMap)
+    boost::container::flat_map<std::pair<Point, frLayerNum>,
+                               boost::container::flat_set<int>>& nodeMap)
 {
   auto regionQuery = getRegionQuery();
 
   // from obj to pt
-  std::map<int, std::set<std::pair<Point, frLayerNum>>> reverseNodeMap;
+  boost::container::
+      flat_map<int, boost::container::flat_set<std::pair<Point, frLayerNum>>>
+          reverseNodeMap;
   for (auto& [pr, idxS] : nodeMap) {
     for (auto& idx : idxS) {
       reverseNodeMap[idx].insert(pr);
@@ -484,7 +503,7 @@ void FlexDRConnectivityChecker::finish(
   }
 
   // must use map because split has to start from right
-  std::map<std::pair<Point, frLayerNum>, int> psSplits;
+  boost::container::flat_map<std::pair<Point, frLayerNum>, int> psSplits;
   for (auto& [pr, idxS] : nodeMap) {
     bool hasPin = false;
     for (auto idx : idxS) {
@@ -537,8 +556,8 @@ void FlexDRConnectivityChecker::finish(
     auto ps1 = static_cast<frPathSeg*>(netRouteObjs[idx1]);
     const auto [bp1, ep1] = ps1->getPoints();
     bool isHorz = (bp1.y() == ep1.y());
-    std::set<std::pair<Point, frLayerNum>> newPr1;
-    std::set<std::pair<Point, frLayerNum>> newPr2;
+    boost::container::flat_set<std::pair<Point, frLayerNum>> newPr1;
+    boost::container::flat_set<std::pair<Point, frLayerNum>> newPr2;
     for (auto& [prPt, prLNum] : reverseNodeMap[idx1]) {
       if (isHorz) {
         if (prPt.x() <= splitPt.x()) {
@@ -655,7 +674,7 @@ void FlexDRConnectivityChecker::finish(
   }
 
   // delete redundant pwires
-  std::set<std::pair<Point, frLayerNum>> validPoints;
+  boost::container::flat_set<std::pair<Point, frLayerNum>> validPoints;
   frLayerNum lNum;
   for (auto& connFig : net->getShapes()) {
     if (connFig->typeId() == frcPathSeg) {
@@ -1252,13 +1271,15 @@ void FlexDRConnectivityChecker::check(int iter)
                             vertNewSegSpans);
     }
     // net->term/instTerm->pt_layer
-    std::vector<std::map<frBlockObject*,
-                         std::set<std::pair<Point, frLayerNum>>,
-                         frBlockObjectComp>>
+    std::vector<boost::container::flat_map<
+        frBlockObject*,
+        boost::container::flat_set<std::pair<Point, frLayerNum>>,
+        frBlockObjectComp>>
         aPin2epMap(batchSize);
     std::vector<std::vector<frBlockObject*>> aNetPins(batchSize);
-    std::vector<std::map<std::pair<Point, frLayerNum>, std::set<int>>> aNodeMap(
-        batchSize);
+    std::vector<boost::container::flat_map<std::pair<Point, frLayerNum>,
+                                           boost::container::flat_set<int>>>
+        aNodeMap(batchSize);
     std::vector<std::vector<char>> aAdjVisited(batchSize);
     std::vector<std::vector<int>> aAdjPrevIdx(batchSize);
     std::vector<char> status(batchSize, false);

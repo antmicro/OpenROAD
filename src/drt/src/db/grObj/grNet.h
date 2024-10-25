@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <memory>
 
 #include "db/grObj/grBlockObject.h"
@@ -73,12 +75,13 @@ class grNet : public grBlockObject
   {
     return pinGCellNodePairs;
   }
-  const std::map<grNode*, std::vector<grNode*>, frBlockObjectComp>&
-  getGCell2PinNodes() const
+  const boost::container::
+      flat_map<grNode*, std::vector<grNode*>, frBlockObjectComp>&
+      getGCell2PinNodes() const
   {
     return gcell2PinNodes;
   }
-  std::map<grNode*, std::vector<grNode*>, frBlockObjectComp>&
+  boost::container::flat_map<grNode*, std::vector<grNode*>, frBlockObjectComp>&
   getGCell2PinNodes()
   {
     return gcell2PinNodes;
@@ -93,11 +96,13 @@ class grNet : public grBlockObject
   {
     return pinNodePairs;
   }
-  const std::map<grNode*, frNode*, frBlockObjectComp>& getGR2FrPinNode() const
+  const boost::container::flat_map<grNode*, frNode*, frBlockObjectComp>&
+  getGR2FrPinNode() const
   {
     return gr2FrPinNode;
   }
-  std::map<grNode*, frNode*, frBlockObjectComp>& getGR2FrPinNode()
+  boost::container::flat_map<grNode*, frNode*, frBlockObjectComp>&
+  getGR2FrPinNode()
   {
     return gr2FrPinNode;
   }
@@ -146,7 +151,8 @@ class grNet : public grBlockObject
     pinGCellNodePairs = in;
   }
   void setGCell2PinNodes(
-      const std::map<grNode*, std::vector<grNode*>, frBlockObjectComp>& in)
+      const boost::container::
+          flat_map<grNode*, std::vector<grNode*>, frBlockObjectComp>& in)
   {
     gcell2PinNodes = in;
   }
@@ -155,7 +161,8 @@ class grNet : public grBlockObject
   {
     pinNodePairs = in;
   }
-  void setGR2FrPinNode(const std::map<grNode*, frNode*, frBlockObjectComp>& in)
+  void setGR2FrPinNode(
+      const boost::container::flat_map<grNode*, frNode*, frBlockObjectComp>& in)
   {
     gr2FrPinNode = in;
   }
@@ -214,12 +221,13 @@ class grNet : public grBlockObject
 
   // pair of <pinNode, gcellNode> with first (0th) element always being root
   std::vector<std::pair<grNode*, grNode*>> pinGCellNodePairs;
-  std::map<grNode*, std::vector<grNode*>, frBlockObjectComp> gcell2PinNodes;
+  boost::container::flat_map<grNode*, std::vector<grNode*>, frBlockObjectComp>
+      gcell2PinNodes;
   // unique, first (0th) element always being root
   std::vector<grNode*> pinGCellNodes;
   std::vector<std::pair<frNode*, grNode*>> pinNodePairs;
-  std::map<grNode*, frNode*, frBlockObjectComp> gr2FrPinNode;
-  // std::set<frBlockObject*>                 fNetTerms;
+  boost::container::flat_map<grNode*, frNode*, frBlockObjectComp> gr2FrPinNode;
+  // boost::container::flat_set<frBlockObject*>                 fNetTerms;
   std::list<std::unique_ptr<grNode>> nodes;
   grNode* root{nullptr};
   frNet* fNet{nullptr};
