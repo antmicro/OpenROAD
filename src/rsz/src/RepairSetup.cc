@@ -55,6 +55,7 @@
 #include "sta/Units.hh"
 #include "sta/VerilogWriter.hh"
 #include "utl/Logger.h"
+#include "ViolatingEndPicker.hh"
 
 namespace rsz {
 
@@ -108,25 +109,10 @@ bool RepairSetup::repairSetup(const float setup_slack_margin,
   removed_buffer_count_ = 0;
   resizer_->buffer_moved_into_core_ = false;
 
-  // Sort failing endpoints by slack.
+  ViolatingEndsPicker violating_ends;
+  violating_ends.init(sta_, setup_slack_margin, max_passes);
   const VertexSet* endpoints = sta_->endpoints();
-  vector<pair<Vertex*, Slack>> violating_ends;
-  // logger_->setDebugLevel(RSZ, "repair_setup", 2);
-  // Should check here whether we can figure out the clock domain for each
-  // vertex. This may be the place where we can do some round robin fun to
-  // individually control each clock domain instead of just fixating on fixing
-  // one.
-  for (Vertex* end : *endpoints) {
-    const Slack end_slack = sta_->vertexSlack(end, max_);
-    if (end_slack < setup_slack_margin) {
-      violating_ends.emplace_back(end, end_slack);
-    }
-  }
-  std::stable_sort(violating_ends.begin(),
-                   violating_ends.end(),
-                   [](const auto& end_slack1, const auto& end_slack2) {
-                     return end_slack1.second < end_slack2.second;
-                   });
+
   debugPrint(logger_,
              RSZ,
              "repair_setup",
@@ -174,8 +160,7 @@ bool RepairSetup::repairSetup(const float setup_slack_margin,
     printProgress(opto_iteration, false, false, false, num_viols);
   }
   float fix_rate_threshold = inc_fix_rate_threshold_;
-  for (const auto& end_original_slack : violating_ends) {
-    Vertex* end = end_original_slack.first;
+  for (Vertex* end = violating_ends.getCurrent(); end; end = violating_ends.getNext()) {
     Slack end_slack = sta_->vertexSlack(end, max_);
     Slack worst_slack;
     Vertex* worst_vertex;
@@ -209,7 +194,7 @@ bool RepairSetup::repairSetup(const float setup_slack_margin,
     int pass = 1;
     int decreasing_slack_passes = 0;
     resizer_->journalBegin();
-    while (pass <= max_passes) {
+    while (!violating_ends.shouldGetNext()) {
       opto_iteration++;
       if (verbose) {
         printProgress(opto_iteration, false, false, false, num_viols);
@@ -314,6 +299,9 @@ bool RepairSetup::repairSetup(const float setup_slack_margin,
                  delayAsString(end_slack, sta_, digits),
                  delayAsString(worst_slack, sta_, digits),
                  better ? "save" : "");
+
+      violating_ends.noteRepair(better);
+      
       if (better) {
         if (end_slack > setup_slack_margin) {
           --num_viols;
@@ -328,7 +316,7 @@ bool RepairSetup::repairSetup(const float setup_slack_margin,
         // Allow slack to increase to get out of local minima.
         // Do not update prev_end_slack so it saves the high water mark.
         decreasing_slack_passes++;
-        if (decreasing_slack_passes > decreasing_slack_max_passes_) {
+        if (!violating_ends.shouldAllowSlackDecrease()) {
           // Undo changes that reduced slack.
           debugPrint(logger_,
                      RSZ,
