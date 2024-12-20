@@ -1,30 +1,9 @@
 #pragma once
-#include "rsz/Resizer.hh"
+#include "rsz/ViolatingEndPicker.hh"
 #include "sta/Graph.hh"
 
 namespace rsz {
-
-class ViolatingEndsPickerInterface
-{
-// This abstract class is used only for documenting the API of ViolatingEndsPicker
-// (and enforcing that FunSearch won't break it)
-public:
-  virtual ~ViolatingEndsPickerInterface() {};
-  virtual void init(dbSta* sta, float setup_slack_margin, int max_passes) = 0;
-
-  virtual Vertex* getCurrent() = 0;
-  virtual bool shouldGetNext() = 0;
-  virtual Vertex* getNext() = 0;
-
-  virtual void noteRepair(bool improved) = 0;
-
-  virtual bool shouldAllowSlackDecrease() = 0;
-
-  virtual size_t size() = 0;
-  virtual size_t empty() = 0;
-};
-
-class ViolatingEndsPicker : ViolatingEndsPickerInterface
+class ViolatingEndsPicker : ViolatingEndsPickerAPI
 {
 public:
   void init(dbSta* sta, const float setup_slack_margin, int max_passes) override
@@ -62,7 +41,6 @@ public:
 
   bool shouldGetNext() override {
     return pass > max_passes;
-    // if(pass <= max_passes)
   }
 
   Vertex* getNext() override {
@@ -95,9 +73,9 @@ private:
   dbSta* sta_ = nullptr;
   std::vector<std::pair<Vertex*, Slack>> violating_ends;
   std::vector<std::pair<Vertex*, Slack>>::iterator it;
+  int max_passes;
 
   static constexpr int decreasing_slack_max_passes_ = 50;
-  int max_passes;
 
   void resetEndpointStats() {
     pass = 1;
@@ -108,5 +86,5 @@ private:
   int pass = 1;
   int decreasing_slack_passes = 0;
 };
-
 }  // namespace rsz
+

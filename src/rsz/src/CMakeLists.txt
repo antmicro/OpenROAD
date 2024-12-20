@@ -67,6 +67,13 @@ target_include_directories(rsz
     ../include
 )
 
+if(DEFINED VIOLATING_ENDS_PICKER_HEADER)
+  MESSAGE(STATUS "VIOLATING_ENDS_PICKER_HEADER: ${VIOLATING_ENDS_PICKER_HEADER}")
+  target_compile_definitions( rsz PRIVATE VIOLATING_ENDS_PICKER_HEADER=${VIOLATING_ENDS_PICKER_HEADER} )
+else()
+  MESSAGE(STATUS "VIOLATING_ENDS_PICKER_HEADER not defined. Using default (rsz/SimpleViolatingEndsPicker.hh)")
+endif()
+
 target_include_directories(rsz_lib
   PUBLIC
     ../include
