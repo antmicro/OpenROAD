@@ -10,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <filesystem>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -135,6 +136,19 @@ class AbcTest : public ::testing::Test
     sta_->ensureGraph();
     sta_->ensureLevelized();
   }
+
+  void LoadOdb(const std::string& file_name)
+  {
+    std::ifstream stream;
+    stream.open(file_name, std::ios::binary);
+    EXPECT_TRUE(stream.is_open());
+    db_->read(stream);
+    sta_->postReadDb(db_.get());
+    sta_->getDbNetwork()->setHierarchy();
+    sta_->ensureGraph();
+    sta_->ensureLevelized();
+  }
+
   std::map<std::string, int> AbcLogicNetworkNameToPrimaryOutputIds(
       abc::Abc_Ntk_t* network)
   {
@@ -192,6 +206,28 @@ class AbcTestSky130 : public AbcTest
     power_unit_ = units->powerUnit();
   }
 };
+
+TEST_F(AbcTest, LogicExtractorCrash)
+{
+  AbcLibraryFactory factory(&logger_);
+  factory.AddDbSta(sta_.get());
+  AbcLibrary abc_library = factory.Build();
+
+  LoadOdb("crash.odb");
+
+  sta::dbNetwork* network = sta_->getDbNetwork();
+  sta::Vertex* vertex = nullptr;
+  for (sta::Vertex* v : *sta_->endpoints()) {
+    if (!std::strcmp(v->name(network), "c")) {
+      vertex = v;
+    }
+  }
+  EXPECT_NE(vertex, nullptr);
+
+  LogicExtractorFactory logic_extractor(sta_.get(), &logger_);
+  logic_extractor.AppendEndpoint(vertex);
+  LogicCut cut = logic_extractor.BuildLogicCut(abc_library);
+}
 
 TEST_F(AbcTest, CellPropertiesMatchOpenSta)
 {
