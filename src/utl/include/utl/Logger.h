@@ -38,6 +38,7 @@ class Progress;
 #define FOREACH_TOOL(X) \
   X(ANT)                \
   X(CTS)                \
+  X(CUT)               \
   X(DFT)                \
   X(DPL)                \
   X(DRT)                \
