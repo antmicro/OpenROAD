@@ -29,6 +29,7 @@
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
 #include "odb/db.h"
+#include "genetic_algorithm.h"
 #include "rsz/Resizer.hh"
 #include "sta/Delay.hh"
 #include "sta/Graph.hh"
@@ -99,6 +100,19 @@ void Restructure::resynthAnnealing(sta::Corner* corner)
                                        annealing_revert_after_,
                                        annealing_init_ops_);
   annealing_strategy.OptimizeDesign(
+      open_sta_, name_generator_, resizer_, logger_);
+}
+
+void Restructure::resynthGenetic(sta::Corner* corner)
+{
+  GeneticAlgorithm genetic_algorithm(corner,
+                                     slack_threshold_,
+                                     annealing_seed_,
+                                     annealing_temp_,
+                                     annealing_iters_,
+                                     annealing_revert_after_,
+                                     annealing_init_ops_);
+  genetic_algorithm.OptimizeDesign(
       open_sta_, name_generator_, resizer_, logger_);
 }
 

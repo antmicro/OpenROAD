@@ -86,6 +86,10 @@ void resynth_annealing_cmd(Corner* corner) {
   getRestructure()->resynthAnnealing(corner);
 }
 
+void resynth_genetic_cmd(Corner* corner) {
+  getRestructure()->resynthGenetic(corner);
+}
+
 void
 restructure_cmd(char* liberty_file_name, char* target, float slack_threshold,
                 int depth_threshold, char* workdir_name, char* abc_logfile)

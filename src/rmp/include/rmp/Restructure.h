@@ -71,6 +71,7 @@ class Restructure
   void reset();
   void resynth(sta::Corner* corner);
   void resynthAnnealing(sta::Corner* corner);
+  void resynthGenetic(sta::Corner* corner);
   void run(char* liberty_file_name,
            float slack_threshold,
            unsigned max_depth,

@@ -16,6 +16,8 @@ cc_library(
         "src/Restructure.cpp",
         "src/annealing_strategy.cpp",
         "src/annealing_strategy.h",
+        "src/genetic_algorithm.cpp",
+        "src/genetic_algorithm.h",
         "src/delay_optimization_strategy.cpp",
         "src/delay_optimization_strategy.h",
         "src/logic_optimization_strategy.h",
