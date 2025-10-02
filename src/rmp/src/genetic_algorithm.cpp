@@ -336,159 +336,57 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   // Initial solution and slack
   debugPrint(logger,
              RMP,
-             "annealing",
+             "population",
              1,
-             "Generating and evaluating the initial solution");
-  std::vector<GiaOp> ops;
-  ops.reserve(initial_ops_);
-  for (size_t i = 0; i < initial_ops_; i++) {
-    ops.push_back(all_ops[random_() % all_ops.size()]);
+             "Generating and evaluating the initial population");
+  population_size_ = 10;
+  std::vector<std::vector<GiaOp>> population(population_size_);
+  for (auto& ind : population) {
+    ind.reserve(initial_ops_);
+    for (size_t i = 0; i < initial_ops_; i++) {
+      ind.push_back(all_ops[random_() % all_ops.size()]);
+    }
   }
+
 
   // The magic numbers are defaults from abc/src/base/abci/abc.c
   const size_t SEARCH_RESIZE_ITERS = 100;
   const size_t FINAL_RESIZE_ITERS = 1000;
 
-  odb::dbDatabase::beginEco(block);
+  std::vector<float> worst_slacks(population_size_);
+  sta::Vertex* worst_vertex_placeholder;
 
-  AnnealingStrategy::RunGia(sta,
-                            candidate_vertices,
-                            abc_library,
-                            ops,
-                            SEARCH_RESIZE_ITERS,
-                            name_generator,
-                            logger);
-
-  odb::dbDatabase::endEco(block);
-
-  float worst_slack;
-  sta::Vertex* worst_vertex;
-  sta->worstSlack(corner_, sta::MinMax::max(), worst_slack, worst_vertex);
-
-  odb::dbDatabase::undoEco(block);
-
-  if (!temperature_) {
-    sta::Delay required = sta->vertexRequired(worst_vertex, sta::MinMax::max());
-    temperature_ = required;
-  }
-
-  logger->info(RMP, 62, "Resynthesis: starting simulated annealing");
-  logger->info(RMP,
-               60,
-               "Initial temperature: {}, worst slack: {}",
-               *temperature_,
-               worst_slack);
-
-  float best_worst_slack = worst_slack;
-  auto best_ops = ops;
-  size_t worse_iters = 0;
-
-  for (unsigned i = 0; i < iterations_; i++) {
-    float current_temp
-        = *temperature_ * (static_cast<float>(iterations_ - i) / iterations_);
-
-    if (revert_after_ && worse_iters >= *revert_after_) {
-      logger->info(RMP, 64, "Reverting to the best found solution");
-      ops = best_ops;
-      worst_slack = best_worst_slack;
-      worse_iters = 0;
-    }
-
-    if (i > 0 && (i + 1) % 10 == 0) {
-      logger->info(RMP,
-                   61,
-                   "Iteration: {}, temperature: {}, best worst slack: {}",
-                   i + 1,
-                   current_temp,
-                   best_worst_slack);
-    } else {
-      debugPrint(logger,
-                 RMP,
-                 "annealing",
-                 1,
-                 "Iteration: {}, temperature: {}, best worst slack: {}",
-                 i + 1,
-                 current_temp,
-                 best_worst_slack);
-    }
-
+  logger->info(RMP, 62, "Resynthesis: starting genetic algorithm");
+  for (int i = 0; i < population_size_; i++) {
     odb::dbDatabase::beginEco(block);
 
-    auto new_ops = neighbor(ops);
     AnnealingStrategy::RunGia(sta,
                               candidate_vertices,
                               abc_library,
-                              new_ops,
+                              population[i],
                               SEARCH_RESIZE_ITERS,
                               name_generator,
                               logger);
 
     odb::dbDatabase::endEco(block);
 
-    float worst_slack_new;
-    sta->worstSlack(corner_, sta::MinMax::max(), worst_slack_new, worst_vertex);
+    sta->worstSlack(corner_, sta::MinMax::max(), worst_slacks[i], worst_vertex_placeholder);
 
     odb::dbDatabase::undoEco(block);
 
-    if (worst_slack_new < best_worst_slack) {
-      worse_iters++;
-    } else {
-      worse_iters = 0;
-    }
-
-    if (worst_slack_new < worst_slack) {
-      float accept_prob
-          = current_temp == 0
-                ? 0
-                : std::exp((worst_slack_new - worst_slack) / current_temp);
-      debugPrint(
-          logger,
-          RMP,
-          "annealing",
-          1,
-          "Current worst slack: {}, new: {}, accepting new ABC script with "
-          "probability {}",
-          worst_slack,
-          worst_slack_new,
-          accept_prob);
-      if (std::uniform_real_distribution<float>(0, 1)(random_) < accept_prob) {
-        debugPrint(logger,
-                   RMP,
-                   "annealing",
-                   1,
-                   "Accepting new ABC script with worse slack");
-      } else {
-        debugPrint(logger,
-                   RMP,
-                   "annealing",
-                   1,
-                   "Rejecting new ABC script with worse slack");
-        continue;
-      }
-    } else {
-      debugPrint(logger,
-                 RMP,
-                 "annealing",
-                 1,
-
-                 "Current worst slack: {}, new: {}, accepting new ABC script",
-                 worst_slack,
-                 worst_slack_new);
-    }
-
-    ops = new_ops;
-    worst_slack = worst_slack_new;
-
-    if (worst_slack > best_worst_slack) {
-      best_worst_slack = worst_slack;
-      best_ops = ops;
-    }
+    logger->info(RMP,
+                 60,
+                 "Individual: {}, worst slack: {}",
+                 i,
+                 worst_slacks[i]);
   }
 
   logger->info(
-      RMP, 59, "Resynthesis: End of simulated annealing, applying operations");
+      RMP, 59, "Resynthesis: End of genetic algorithm, applying operations");
   logger->info(RMP, 63, "Resynthesis: Applying ABC operations");
 
+  auto best_slack_iterator = std::max_element(worst_slacks.begin(), worst_slacks.end());
+  auto best_ops = *(population.begin() + std::distance(worst_slacks.begin(), best_slack_iterator));
   // Apply the ops
   AnnealingStrategy::RunGia(sta,
                             candidate_vertices,

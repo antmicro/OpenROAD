@@ -56,6 +56,7 @@ class GeneticAlgorithm : public ResynthesisStrategy
   unsigned iterations_;
   std::optional<unsigned> revert_after_;
   unsigned initial_ops_;
+  unsigned population_size_;
   std::mt19937 random_;
 };
 
