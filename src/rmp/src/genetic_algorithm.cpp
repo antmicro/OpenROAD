@@ -2,6 +2,7 @@
 // Copyright (c) 2025-2025, The OpenROAD Authors
 
 #include "genetic_algorithm.h"
+#include "annealing_strategy.h"
 
 #include <fcntl.h>
 
@@ -350,13 +351,13 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
 
   odb::dbDatabase::beginEco(block);
 
-  RunGia(sta,
-         candidate_vertices,
-         abc_library,
-         ops,
-         SEARCH_RESIZE_ITERS,
-         name_generator,
-         logger);
+  AnnealingStrategy::RunGia(sta,
+                            candidate_vertices,
+                            abc_library,
+                            ops,
+                            SEARCH_RESIZE_ITERS,
+                            name_generator,
+                            logger);
 
   odb::dbDatabase::endEco(block);
 
@@ -414,13 +415,13 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     odb::dbDatabase::beginEco(block);
 
     auto new_ops = neighbor(ops);
-    RunGia(sta,
-           candidate_vertices,
-           abc_library,
-           new_ops,
-           SEARCH_RESIZE_ITERS,
-           name_generator,
-           logger);
+    AnnealingStrategy::RunGia(sta,
+                              candidate_vertices,
+                              abc_library,
+                              new_ops,
+                              SEARCH_RESIZE_ITERS,
+                              name_generator,
+                              logger);
 
     odb::dbDatabase::endEco(block);
 
@@ -489,193 +490,12 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   logger->info(RMP, 63, "Resynthesis: Applying ABC operations");
 
   // Apply the ops
-  RunGia(sta,
-         candidate_vertices,
-         abc_library,
-         best_ops,
-         FINAL_RESIZE_ITERS,
-         name_generator,
-         logger);
-}
-
-void GeneticAlgorithm::RunGia(
-    sta::dbSta* sta,
-    const std::vector<sta::Vertex*>& candidate_vertices,
-    cut::AbcLibrary& abc_library,
-    const std::vector<GiaOp>& gia_ops,
-    size_t resize_iters,
-    utl::UniqueName& name_generator,
-    utl::Logger* logger)
-{
-  sta::dbNetwork* network = sta->getDbNetwork();
-
-  // Disable incremental timing.
-  sta->graphDelayCalc()->delaysInvalid();
-  sta->search()->arrivalsInvalid();
-  sta->search()->endpointsInvalid();
-
-  cut::LogicExtractorFactory logic_extractor(sta, logger);
-  for (sta::Vertex* negative_endpoint : candidate_vertices) {
-    logic_extractor.AppendEndpoint(negative_endpoint);
-  }
-
-  cut::LogicCut cut = logic_extractor.BuildLogicCut(abc_library);
-
-  utl::UniquePtrWithDeleter<abc::Abc_Ntk_t> mapped_abc_network
-      = cut.BuildMappedAbcNetwork(abc_library, network, logger);
-
-  utl::UniquePtrWithDeleter<abc::Abc_Ntk_t> current_network(
-      abc::Abc_NtkToLogic(
-          const_cast<abc::Abc_Ntk_t*>(mapped_abc_network.get())),
-      &abc::Abc_NtkDelete);
-
-  {
-    auto library
-        = static_cast<abc::Mio_Library_t*>(mapped_abc_network->pManFunc);
-
-    // Install library for NtkMap
-    abc::Abc_FrameSetLibGen(library);
-
-    debugPrint(logger,
-               RMP,
-               "annealing",
-               1,
-               "Mapped ABC network has {} nodes and {} POs.",
-               abc::Abc_NtkNodeNum(current_network.get()),
-               abc::Abc_NtkPoNum(current_network.get()));
-
-    current_network->pManFunc = library;
-    abc::Gia_Man_t* gia = nullptr;
-
-    {
-      debugPrint(logger, RMP, "annealing", 1, "Converting to GIA");
-      auto ntk = current_network.get();
-      assert(!Abc_NtkIsStrash(ntk));
-      // derive comb GIA
-      auto strash = Abc_NtkStrash(ntk, false, true, false);
-      auto aig = Abc_NtkToDar(strash, false, false);
-      Abc_NtkDelete(strash);
-      gia = Gia_ManFromAig(aig);
-      Aig_ManStop(aig);
-      // perform undc/zero
-      auto inits = Abc_NtkCollectLatchValuesStr(ntk);
-      auto temp = gia;
-      gia = Gia_ManDupZeroUndc(gia, inits, 0, false, false);
-      Gia_ManStop(temp);
-      ABC_FREE(inits);
-      // copy names
-      gia->vNamesIn = abc::Abc_NtkCollectCiNames(ntk);
-      gia->vNamesOut = abc::Abc_NtkCollectCoNames(ntk);
-    }
-
-    // Run all the given GIA ops
-    for (auto& op : gia_ops) {
-      op(gia);
-    }
-
-    {
-      debugPrint(logger, RMP, "annealing", 1, "Converting GIA to network");
-      abc::Extra_UtilGetoptReset();
-
-      if (Gia_ManHasCellMapping(gia)) {
-        current_network = WrapUnique(abc::Abc_NtkFromCellMappedGia(gia, false));
-      } else if (Gia_ManHasMapping(gia) || gia->pMuxes) {
-        current_network = WrapUnique(Abc_NtkFromMappedGia(gia, false, false));
-      } else {
-        if (Gia_ManHasDangling(gia) != 0) {
-          debugPrint(
-              logger, RMP, "annealing", 1, "Rehashing before conversion");
-          replaceGia(gia, Gia_ManRehash(gia, false));
-        }
-        assert(Gia_ManHasDangling(gia) == 0);
-        auto aig = Gia_ManToAig(gia, false);
-        current_network = WrapUnique(Abc_NtkFromAigPhase(aig));
-        current_network->pName = abc::Extra_UtilStrsav(aig->pName);
-        Aig_ManStop(aig);
-      }
-
-      assert(gia->vNamesIn);
-      for (int i = 0; i < abc::Abc_NtkCiNum(current_network.get()); i++) {
-        assert(i < Vec_PtrSize(gia->vNamesIn));
-        abc::Abc_Obj_t* obj = abc::Abc_NtkCi(current_network.get(), i);
-        assert(obj);
-        Nm_ManDeleteIdName(current_network->pManName, obj->Id);
-        Abc_ObjAssignName(
-            obj, static_cast<char*>(Vec_PtrEntry(gia->vNamesIn, i)), nullptr);
-      }
-      assert(gia->vNamesOut);
-      for (int i = 0; i < abc::Abc_NtkCoNum(current_network.get()); i++) {
-        assert(i < Vec_PtrSize(gia->vNamesOut));
-        abc::Abc_Obj_t* obj = Abc_NtkCo(current_network.get(), i);
-        assert(obj);
-        Nm_ManDeleteIdName(current_network->pManName, obj->Id);
-        assert(Abc_ObjIsPo(obj));
-        Abc_ObjAssignName(
-            obj, static_cast<char*>(Vec_PtrEntry(gia->vNamesOut, i)), nullptr);
-      }
-
-      // decouple CI/CO with the same name
-      if (!Abc_NtkIsStrash(current_network.get())
-          && (gia->vNamesIn || gia->vNamesOut)) {
-        abc::Abc_NtkRedirectCiCo(current_network.get());
-      }
-
-      Gia_ManStop(gia);
-    }
-
-    if (!Abc_NtkIsStrash(current_network.get())) {
-      current_network = WrapUnique(
-          abc::Abc_NtkStrash(current_network.get(), false, true, false));
-    }
-
-    {
-      SuppressStdout nostdout;
-      current_network = WrapUnique(abc::Abc_NtkMap(current_network.get(),
-                                                   nullptr,
-                                                   /*DelayTarget=*/1.0,
-                                                   /*AreaMulti=*/0.0,
-                                                   /*DelayMulti=*/2.5,
-                                                   /*LogFan=*/0.0,
-                                                   /*Slew=*/0.0,
-                                                   /*Gain=*/250.0,
-                                                   /*nGatesMin=*/0,
-                                                   /*fRecovery=*/true,
-                                                   /*fSwitching=*/false,
-                                                   /*fSkipFanout=*/false,
-                                                   /*fUseProfile=*/false,
-                                                   /*fUseBuffs=*/false,
-                                                   /*fVerbose=*/false));
-    }
-
-    abc::Abc_NtkCleanup(current_network.get(), /*fVerbose=*/false);
-
-    current_network = WrapUnique(abc::Abc_NtkDupDfs(current_network.get()));
-
-    if (resize_iters > 0) {
-      // All the magic numbers are defaults from abc/src/base/abci/abc.c
-      SuppressStdout nostdout;
-      abc::SC_SizePars pars = {};
-      pars.nIters = resize_iters;
-      pars.nIterNoChange = 50;
-      pars.Window = 1;
-      pars.Ratio = 10;
-      pars.Notches = 1000;
-      pars.DelayUser = 0;
-      pars.DelayGap = 0;
-      pars.TimeOut = 0;
-      pars.BuffTreeEst = 0;
-      pars.BypassFreq = 0;
-      pars.fUseDept = true;
-      abc::Abc_SclUpsizePerform(
-          abc_library.abc_library(), current_network.get(), &pars, nullptr);
-      abc::Abc_SclDnsizePerform(
-          abc_library.abc_library(), current_network.get(), &pars, nullptr);
-    }
-
-    current_network = WrapUnique(abc::Abc_NtkToNetlist(current_network.get()));
-  }
-
-  cut.InsertMappedAbcNetwork(
-      current_network.get(), abc_library, network, name_generator, logger);
+  AnnealingStrategy::RunGia(sta,
+                            candidate_vertices,
+                            abc_library,
+                            best_ops,
+                            FINAL_RESIZE_ITERS,
+                            name_generator,
+                            logger);
 }
 }  // namespace rmp

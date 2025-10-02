@@ -46,13 +46,13 @@ class AnnealingStrategy : public ResynthesisStrategy
                       utl::UniqueName& name_generator,
                       rsz::Resizer* resizer,
                       utl::Logger* logger) override;
-  void RunGia(sta::dbSta* sta,
-              const std::vector<sta::Vertex*>& candidate_vertices,
-              cut::AbcLibrary& abc_library,
-              const std::vector<GiaOp>& gia_ops,
-              size_t resize_iters,
-              utl::UniqueName& name_generator,
-              utl::Logger* logger);
+  static void RunGia(sta::dbSta* sta,
+                     const std::vector<sta::Vertex*>& candidate_vertices,
+                     cut::AbcLibrary& abc_library,
+                     const std::vector<GiaOp>& gia_ops,
+                     size_t resize_iters,
+                     utl::UniqueName& name_generator,
+                     utl::Logger* logger);
 
  private:
   sta::Corner* corner_;
