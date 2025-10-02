@@ -85,7 +85,8 @@ void dbSdcNetwork::findInstancesMatching1(const PatternMatch* pattern,
       if (original_size > 0) {
         path_buffer.push_back(pathDivider());
       }
-      path_buffer.append(std::string_view(name(child)));
+      const char* nameChild = name(child);
+      path_buffer.append(nameChild, nameChild + std::strlen(nameChild));
 
       // Check if the child instance name matches the pattern.
       // Add a null terminator for C-style string compatibility.

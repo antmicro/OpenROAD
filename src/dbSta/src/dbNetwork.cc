@@ -1768,7 +1768,8 @@ const char* dbNetwork::pathName(const Net* net) const
                      db_mod->getName(),
                      block_->getHierarchyDelimiter());
     }
-    full_path_buf.append(modnet_name);
+    const char* modnet_name_char = modnet_name.c_str();
+    full_path_buf.append(modnet_name_char, modnet_name_char + std::strlen(modnet_name_char));
     full_path_buf.push_back('\0');
     return tmpStringCopy(full_path_buf.data());
   }
