@@ -103,7 +103,7 @@ class SuppressStdout
 struct SolutionSlack
 {
   std::vector<GiaOp> solution;
-  float worst_slack;
+  float worst_slack = -100000;
   bool computed_slack = false;
 };
 
@@ -386,6 +386,16 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                  "Individual: {}, worst slack: {}",
                  i,
                  population[i].worst_slack);
+  }
+
+  for (unsigned i = 0; i < iterations_; i++) {
+    // Mutations
+    for (unsigned j = 0; j < population_size_; j++) {
+      SolutionSlack sol_slack;
+      sol_slack.solution = neighbor(population[j].solution);
+      population.push_back(std::move(sol_slack));
+    }
+    
   }
 
   logger->info(
