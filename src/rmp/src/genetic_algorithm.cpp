@@ -100,6 +100,13 @@ class SuppressStdout
 #endif
 };
 
+struct SolutionSlack
+{
+  std::vector<GiaOp> solution;
+  float worst_slack;
+  bool computed_slack = false;
+};
+
 static void replaceGia(abc::Gia_Man_t*& gia, abc::Gia_Man_t* new_gia)
 {
   if (gia == new_gia) {
@@ -340,11 +347,11 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
              1,
              "Generating and evaluating the initial population");
   population_size_ = 10;
-  std::vector<std::vector<GiaOp>> population(population_size_);
+  std::vector<SolutionSlack> population(population_size_);
   for (auto& ind : population) {
-    ind.reserve(initial_ops_);
+    ind.solution.reserve(initial_ops_);
     for (size_t i = 0; i < initial_ops_; i++) {
-      ind.push_back(all_ops[random_() % all_ops.size()]);
+      ind.solution.push_back(all_ops[random_() % all_ops.size()]);
     }
   }
 
@@ -353,24 +360,24 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   const size_t SEARCH_RESIZE_ITERS = 100;
   const size_t FINAL_RESIZE_ITERS = 1000;
 
-  std::vector<float> worst_slacks(population_size_);
   sta::Vertex* worst_vertex_placeholder;
 
   logger->info(RMP, 62, "Resynthesis: starting genetic algorithm");
-  for (int i = 0; i < population_size_; i++) {
+
+  for (unsigned i = 0; i < population_size_; i++) {
     odb::dbDatabase::beginEco(block);
 
     AnnealingStrategy::RunGia(sta,
                               candidate_vertices,
                               abc_library,
-                              population[i],
+                              population[i].solution,
                               SEARCH_RESIZE_ITERS,
                               name_generator,
                               logger);
 
     odb::dbDatabase::endEco(block);
 
-    sta->worstSlack(corner_, sta::MinMax::max(), worst_slacks[i], worst_vertex_placeholder);
+    sta->worstSlack(corner_, sta::MinMax::max(), population[i].worst_slack, worst_vertex_placeholder);
 
     odb::dbDatabase::undoEco(block);
 
@@ -378,20 +385,20 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                  60,
                  "Individual: {}, worst slack: {}",
                  i,
-                 worst_slacks[i]);
+                 population[i].worst_slack);
   }
 
   logger->info(
       RMP, 59, "Resynthesis: End of genetic algorithm, applying operations");
   logger->info(RMP, 63, "Resynthesis: Applying ABC operations");
 
-  auto best_slack_iterator = std::max_element(worst_slacks.begin(), worst_slacks.end());
-  auto best_ops = *(population.begin() + std::distance(worst_slacks.begin(), best_slack_iterator));
+  auto best_it = std::max_element(population.begin(), population.end(),
+                                  [](const auto& a, const auto& b) { return a.worst_slack < b.worst_slack;});
   // Apply the ops
   AnnealingStrategy::RunGia(sta,
                             candidate_vertices,
                             abc_library,
-                            best_ops,
+                            best_it->solution,
                             FINAL_RESIZE_ITERS,
                             name_generator,
                             logger);
