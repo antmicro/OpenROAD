@@ -25,6 +25,7 @@ report_timing_histogram
 report_checks
 report_wns
 report_tns
+write_verilog_for_eqy gcd_annealing1 before "None"
 
 puts "-- After --\n"
 
@@ -34,3 +35,4 @@ report_cell_usage
 report_checks
 report_wns
 report_tns
+run_equivalence_test gcd_annealing1 ./Nangate45/work_around_yosys/ "None"
