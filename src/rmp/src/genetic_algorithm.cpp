@@ -395,7 +395,10 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       sol_slack.solution = neighbor(population[j].solution);
       population.push_back(std::move(sol_slack));
     }
-    
+    // Selection
+    std::nth_element(population.begin(), population.begin() + population_size_, population.end(),
+                     [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
+    population.resize(population_size_);
   }
 
   logger->info(
