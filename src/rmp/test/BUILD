@@ -27,6 +27,7 @@ COMPULSORY_TESTS = [
     "aes_annealing",
     "gcd_annealing1",
     "gcd_annealing2",
+    "gcd_genetic1",
 ]
 
 # Disabled in CMakeLists.txt
