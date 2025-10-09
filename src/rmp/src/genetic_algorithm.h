@@ -23,11 +23,15 @@ class GeneticAlgorithm : public ResynthesisStrategy
                              sta::Slack slack_threshold,
                              std::optional<std::mt19937::result_type> seed,
                              unsigned pop_size,
+                             unsigned mut_size,
+                             unsigned cross_size,
                              unsigned iterations,
                              unsigned initial_ops)
       : corner_(corner),
         slack_threshold_(slack_threshold),
         pop_size_(pop_size),
+        mut_size_(mut_size),
+        cross_size_(cross_size),
         iterations_(iterations),
         initial_ops_(initial_ops)
   {
@@ -51,6 +55,8 @@ class GeneticAlgorithm : public ResynthesisStrategy
   sta::Corner* corner_;
   sta::Slack slack_threshold_;
   unsigned pop_size_;
+  unsigned mut_size_;
+  unsigned cross_size_;
   unsigned iterations_;
   unsigned initial_ops_;
   std::mt19937 random_;

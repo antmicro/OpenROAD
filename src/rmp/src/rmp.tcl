@@ -164,7 +164,7 @@ sta::define_cmd_args "resynth_genetic" {
 
 proc resynth_genetic { args } {
   sta::parse_key_args "resynth_genetic" args \
-    keys {-corner -iters -seed -pop_size -initial_ops -slack_threshold} \
+    keys {-corner -iters -seed -pop_size -mut_size -cross_size -initial_ops -slack_threshold} \
     flags {}
 
   set corner [sta::parse_corner keys]
@@ -176,6 +176,12 @@ proc resynth_genetic { args } {
   }
   if { [info exists keys(-pop_size)] } {
     rmp::set_genetic_pop_size $keys(-pop_size)
+  }
+  if { [info exists keys(-mut_size)] } {
+    rmp::set_genetic_mut_size $keys(-mut_size)
+  }
+  if { [info exists keys(-cross_size)] } {
+    rmp::set_genetic_cross_size $keys(-cross_size)
   }
   if { [info exists keys(-iters)] } {
     rmp::set_genetic_iters $keys(-iters)

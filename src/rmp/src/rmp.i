@@ -91,6 +91,18 @@ set_genetic_pop_size(int genetic_pop_size)
 }
 
 void
+  set_genetic_mut_size(int genetic_mut_size)
+{
+  getRestructure()->setGeneticMutSize(genetic_mut_size);
+}
+
+void
+set_genetic_cross_size(int genetic_cross_size)
+{
+  getRestructure()->setGeneticCrossSize(genetic_cross_size);
+}
+
+void
 set_genetic_iters(int genetic_iters)
 {
   getRestructure()->setGeneticIters(genetic_iters);

@@ -391,10 +391,9 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                  population[i].worst_slack);
   }
 
-  unsigned int crossover_count = pop_size_;
   for (unsigned i = 0; i < iterations_; i++) {
     // Crossover
-    for (unsigned j = 0; j < crossover_count; j++) {
+    for (unsigned j = 0; j < cross_size_; j++) {
       auto rand1 = random_() % pop_size_;
       auto rand2 = random_() % pop_size_;
       if (rand1 == rand2) continue;
@@ -407,7 +406,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       population.push_back(std::move(child_sol_slack));
     }
     // Mutations
-    for (unsigned j = 0; j < pop_size_; j++) {
+    for (unsigned j = 0; j < mut_size_; j++) {
       SolutionSlack sol_slack;
       sol_slack.solution = neighbor(population[j].solution);
       population.push_back(std::move(sol_slack));

@@ -109,6 +109,8 @@ void Restructure::resynthGenetic(sta::Corner* corner)
                                      slack_threshold_,
                                      genetic_seed_,
                                      genetic_pop_size_,
+                                     genetic_mut_size_,
+                                     genetic_cross_size_,
                                      genetic_iters_,
                                      genetic_init_ops_);
   genetic_algorithm.OptimizeDesign(
