@@ -372,7 +372,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
              "population",
              1,
              "Generating and evaluating the initial population");
-  population_size_ = 10;
+  population_size_ = 4;
   std::vector<SolutionSlack> population(population_size_);
   for (auto& ind : population) {
     ind.solution.reserve(initial_ops_);
@@ -393,7 +393,8 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   }
 
   unsigned int crossover_count = population_size_;
-  for (unsigned i = 0; i < 100; i++) {
+  unsigned int iterations = 10;
+  for (unsigned i = 0; i < iterations; i++) {
     // Crossover
     for (unsigned j = 0; j < crossover_count; j++) {
       auto rand1 = random_() % population_size_;
