@@ -22,15 +22,13 @@ class GeneticAlgorithm : public ResynthesisStrategy
   explicit GeneticAlgorithm(sta::Corner* corner,
                              sta::Slack slack_threshold,
                              std::optional<std::mt19937::result_type> seed,
-                             std::optional<float> temperature,
+                             unsigned pop_size,
                              unsigned iterations,
-                             std::optional<unsigned> revert_after,
                              unsigned initial_ops)
       : corner_(corner),
         slack_threshold_(slack_threshold),
-        temperature_(temperature),
+        pop_size_(pop_size),
         iterations_(iterations),
-        revert_after_(revert_after),
         initial_ops_(initial_ops)
   {
     if (seed) {
@@ -52,11 +50,9 @@ class GeneticAlgorithm : public ResynthesisStrategy
  private:
   sta::Corner* corner_;
   sta::Slack slack_threshold_;
-  std::optional<float> temperature_;
+  unsigned pop_size_;
   unsigned iterations_;
-  std::optional<unsigned> revert_after_;
   unsigned initial_ops_;
-  unsigned population_size_;
   std::mt19937 random_;
 };
 

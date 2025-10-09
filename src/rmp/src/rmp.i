@@ -78,7 +78,31 @@ set_annealing_initial_ops(int set_annealing_initial_ops)
   getRestructure()->setAnnealingInitialOps(set_annealing_initial_ops);
 }
 
-void resynth_cmd(Corner* corner) {
+void
+set_genetic_seed(std::mt19937::result_type genetic_seed)
+{
+  getRestructure()->setGeneticSeed(genetic_seed);
+}
+
+void
+set_genetic_pop_size(int genetic_pop_size)
+{
+  getRestructure()->setGeneticPopSize(genetic_pop_size);
+}
+
+void
+set_genetic_iters(int genetic_iters)
+{
+  getRestructure()->setGeneticIters(genetic_iters);
+}
+
+void
+set_genetic_initial_ops(int genetic_initial_ops)
+{
+  getRestructure()->setGeneticInitialOps(genetic_initial_ops);
+}
+
+ void resynth_cmd(Corner* corner) {
   getRestructure()->resynth(corner);
 }
 

@@ -107,11 +107,10 @@ void Restructure::resynthGenetic(sta::Corner* corner)
 {
   GeneticAlgorithm genetic_algorithm(corner,
                                      slack_threshold_,
-                                     annealing_seed_,
-                                     annealing_temp_,
-                                     annealing_iters_,
-                                     annealing_revert_after_,
-                                     annealing_init_ops_);
+                                     genetic_seed_,
+                                     genetic_pop_size_,
+                                     genetic_iters_,
+                                     genetic_init_ops_);
   genetic_algorithm.OptimizeDesign(
       open_sta_, name_generator_, resizer_, logger_);
 }

@@ -89,6 +89,13 @@ class Restructure
     annealing_revert_after_ = revert_after;
   }
   void setAnnealingInitialOps(unsigned ops) { annealing_init_ops_ = ops; }
+  void setGeneticSeed(std::mt19937::result_type seed)
+  {
+    genetic_seed_ = seed;
+  }
+  void setGeneticPopSize(unsigned pop_size) { genetic_pop_size_ = pop_size; }
+  void setGeneticIters(unsigned iters) { genetic_iters_ = iters; }
+  void setGeneticInitialOps(unsigned ops) { genetic_init_ops_ = ops; }
   void setSlackThreshold(sta::Slack thresh) { slack_threshold_ = thresh; }
   void setMode(const char* mode_name);
   void setTieLoPort(sta::LibertyPort* loport);
@@ -130,6 +137,13 @@ class Restructure
   unsigned annealing_iters_ = 100;
   std::optional<unsigned> annealing_revert_after_;
   unsigned annealing_init_ops_ = 10;
+
+  // Genetic
+  std::optional<std::mt19937::result_type> genetic_seed_;
+  unsigned genetic_pop_size_ = 4;
+  unsigned genetic_iters_ = 10;
+  unsigned genetic_init_ops_ = 10;
+
   sta::Slack slack_threshold_ = 0;
 
   std::string input_blif_file_name_;

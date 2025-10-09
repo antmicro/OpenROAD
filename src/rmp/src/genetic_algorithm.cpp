@@ -372,8 +372,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
              "population",
              1,
              "Generating and evaluating the initial population");
-  population_size_ = 4;
-  std::vector<SolutionSlack> population(population_size_);
+  std::vector<SolutionSlack> population(pop_size_);
   for (auto& ind : population) {
     ind.solution.reserve(initial_ops_);
     for (size_t i = 0; i < initial_ops_; i++) {
@@ -383,7 +382,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
 
   logger->info(RMP, 62, "Resynthesis: starting genetic algorithm");
 
-  for (unsigned i = 0; i < population_size_; i++) {
+  for (unsigned i = 0; i < pop_size_; i++) {
     evaluateSolution(population[i], candidate_vertices, abc_library, corner_, sta, name_generator, logger);
     logger->info(RMP,
                  60,
@@ -392,13 +391,12 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                  population[i].worst_slack);
   }
 
-  unsigned int crossover_count = population_size_;
-  unsigned int iterations = 10;
-  for (unsigned i = 0; i < iterations; i++) {
+  unsigned int crossover_count = pop_size_;
+  for (unsigned i = 0; i < iterations_; i++) {
     // Crossover
     for (unsigned j = 0; j < crossover_count; j++) {
-      auto rand1 = random_() % population_size_;
-      auto rand2 = random_() % population_size_;
+      auto rand1 = random_() % pop_size_;
+      auto rand2 = random_() % pop_size_;
       if (rand1 == rand2) continue;
       std::vector<GiaOp>& parent1_sol = population[rand1].solution;
       std::vector<GiaOp>& parent2_sol = population[rand2].solution;
@@ -409,7 +407,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       population.push_back(std::move(child_sol_slack));
     }
     // Mutations
-    for (unsigned j = 0; j < population_size_; j++) {
+    for (unsigned j = 0; j < pop_size_; j++) {
       SolutionSlack sol_slack;
       sol_slack.solution = neighbor(population[j].solution);
       population.push_back(std::move(sol_slack));
@@ -420,9 +418,9 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       evaluateSolution(sol_slack, candidate_vertices, abc_library, corner_, sta, name_generator, logger);
     }
     // Selection
-    std::nth_element(population.begin(), population.begin() + population_size_, population.end(),
+    std::nth_element(population.begin(), population.begin() + pop_size_, population.end(),
                      [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
-    population.resize(population_size_);
+    population.resize(pop_size_);
   }
 
   logger->info(
