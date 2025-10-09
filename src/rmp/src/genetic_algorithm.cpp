@@ -396,8 +396,11 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   for (unsigned i = 0; i < 100; i++) {
     // Crossover
     for (unsigned j = 0; j < crossover_count; j++) {
-      std::vector<GiaOp>& parent1_sol = population[random_() % population_size_].solution;
-      std::vector<GiaOp>& parent2_sol = population[random_() % population_size_].solution;
+      auto rand1 = random_() % population_size_;
+      auto rand2 = random_() % population_size_;
+      if (rand1 == rand2) continue;
+      std::vector<GiaOp>& parent1_sol = population[rand1].solution;
+      std::vector<GiaOp>& parent2_sol = population[rand2].solution;
       std::vector<GiaOp> child_sol(parent1_sol.begin(), parent1_sol.begin() + parent1_sol.size() / 2);
       child_sol.insert(child_sol.end(), parent2_sol.begin() + parent2_sol.size() / 2, parent2_sol.end());
       SolutionSlack child_sol_slack;
