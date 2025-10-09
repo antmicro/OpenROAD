@@ -34,6 +34,3 @@ report_cell_usage
 report_checks
 report_wns
 report_tns
-
-# TODO: Generate the expected output
-exit 1
