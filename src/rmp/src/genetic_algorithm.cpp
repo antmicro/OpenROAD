@@ -32,6 +32,10 @@
 #include "utl/deleter.h"
 #include "utl/unique_name.h"
 
+// The magic numbers are defaults from abc/src/base/abci/abc.c
+const size_t SEARCH_RESIZE_ITERS = 100;
+const size_t FINAL_RESIZE_ITERS = 1000;
+
 namespace abc {
 extern Abc_Ntk_t* Abc_NtkFromAigPhase(Aig_Man_t* pMan);
 extern Abc_Ntk_t* Abc_NtkFromCellMappedGia(Gia_Man_t* p, int fUseBuffs);
@@ -100,13 +104,6 @@ class SuppressStdout
 #endif
 };
 
-struct SolutionSlack
-{
-  std::vector<GiaOp> solution;
-  float worst_slack = -100000;
-  bool computed_slack = false;
-};
-
 static void replaceGia(abc::Gia_Man_t*& gia, abc::Gia_Man_t* new_gia)
 {
   if (gia == new_gia) {
@@ -125,6 +122,36 @@ static void replaceGia(abc::Gia_Man_t*& gia, abc::Gia_Man_t* new_gia)
   gia = new_gia;
 }
 
+struct SolutionSlack
+{
+  std::vector<GiaOp> solution;
+  float worst_slack = -100000;
+  bool computed_slack = false;
+};
+
+void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>& candidate_vertices,
+                      cut::AbcLibrary& abc_library, sta::Corner* corner, sta::dbSta* sta,
+                      utl::UniqueName& name_generator, utl::Logger* logger) {
+  auto block = sta->db()->getChip()->getBlock();
+  odb::dbDatabase::beginEco(block);
+
+  AnnealingStrategy::RunGia(sta,
+                            candidate_vertices,
+                            abc_library,
+                            sol_slack.solution,
+                            SEARCH_RESIZE_ITERS,
+                            name_generator,
+                            logger);
+
+  odb::dbDatabase::endEco(block);
+
+  sta::Vertex* worst_vertex_placeholder;
+  sta->worstSlack(corner, sta::MinMax::max(), sol_slack.worst_slack, worst_vertex_placeholder);
+  sol_slack.computed_slack = true;
+
+  odb::dbDatabase::undoEco(block);
+}
+
 void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                                        utl::UniqueName& name_generator,
                                        rsz::Resizer* resizer,
@@ -134,7 +161,6 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   sta->ensureLevelized();
   sta->searchPreamble();
   sta->ensureClkNetwork();
-  auto block = sta->db()->getChip()->getBlock();
 
   auto candidate_vertices = GetEndpoints(sta, resizer, slack_threshold_);
   if (candidate_vertices.empty()) {
@@ -355,32 +381,10 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     }
   }
 
-
-  // The magic numbers are defaults from abc/src/base/abci/abc.c
-  const size_t SEARCH_RESIZE_ITERS = 100;
-  const size_t FINAL_RESIZE_ITERS = 1000;
-
-  sta::Vertex* worst_vertex_placeholder;
-
   logger->info(RMP, 62, "Resynthesis: starting genetic algorithm");
 
   for (unsigned i = 0; i < population_size_; i++) {
-    odb::dbDatabase::beginEco(block);
-
-    AnnealingStrategy::RunGia(sta,
-                              candidate_vertices,
-                              abc_library,
-                              population[i].solution,
-                              SEARCH_RESIZE_ITERS,
-                              name_generator,
-                              logger);
-
-    odb::dbDatabase::endEco(block);
-
-    sta->worstSlack(corner_, sta::MinMax::max(), population[i].worst_slack, worst_vertex_placeholder);
-
-    odb::dbDatabase::undoEco(block);
-
+    evaluateSolution(population[i], candidate_vertices, abc_library, corner_, sta, name_generator, logger);
     logger->info(RMP,
                  60,
                  "Individual: {}, worst slack: {}",
@@ -389,7 +393,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   }
 
   unsigned int crossover_count = population_size_;
-  for (unsigned i = 0; i < iterations_; i++) {
+  for (unsigned i = 0; i < 100; i++) {
     // Crossover
     for (unsigned j = 0; j < crossover_count; j++) {
       std::vector<GiaOp>& parent1_sol = population[random_() % population_size_].solution;
@@ -405,6 +409,11 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       SolutionSlack sol_slack;
       sol_slack.solution = neighbor(population[j].solution);
       population.push_back(std::move(sol_slack));
+    }
+    // Evaluation
+    for (auto& sol_slack : population) {
+      if (sol_slack.computed_slack) continue;
+      evaluateSolution(sol_slack, candidate_vertices, abc_library, corner_, sta, name_generator, logger);
     }
     // Selection
     std::nth_element(population.begin(), population.begin() + population_size_, population.end(),
