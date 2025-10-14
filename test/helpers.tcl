@@ -72,7 +72,8 @@ proc run_equivalence_test { test lib_files remove_cells } {
   puts $outfile "read_verilog -sv $before_netlist\nprep -top $top_cell -flatten\nmemory_map\n\n"
   # Modified netlist
   # tclint-disable-next-line line-length
-  puts $outfile "\[gate]\nread_verilog -sv  $after_netlist $lib_files\nprep -top $top_cell -flatten\nmemory_map\n\n"
+  puts $outfile "\[gate]\nread_liberty -ignore_miss_func -overwrite $lib_files\n"
+  puts $outfile "read_verilog -sv  $after_netlist\nprep -top $top_cell -flatten\nmemory_map\n\n"
 
   # Equivalence check recipe
   puts $outfile "\[strategy basic]\nuse sat\ndepth 10\n\n"
