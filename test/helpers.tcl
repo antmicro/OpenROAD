@@ -84,8 +84,7 @@ proc run_equivalence_test { test lib remove_cells } {
     set count 0
     catch {
       set count [
-        exec grep -c "Successfully proved designs equivalent"
-        $run_dir/logfile.txt
+        exec grep -c "Successfully proved designs equivalent" $run_dir/logfile.txt
       ]
     }
     if { $count == 0 } {
