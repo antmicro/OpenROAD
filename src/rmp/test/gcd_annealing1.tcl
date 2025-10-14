@@ -35,4 +35,4 @@ report_cell_usage
 report_checks
 report_wns
 report_tns
-run_equivalence_test gcd_annealing1 ./Nangate45/work_around_yosys/ "None"
+run_equivalence_test gcd_annealing1 "./asap7/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz ./asap7/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib ./asap7/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz"  "None"

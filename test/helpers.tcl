@@ -52,7 +52,7 @@ proc write_verilog_for_eqy { test stage remove_cells } {
   }
 }
 
-proc run_equivalence_test { test lib remove_cells } {
+proc run_equivalence_test { test lib_files remove_cells } {
   write_verilog_for_eqy $test after $remove_cells
   # eqy config file for test
   set test_script [make_result_file "${test}.eqy"]
@@ -63,13 +63,13 @@ proc run_equivalence_test { test lib remove_cells } {
   # output directory for test
   set run_dir [make_result_file "${test}_output"]
   # verilog lib files to run test
-  set lib_files [glob $lib/*]
   set outfile [open $test_script w]
 
   set top_cell [current_design]
   # Gold netlist
   # tclint-disable-next-line line-length
-  puts $outfile "\[gold]\nread_verilog -sv $before_netlist $lib_files\nprep -top $top_cell -flatten\nmemory_map\n\n"
+  puts $outfile "\[gold]\nread_liberty -ignore_miss_func -overwrite $lib_files\n"
+  puts $outfile "read_verilog -sv $before_netlist\nprep -top $top_cell -flatten\nmemory_map\n\n"
   # Modified netlist
   # tclint-disable-next-line line-length
   puts $outfile "\[gate]\nread_verilog -sv  $after_netlist $lib_files\nprep -top $top_cell -flatten\nmemory_map\n\n"
