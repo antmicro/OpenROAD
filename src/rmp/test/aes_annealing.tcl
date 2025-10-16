@@ -25,6 +25,7 @@ report_timing_histogram
 report_checks
 report_wns
 report_tns
+write_verilog_for_eqy aes_annealing before "None"
 
 puts "-- After --\n"
 
@@ -34,3 +35,4 @@ report_cell_usage
 report_checks
 report_wns
 report_tns
+run_equivalence_test aes_annealing "./asap7/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz ./asap7/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib ./asap7/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz"  "None"
