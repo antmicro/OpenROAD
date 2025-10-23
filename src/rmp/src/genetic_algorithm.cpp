@@ -132,6 +132,8 @@ struct SolutionSlack
 void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>& candidate_vertices,
                       cut::AbcLibrary& abc_library, sta::Corner* corner, sta::dbSta* sta,
                       utl::UniqueName& name_generator, utl::Logger* logger) {
+  logger->info(RMP, 59, "Resynthesis: Evaluating individual");
+
   auto block = sta->db()->getChip()->getBlock();
   odb::dbDatabase::beginEco(block);
 
@@ -392,6 +394,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   }
 
   for (unsigned i = 0; i < iterations_; i++) {
+    logger->info(RMP, 59, "Resynthesis: Iteration {} of genetic algorithm", i);
     // Crossover
     for (unsigned j = 0; j < cross_size_; j++) {
       auto rand1 = random_() % pop_size_;
@@ -420,6 +423,9 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     std::nth_element(population.begin(), population.begin() + pop_size_, population.end(),
                      [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
     population.resize(pop_size_);
+    for (int j = 0; j < pop_size_; j++) {
+      logger->info(RMP, 59, "Resynthesis: Worst slack of individual {} is {}", j, population[j].worst_slack);
+    }
   }
 
   logger->info(
@@ -428,6 +434,8 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
 
   auto best_it = std::max_element(population.begin(), population.end(),
                                   [](const auto& a, const auto& b) { return a.worst_slack < b.worst_slack;});
+  logger->info(RMP, 63, "Resynthesis: Best result is of individual {}: {}",
+               std::distance(best_it, population.begin()), best_it->worst_slack);
   // Apply the ops
   AnnealingStrategy::RunGia(sta,
                             candidate_vertices,
