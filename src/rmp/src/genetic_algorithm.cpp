@@ -435,7 +435,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   auto best_it = std::max_element(population.begin(), population.end(),
                                   [](const auto& a, const auto& b) { return a.worst_slack < b.worst_slack;});
   logger->info(RMP, 63, "Resynthesis: Best result is of individual {}: {}",
-               std::distance(best_it, population.begin()), best_it->worst_slack);
+               std::distance(population.begin(), best_it), best_it->worst_slack);
   // Apply the ops
   AnnealingStrategy::RunGia(sta,
                             candidate_vertices,
