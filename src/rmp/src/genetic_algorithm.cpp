@@ -154,6 +154,13 @@ void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>&
   odb::dbDatabase::undoEco(block);
 }
 
+float getWorstSlack(sta::dbSta* sta, sta::Corner* corner) {
+  float worst_slack;
+  sta::Vertex* worst_vertex_placeholder;
+  sta->worstSlack(corner, sta::MinMax::max(), worst_slack, worst_vertex_placeholder);
+  return worst_slack;
+}
+
 void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                                        utl::UniqueName& name_generator,
                                        rsz::Resizer* resizer,
@@ -382,7 +389,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     }
   }
 
-  logger->info(RMP, 62, "Resynthesis: starting genetic algorithm");
+  logger->info(RMP, 62, "Resynthesis: starting genetic algorithm, Worst slack is {}", getWorstSlack(sta, corner_));
 
   for (unsigned i = 0; i < pop_size_; i++) {
     evaluateSolution(population[i], candidate_vertices, abc_library, corner_, sta, name_generator, logger);
@@ -444,5 +451,6 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                             FINAL_RESIZE_ITERS,
                             name_generator,
                             logger);
+  logger->info(RMP, 63, "Resynthesis: Worst slack is {}", getWorstSlack(sta, corner_));
 }
 }  // namespace rmp
