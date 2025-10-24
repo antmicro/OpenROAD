@@ -141,7 +141,7 @@ std::vector<GiaOp> getSolutionOps(const Solution& sol, const std::vector<GiaOp>&
 void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>& candidate_vertices,
                       cut::AbcLibrary& abc_library, sta::Corner* corner, sta::dbSta* sta,
                       utl::UniqueName& name_generator, utl::Logger* logger, const std::vector<GiaOp>& all_ops) {
-  logger->info(RMP, 59, "Resynthesis: Evaluating individual");
+  logger->info(RMP, 61, "Resynthesis: Evaluating individual");
 
   auto block = sta->db()->getChip()->getBlock();
   odb::dbDatabase::beginEco(block);
@@ -420,7 +420,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   }
 
   for (unsigned i = 0; i < iterations_; i++) {
-    logger->info(RMP, 59, "Resynthesis: Iteration {} of genetic algorithm", i);
+    logger->info(RMP, 65, "Resynthesis: Iteration {} of genetic algorithm", i);
     // Crossover
     for (unsigned j = 0; j < cross_size_; j++) {
       auto rand1 = random_() % population.size();
@@ -463,7 +463,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
 
   auto best_it = std::max_element(population.begin(), population.end(),
                                   [](const auto& a, const auto& b) { return a.worst_slack < b.worst_slack;});
-  logger->info(RMP, 63, "Resynthesis: Best result is of individual {}: {}",
+  logger->info(RMP, 66, "Resynthesis: Best result is of individual {}: {}",
                std::distance(population.begin(), best_it), best_it->worst_slack);
   // Apply the ops
   AnnealingStrategy::RunGia(sta,
@@ -473,6 +473,6 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                             FINAL_RESIZE_ITERS,
                             name_generator,
                             logger);
-  logger->info(RMP, 63, "Resynthesis: Worst slack is {}", getWorstSlack(sta, corner_));
+  logger->info(RMP, 67, "Resynthesis: Worst slack is {}", getWorstSlack(sta, corner_));
 }
 }  // namespace rmp
