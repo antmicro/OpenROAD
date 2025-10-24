@@ -423,8 +423,8 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     logger->info(RMP, 59, "Resynthesis: Iteration {} of genetic algorithm", i);
     // Crossover
     for (unsigned j = 0; j < cross_size_; j++) {
-      auto rand1 = random_() % pop_size_;
-      auto rand2 = random_() % pop_size_;
+      auto rand1 = random_() % population.size();
+      auto rand2 = random_() % population.size();
       if (rand1 == rand2) continue;
       Solution& parent1_sol = population[rand1].solution;
       Solution& parent2_sol = population[rand2].solution;
@@ -447,11 +447,13 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       evaluateSolution(sol_slack, candidate_vertices, abc_library, corner_, sta, name_generator, logger, all_ops);
     }
     // Selection
-    std::nth_element(population.begin(), population.begin() + pop_size_, population.end(),
-                     [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
-    population.resize(pop_size_);
-    for (int j = 0; j < pop_size_; j++) {
-      logger->info(RMP, 59, "Resynthesis: Worst slack of individual {} is {}", j, population[j].worst_slack);
+    if (population.size() > pop_size_) {
+      std::nth_element(population.begin(), population.begin() + pop_size_, population.end(),
+                       [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
+      population.resize(pop_size_);
+    }
+    for (int j = 0; j < population.size(); j++) {
+      logger->info(RMP, 64, "Resynthesis: Worst slack of individual {} is {}", j, population[j].worst_slack);
     }
   }
 
