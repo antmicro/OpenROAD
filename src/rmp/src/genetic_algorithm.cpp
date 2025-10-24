@@ -124,14 +124,21 @@ static void replaceGia(abc::Gia_Man_t*& gia, abc::Gia_Man_t* new_gia)
 
 struct SolutionSlack
 {
-  std::vector<GiaOp> solution;
+  std::vector<size_t> solution;
   float worst_slack = -100000;
   bool computed_slack = false;
 };
 
+std::vector<GiaOp> getSolutionOps(const std::vector<size_t>& sol, const std::vector<GiaOp>& all_ops) {
+  std::vector<GiaOp> solOps;
+  solOps.reserve(sol.size());
+  for (int i = 0; i < sol.size(); i++) solOps.push_back(all_ops[sol[i]]);
+  return solOps;
+}
+
 void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>& candidate_vertices,
                       cut::AbcLibrary& abc_library, sta::Corner* corner, sta::dbSta* sta,
-                      utl::UniqueName& name_generator, utl::Logger* logger) {
+                      utl::UniqueName& name_generator, utl::Logger* logger, const std::vector<GiaOp>& all_ops) {
   logger->info(RMP, 59, "Resynthesis: Evaluating individual");
 
   auto block = sta->db()->getChip()->getBlock();
@@ -140,7 +147,7 @@ void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>&
   AnnealingStrategy::RunGia(sta,
                             candidate_vertices,
                             abc_library,
-                            sol_slack.solution,
+                            getSolutionOps(sol_slack.solution, all_ops),
                             SEARCH_RESIZE_ITERS,
                             name_generator,
                             logger);
@@ -337,8 +344,8 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       These are just stubs that return null.
    */
 
-  // Computes a random neighbor of a given GIA op list
-  const auto neighbor = [&](std::vector<GiaOp> ops) {
+  // Computes a random neighbor of a given solution
+  const auto neighbor = [&](std::vector<size_t> sol) {
     enum Move
     {
       ADD,
@@ -347,32 +354,32 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       COUNT
     };
     Move move = ADD;
-    if (ops.size() > 1) {
+    if (sol.size() > 1) {
       move = Move(random_() % (COUNT));
     }
     switch (move) {
       case ADD: {
         debugPrint(logger, RMP, "annealing", 2, "Adding a new GIA operation");
-        size_t i = random_() % (ops.size() + 1);
+        size_t i = random_() % (sol.size() + 1);
         size_t j = random_() % all_ops.size();
-        ops.insert(ops.begin() + i, all_ops[j]);
+        sol.insert(sol.begin() + i, j);
       } break;
       case REMOVE: {
         debugPrint(logger, RMP, "annealing", 2, "Removing a GIA operation");
-        size_t i = random_() % ops.size();
-        ops.erase(ops.begin() + i);
+        size_t i = random_() % sol.size();
+        sol.erase(sol.begin() + i);
       } break;
       case SWAP: {
         debugPrint(
             logger, RMP, "annealing", 2, "Swapping adjacent GIA operations");
-        size_t i = random_() % (ops.size() - 1);
-        std::swap(ops[i], ops[i + 1]);
+        size_t i = random_() % (sol.size() - 1);
+        std::swap(sol[i], sol[i + 1]);
       } break;
       case COUNT:
         // unreachable
         std::abort();
     }
-    return ops;
+    return sol;
   };
 
   // Initial solution and slack
@@ -385,14 +392,14 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   for (auto& ind : population) {
     ind.solution.reserve(initial_ops_);
     for (size_t i = 0; i < initial_ops_; i++) {
-      ind.solution.push_back(all_ops[random_() % all_ops.size()]);
+      ind.solution.push_back(random_() % all_ops.size());
     }
   }
 
   logger->info(RMP, 62, "Resynthesis: starting genetic algorithm, Worst slack is {}", getWorstSlack(sta, corner_));
 
   for (unsigned i = 0; i < pop_size_; i++) {
-    evaluateSolution(population[i], candidate_vertices, abc_library, corner_, sta, name_generator, logger);
+    evaluateSolution(population[i], candidate_vertices, abc_library, corner_, sta, name_generator, logger, all_ops);
     logger->info(RMP,
                  60,
                  "Individual: {}, worst slack: {}",
@@ -407,9 +414,9 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       auto rand1 = random_() % pop_size_;
       auto rand2 = random_() % pop_size_;
       if (rand1 == rand2) continue;
-      std::vector<GiaOp>& parent1_sol = population[rand1].solution;
-      std::vector<GiaOp>& parent2_sol = population[rand2].solution;
-      std::vector<GiaOp> child_sol(parent1_sol.begin(), parent1_sol.begin() + parent1_sol.size() / 2);
+      std::vector<size_t>& parent1_sol = population[rand1].solution;
+      std::vector<size_t>& parent2_sol = population[rand2].solution;
+      std::vector<size_t> child_sol(parent1_sol.begin(), parent1_sol.begin() + parent1_sol.size() / 2);
       child_sol.insert(child_sol.end(), parent2_sol.begin() + parent2_sol.size() / 2, parent2_sol.end());
       SolutionSlack child_sol_slack;
       child_sol_slack.solution = std::move(child_sol);
@@ -424,7 +431,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     // Evaluation
     for (auto& sol_slack : population) {
       if (sol_slack.computed_slack) continue;
-      evaluateSolution(sol_slack, candidate_vertices, abc_library, corner_, sta, name_generator, logger);
+      evaluateSolution(sol_slack, candidate_vertices, abc_library, corner_, sta, name_generator, logger, all_ops);
     }
     // Selection
     std::nth_element(population.begin(), population.begin() + pop_size_, population.end(),
@@ -447,7 +454,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
   AnnealingStrategy::RunGia(sta,
                             candidate_vertices,
                             abc_library,
-                            best_it->solution,
+                            getSolutionOps(best_it->solution, all_ops),
                             FINAL_RESIZE_ITERS,
                             name_generator,
                             logger);
