@@ -122,14 +122,16 @@ static void replaceGia(abc::Gia_Man_t*& gia, abc::Gia_Man_t* new_gia)
   gia = new_gia;
 }
 
+using Solution = std::vector<size_t>;
+
 struct SolutionSlack
 {
-  std::vector<size_t> solution;
+  Solution solution;
   float worst_slack = -100000;
   bool computed_slack = false;
 };
 
-std::vector<GiaOp> getSolutionOps(const std::vector<size_t>& sol, const std::vector<GiaOp>& all_ops) {
+std::vector<GiaOp> getSolutionOps(const Solution& sol, const std::vector<GiaOp>& all_ops) {
   std::vector<GiaOp> solOps;
   solOps.reserve(sol.size());
   for (int i = 0; i < sol.size(); i++) solOps.push_back(all_ops[sol[i]]);
@@ -166,6 +168,16 @@ float getWorstSlack(sta::dbSta* sta, sta::Corner* corner) {
   sta::Vertex* worst_vertex_placeholder;
   sta->worstSlack(corner, sta::MinMax::max(), worst_slack, worst_vertex_placeholder);
   return worst_slack;
+}
+
+void removeDuplicates(std::vector<SolutionSlack>& population, size_t checkFrom=0) {
+  std::vector<int> toRemove;
+  for (int i = checkFrom; i < population.size(); i++) {
+    for (int j = 0; j < i; j++) {
+      if (population[i].solution == population[j].solution) toRemove.push_back(i);
+    }
+  }
+  for (const auto& i : toRemove) population.erase(population.begin() + i);
 }
 
 void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
@@ -345,7 +357,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
    */
 
   // Computes a random neighbor of a given solution
-  const auto neighbor = [&](std::vector<size_t> sol) {
+  const auto neighbor = [&](Solution sol) {
     enum Move
     {
       ADD,
@@ -414,9 +426,9 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       auto rand1 = random_() % pop_size_;
       auto rand2 = random_() % pop_size_;
       if (rand1 == rand2) continue;
-      std::vector<size_t>& parent1_sol = population[rand1].solution;
-      std::vector<size_t>& parent2_sol = population[rand2].solution;
-      std::vector<size_t> child_sol(parent1_sol.begin(), parent1_sol.begin() + parent1_sol.size() / 2);
+      Solution& parent1_sol = population[rand1].solution;
+      Solution& parent2_sol = population[rand2].solution;
+      Solution child_sol(parent1_sol.begin(), parent1_sol.begin() + parent1_sol.size() / 2);
       child_sol.insert(child_sol.end(), parent2_sol.begin() + parent2_sol.size() / 2, parent2_sol.end());
       SolutionSlack child_sol_slack;
       child_sol_slack.solution = std::move(child_sol);
@@ -428,6 +440,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       sol_slack.solution = neighbor(population[j].solution);
       population.push_back(std::move(sol_slack));
     }
+    removeDuplicates(population);
     // Evaluation
     for (auto& sol_slack : population) {
       if (sol_slack.computed_slack) continue;
