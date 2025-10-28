@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <unordered_set>
 
 #include "aig/gia/gia.h"
 #include "aig/gia/giaAig.h"
@@ -182,14 +183,20 @@ float getWorstSlack(sta::dbSta* sta, sta::Corner* corner) {
   return worst_slack;
 }
 
-void removeDuplicates(std::vector<SolutionSlack>& population, size_t checkFrom=0) {
-  std::vector<int> toRemove;
-  for (int i = checkFrom; i < population.size(); i++) {
-    for (int j = 0; j < i; j++) {
-      if (population[i].solution == population[j].solution) toRemove.push_back(i);
+void removeDuplicates(std::vector<SolutionSlack>& population) {
+  struct HashVector {
+    size_t operator()(const Solution& sol) const {
+    std::size_t res = 0;
+    for (const auto& item : sol) res += item;
+    return res;
     }
-  }
-  for (const auto& i : toRemove) population.erase(population.begin() + i);
+  };
+  std::unordered_set<Solution, HashVector> taken;
+  population.erase(std::remove_if(population.begin(), population.end(),
+                                  [&taken](const SolutionSlack& s) {
+                                    return taken.insert(s.solution).second;
+                                  }),
+                   population.end());
 }
 
 void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
