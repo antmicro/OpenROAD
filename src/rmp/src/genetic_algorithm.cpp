@@ -129,6 +129,20 @@ struct SolutionSlack
   Solution solution;
   float worst_slack = -100000;
   bool computed_slack = false;
+  std::string toString() {
+    std::ostringstream resStream;
+    resStream << '[' << (solution.size() > 0 ? std::to_string(solution[0]) : "");
+    for (int i = 1; i < solution.size(); i++) {
+      resStream << ", " << std::to_string(solution[i]);
+    }
+    resStream << "], worst slack: ";
+    if (computed_slack) {
+      resStream << worst_slack;
+    } else {
+      resStream << "not computed";
+    }
+    return resStream.str();
+  }
 };
 
 std::vector<GiaOp> getSolutionOps(const Solution& sol, const std::vector<GiaOp>& all_ops) {
@@ -141,8 +155,6 @@ std::vector<GiaOp> getSolutionOps(const Solution& sol, const std::vector<GiaOp>&
 void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>& candidate_vertices,
                       cut::AbcLibrary& abc_library, sta::Corner* corner, sta::dbSta* sta,
                       utl::UniqueName& name_generator, utl::Logger* logger, const std::vector<GiaOp>& all_ops) {
-  logger->info(RMP, 61, "Resynthesis: Evaluating individual");
-
   auto block = sta->db()->getChip()->getBlock();
   odb::dbDatabase::beginEco(block);
 
@@ -412,11 +424,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
 
   for (unsigned i = 0; i < pop_size_; i++) {
     evaluateSolution(population[i], candidate_vertices, abc_library, corner_, sta, name_generator, logger, all_ops);
-    logger->info(RMP,
-                 60,
-                 "Individual: {}, worst slack: {}",
-                 i,
-                 population[i].worst_slack);
+    debugPrint(logger, RMP, "genetic", 1, population[i].toString());
   }
 
   for (unsigned i = 0; i < iterations_; i++) {
@@ -453,7 +461,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       population.resize(pop_size_);
     }
     for (int j = 0; j < population.size(); j++) {
-      logger->info(RMP, 64, "Resynthesis: Worst slack of individual {} is {}", j, population[j].worst_slack);
+      debugPrint(logger, RMP, "genetic", 1, population[j].toString());
     }
   }
 
