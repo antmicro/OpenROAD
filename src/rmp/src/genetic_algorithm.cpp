@@ -194,7 +194,7 @@ void removeDuplicates(std::vector<SolutionSlack>& population) {
   std::unordered_set<Solution, HashVector> taken;
   population.erase(std::remove_if(population.begin(), population.end(),
                                   [&taken](const SolutionSlack& s) {
-                                    return taken.insert(s.solution).second;
+                                    return !taken.insert(s.solution).second;
                                   }),
                    population.end());
 }
