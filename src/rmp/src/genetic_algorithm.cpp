@@ -130,7 +130,7 @@ struct SolutionSlack
   Solution solution;
   float worst_slack = -100000;
   bool computed_slack = false;
-  std::string toString() {
+  std::string toString() const {
     std::ostringstream resStream;
     resStream << '[' << (solution.size() > 0 ? std::to_string(solution[0]) : "");
     for (int i = 1; i < solution.size(); i++) {
@@ -183,7 +183,7 @@ float getWorstSlack(sta::dbSta* sta, sta::Corner* corner) {
   return worst_slack;
 }
 
-void removeDuplicates(std::vector<SolutionSlack>& population) {
+void removeDuplicates(std::vector<SolutionSlack>& population, utl::Logger* logger) {
   struct HashVector {
     size_t operator()(const Solution& sol) const {
     std::size_t res = 0;
@@ -193,8 +193,14 @@ void removeDuplicates(std::vector<SolutionSlack>& population) {
   };
   std::unordered_set<Solution, HashVector> taken;
   population.erase(std::remove_if(population.begin(), population.end(),
-                                  [&taken](const SolutionSlack& s) {
-                                    return !taken.insert(s.solution).second;
+                                  [&taken, logger](const SolutionSlack& s) {
+                                    if (!taken.insert(s.solution).second) {
+                                      debugPrint(logger, RMP, "genetic", 2, "Removing: " + s.toString());
+                                      return true;
+                                    } else {
+                                      debugPrint(logger, RMP, "genetic", 2, "Keeping: " + s.toString());
+                                      return false;
+                                    }
                                   }),
                    population.end());
 }
@@ -455,7 +461,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       sol_slack.solution = neighbor(population[j].solution);
       population.push_back(std::move(sol_slack));
     }
-    removeDuplicates(population);
+    removeDuplicates(population, logger);
     // Evaluation
     for (auto& sol_slack : population) {
       if (sol_slack.computed_slack) continue;
