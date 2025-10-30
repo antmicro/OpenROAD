@@ -468,14 +468,13 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       evaluateSolution(sol_slack, candidate_vertices, abc_library, corner_, sta, name_generator, logger, all_ops);
     }
     // Selection
-    if (population.size() > pop_size_) {
-      std::sort(population.begin(), population.end(), [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
-      std::vector<SolutionSlack> newPopulation;
-      newPopulation.reserve(pop_size_);
-      for (int j = 0; j < population.size(); j++) {
-
-      }
+    std::sort(population.begin(), population.end(), [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
+    std::vector<SolutionSlack> newPopulation;
+    newPopulation.reserve(pop_size_);
+    for (int j = 0; j < pop_size_; j++) {
+      
     }
+
     for (int j = 0; j < population.size(); j++) {
       debugPrint(logger, RMP, "genetic", 1, population[j].toString());
     }

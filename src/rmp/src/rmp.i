@@ -103,6 +103,12 @@ set_genetic_cross_size(int genetic_cross_size)
 }
 
 void
+set_genetic_tourn_size(int genetic_tourn_size)
+{
+  getRestructure()->setGeneticTournSize(genetic_tourn_size);
+}
+
+void
 set_genetic_iters(int genetic_iters)
 {
   getRestructure()->setGeneticIters(genetic_iters);

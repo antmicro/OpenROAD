@@ -96,6 +96,7 @@ class Restructure
   void setGeneticPopSize(unsigned pop_size) { genetic_pop_size_ = pop_size; }
   void setGeneticMutSize(unsigned mut_size) { genetic_mut_size_ = mut_size; }
   void setGeneticCrossSize(unsigned cross_size) { genetic_cross_size_ = cross_size; }
+  void setGeneticTournSize(unsigned tourn_size) { genetic_tourn_size_ = tourn_size; }
   void setGeneticIters(unsigned iters) { genetic_iters_ = iters; }
   void setGeneticInitialOps(unsigned ops) { genetic_init_ops_ = ops; }
   void setSlackThreshold(sta::Slack thresh) { slack_threshold_ = thresh; }
@@ -145,6 +146,7 @@ class Restructure
   unsigned genetic_pop_size_ = 4;
   unsigned genetic_mut_size_ = 4;
   unsigned genetic_cross_size_ = 4;
+  unsigned genetic_tourn_size_ = 4;
   unsigned genetic_iters_ = 10;
   unsigned genetic_init_ops_ = 10;
 
