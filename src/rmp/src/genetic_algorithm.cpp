@@ -472,8 +472,13 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     std::vector<SolutionSlack> newPopulation;
     newPopulation.reserve(pop_size_);
     for (int j = 0; j < pop_size_; j++) {
-      
+      std::vector<size_t> tournament(tourn_size_);
+      std::generate_n(tournament.begin(), tourn_size_, [&](){ return random_() % population.size();});
+      std::sort(tournament.begin(), tournament.end());
+      tournament.erase(std::unique(tournament.begin(), tournament.end()), tournament.end());
+      newPopulation.push_back(population[tournament[0]]);
     }
+    population = newPopulation;
 
     for (int j = 0; j < population.size(); j++) {
       debugPrint(logger, RMP, "genetic", 1, population[j].toString());
