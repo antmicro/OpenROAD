@@ -485,6 +485,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
         }
       }
     }
+    removeDuplicates(newPopulation, logger);
     population = newPopulation;
 
     for (int j = 0; j < population.size(); j++) {
