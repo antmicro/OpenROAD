@@ -456,9 +456,11 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       population.push_back(std::move(child_sol_slack));
     }
     // Mutations
+    const size_t size_before_mutations = population.size();
     for (unsigned j = 0; j < mut_size_; j++) {
       SolutionSlack sol_slack;
-      sol_slack.solution = neighbor(population[j].solution);
+      auto rand = random_() % size_before_mutations;
+      sol_slack.solution = neighbor(population[rand].solution);
       population.push_back(std::move(sol_slack));
     }
     removeDuplicates(population, logger);
