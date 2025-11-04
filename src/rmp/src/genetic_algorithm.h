@@ -26,6 +26,7 @@ class GeneticAlgorithm : public ResynthesisStrategy
                             unsigned mut_size,
                             unsigned cross_size,
                             unsigned tourn_size,
+                            float tourn_prob,
                             unsigned iterations,
                             unsigned initial_ops)
       : corner_(corner),
@@ -34,6 +35,7 @@ class GeneticAlgorithm : public ResynthesisStrategy
         mut_size_(mut_size),
         cross_size_(cross_size),
         tourn_size_(tourn_size),
+        tourn_prob_(tourn_prob),
         iterations_(iterations),
         initial_ops_(initial_ops)
   {
@@ -60,6 +62,7 @@ class GeneticAlgorithm : public ResynthesisStrategy
   unsigned mut_size_;
   unsigned cross_size_;
   unsigned tourn_size_;
+  float tourn_prob_;
   unsigned iterations_;
   unsigned initial_ops_;
   std::mt19937 random_;

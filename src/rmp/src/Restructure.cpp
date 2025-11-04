@@ -112,6 +112,7 @@ void Restructure::resynthGenetic(sta::Corner* corner)
                                      genetic_mut_size_,
                                      genetic_cross_size_,
                                      genetic_tourn_size_,
+                                     genetic_tourn_prob_,
                                      genetic_iters_,
                                      genetic_init_ops_);
   genetic_algorithm.OptimizeDesign(

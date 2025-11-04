@@ -478,8 +478,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       std::generate_n(tournament.begin(), tourn_size_, [&](){ return random_() % population.size();});
       std::sort(tournament.begin(), tournament.end());
       tournament.erase(std::unique(tournament.begin(), tournament.end()), tournament.end());
-      const float prob = 0.8;
-      std::bernoulli_distribution bern_dist{prob};
+      std::bernoulli_distribution bern_dist{tourn_prob_};
       for (int k = 0; k < tournament.size(); k++) {
         if (bern_dist(random_)) {
           newPopulation.push_back(population[tournament[k]]);

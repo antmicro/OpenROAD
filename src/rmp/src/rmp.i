@@ -109,6 +109,12 @@ set_genetic_tourn_size(int genetic_tourn_size)
 }
 
 void
+set_genetic_tourn_prob(float genetic_tourn_prob)
+{
+  getRestructure()->setGeneticTournProb(genetic_tourn_prob);
+}
+
+void
 set_genetic_iters(int genetic_iters)
 {
   getRestructure()->setGeneticIters(genetic_iters);
