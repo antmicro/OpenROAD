@@ -78,6 +78,14 @@ set_annealing_initial_ops(int set_annealing_initial_ops)
   getRestructure()->setAnnealingInitialOps(set_annealing_initial_ops);
 }
 
+void noop_cmd(Corner* corner) {
+  getRestructure()->noop(corner);
+}
+
+void strash_cmd(Corner* corner) {
+  getRestructure()->strash(corner);
+}
+
 void resynth_cmd(Corner* corner) {
   getRestructure()->resynth(corner);
 }

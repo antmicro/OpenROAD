@@ -1,0 +1,862 @@
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 13156, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 13189, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 13222, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 13255, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 13288, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 13321, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 13354, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 14748, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 14781, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz line 14814, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 13178, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 13211, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 13244, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 13277, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 13310, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 13343, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 13376, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 14772, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 14805, timing group from output port.
+[WARNING STA-1212] ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz line 14838, timing group from output port.
+[INFO ODB-0227] LEF file: ./asap7/asap7_tech_1x_201209.lef, created 30 layers, 9 vias
+[INFO ODB-0227] LEF file: ./asap7/asap7sc7p5t_28_R_1x_220121a.lef, created 212 library cells
+[WARNING STA-0441] set_input_delay relative to a clock defined on the same port/pin not allowed.
+Derived GENLIB library "asap7sc7p5t_AO_RVT_SS_nldm_211120" with 169 gates.
+The cell delays are multiplied by the factor: <num_fanins> ^ (2.50).
+Cannot meet the target required times (1.00). Continue anyway.
+Error: gcd_strash.tcl, 25 EQY 11:08:02 [gcd_strash] read_gold: starting process "yosys -ql gcd_strash/gold.log gcd_strash/gold.ys"
+EQY 11:08:03 [gcd_strash] read_gate: starting process "yosys -ql gcd_strash/gate.log gcd_strash/gate.ys"
+EQY 11:08:03 [gcd_strash] read_gold: finished (returncode=0)
+EQY 11:08:04 [gcd_strash] read_gate: finished (returncode=0)
+EQY 11:08:04 [gcd_strash] combine: starting process "yosys -ql gcd_strash/combine.log gcd_strash/combine.ys"
+EQY 11:08:04 [gcd_strash] combine: finished (returncode=0)
+EQY 11:08:04 [gcd_strash] partition: starting process "cd gcd_strash; yosys -ql partition.log partition.ys"
+EQY 11:08:04 [gcd_strash] partition: finished (returncode=0)
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.9_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.9_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.8_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.8_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.7_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.7_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.6_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.6_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.5_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.5_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.4_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.4_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.3_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.3_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.2_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.2_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.1_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.1_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.15_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.15_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.14_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.14_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.13_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.13_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.12_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.12_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.11_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.11_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.10_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin1.10_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.9_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.9_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.8_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.8_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.7_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.7_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.6_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.6_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.5_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.5_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.4_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.4_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.3_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.3_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.2_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.2_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.1_DFFE_PP_.D contains 2 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.1_DFFE_PP_.D contains 2 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.15_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.15_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.14_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.14_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.13_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.13_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.12_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.12_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.11_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.11_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.10_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.10_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.0_DFFE_PP_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.dpatha_lt_bin0.0_DFFE_PP_.D contains 1 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.ctrlstateout.2_DFF_P_.D contains 3 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.ctrlstateout.2_DFF_P_.D contains 3 unused gate inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.ctrlstateout.1_DFF_P_.D contains 1 unused gold inputs.
+EQY 11:08:04 [gcd_strash] Warning: Partition gcd.ctrlstateout.1_DFF_P_.D contains 1 unused gate inputs.
+EQY 11:08:05 [gcd_strash] run: starting process "make -C gcd_strash -f strategies.mk"
+EQY 11:08:05 [gcd_strash] run: make: Entering directory '/home/k/work/OpenROAD/src/rmp/test/gcd_strash'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._259_.A'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._259_.A' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._259_.Y'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._259_.Y' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._261_.A1'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._261_.A1' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._261_.A2'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._261_.A2' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._261_.B'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._261_.B' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._261_.Y'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._261_.Y' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._420_.A'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._420_.A' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._420_.B'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._420_.B' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._420_.CI'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._420_.CI' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._420_.CON'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._420_.CON' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._420_.SN'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._420_.SN' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._421_.A'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._421_.A' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._421_.B'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._421_.B' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._421_.CON'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._421_.CON' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._421_.SN'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._421_.SN' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._422_.A'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._422_.A' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._422_.B'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._422_.B' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._422_.CON'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._422_.CON' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._422_.SN'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._422_.SN' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._423_.A'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._423_.A' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._423_.B'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._423_.B' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._423_.CON'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._423_.CON' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._423_.SN'..
+EQY 11:08:05 [gcd_strash] run: Proved equivalence of partition 'gcd._423_.SN' using strategy 'basic'
+EQY 11:08:05 [gcd_strash] run: Running strategy 'basic' on 'gcd._424_.A'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._424_.A' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._424_.B'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._424_.B' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._424_.CON'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._424_.CON' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._424_.SN'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._424_.SN' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._425_.A'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._425_.A' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._425_.B'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._425_.B' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._425_.CON'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._425_.CON' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._425_.SN'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._425_.SN' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._426_.A'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._426_.A' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._426_.B'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._426_.B' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._426_.CON'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._426_.CON' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._426_.SN'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._426_.SN' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._427_.A'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._427_.A' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._427_.B'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._427_.B' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._427_.CON'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._427_.CON' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._427_.SN'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._427_.SN' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._428_.A'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._428_.A' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._428_.B'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._428_.B' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._428_.CON'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._428_.CON' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._428_.SN'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._428_.SN' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._429_.A'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._429_.A' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._429_.B'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._429_.B' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._429_.CON'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._429_.CON' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._429_.SN'..
+EQY 11:08:06 [gcd_strash] run: Proved equivalence of partition 'gcd._429_.SN' using strategy 'basic'
+EQY 11:08:06 [gcd_strash] run: Running strategy 'basic' on 'gcd._430_.A'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._430_.A' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._430_.B'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._430_.B' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._430_.CON'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._430_.CON' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._430_.SN'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._430_.SN' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._431_.A'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._431_.A' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._431_.B'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._431_.B' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._431_.CON'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._431_.CON' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._431_.SN'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._431_.SN' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._432_.A'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._432_.A' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._432_.B'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._432_.B' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._432_.CON'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._432_.CON' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._432_.SN'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._432_.SN' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._433_.A'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._433_.A' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._433_.B'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._433_.B' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._433_.CON'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._433_.CON' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._433_.SN'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._433_.SN' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._434_.A'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._434_.A' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._434_.B'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._434_.B' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._434_.CON'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._434_.CON' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._434_.SN'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._434_.SN' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._435_.A'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._435_.A' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._435_.B'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._435_.B' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._435_.CON'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._435_.CON' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._435_.SN'..
+EQY 11:08:07 [gcd_strash] run: Proved equivalence of partition 'gcd._435_.SN' using strategy 'basic'
+EQY 11:08:07 [gcd_strash] run: Running strategy 'basic' on 'gcd._436_.A'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd._436_.A' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd._436_.B'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd._436_.B' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd._436_.CON'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd._436_.CON' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd._436_.SN'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd._436_.SN' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.1_DFF_P_.CLK'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.ctrlstateout.1_DFF_P_.CLK' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.1_DFF_P_.D'..
+EQY 11:08:08 [gcd_strash] run: Could not prove equivalence of partition 'gcd.ctrlstateout.1_DFF_P_.D' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.1_DFF_P_.IQN'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.ctrlstateout.1_DFF_P_.IQN' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.1_DFF_P_.QN'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.ctrlstateout.1_DFF_P_.QN' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.2_DFF_P_.CLK'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.ctrlstateout.2_DFF_P_.CLK' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.2_DFF_P_.D'..
+EQY 11:08:08 [gcd_strash] run: Could not prove equivalence of partition 'gcd.ctrlstateout.2_DFF_P_.D' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.2_DFF_P_.IQN'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.ctrlstateout.2_DFF_P_.IQN' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.ctrlstateout.2_DFF_P_.QN'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.ctrlstateout.2_DFF_P_.QN' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.0_DFFE_PP_.CLK'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.0_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.0_DFFE_PP_.D'..
+EQY 11:08:08 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.0_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.0_DFFE_PP_.IQN'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.0_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.0_DFFE_PP_.QN'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.0_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.1'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.1' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.10'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.10' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.10_DFFE_PP_.CLK'..
+EQY 11:08:08 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.10_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.10_DFFE_PP_.D'..
+EQY 11:08:08 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.10_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:08 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.10_DFFE_PP_.IQN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.10_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.10_DFFE_PP_.QN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.10_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.11'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.11' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.11_DFFE_PP_.CLK'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.11_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.11_DFFE_PP_.D'..
+EQY 11:08:09 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.11_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.11_DFFE_PP_.IQN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.11_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.11_DFFE_PP_.QN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.11_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.12'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.12' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.12_DFFE_PP_.CLK'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.12_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.12_DFFE_PP_.D'..
+EQY 11:08:09 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.12_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.12_DFFE_PP_.IQN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.12_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.12_DFFE_PP_.QN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.12_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.13'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.13' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.13_DFFE_PP_.CLK'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.13_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.13_DFFE_PP_.D'..
+EQY 11:08:09 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.13_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.13_DFFE_PP_.IQN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.13_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.13_DFFE_PP_.QN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.13_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.14'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.14' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.14_DFFE_PP_.CLK'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.14_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.14_DFFE_PP_.D'..
+EQY 11:08:09 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.14_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.14_DFFE_PP_.IQN'..
+EQY 11:08:09 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.14_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:09 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.14_DFFE_PP_.QN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.14_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.15'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.15' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.15_DFFE_PP_.CLK'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.15_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.15_DFFE_PP_.D'..
+EQY 11:08:10 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.15_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.15_DFFE_PP_.IQN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.15_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.15_DFFE_PP_.QN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.15_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.1_DFFE_PP_.CLK'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.1_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.1_DFFE_PP_.D'..
+EQY 11:08:10 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.1_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.1_DFFE_PP_.IQN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.1_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.1_DFFE_PP_.QN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.1_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.2'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.2' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.2_DFFE_PP_.CLK'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.2_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.2_DFFE_PP_.D'..
+EQY 11:08:10 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.2_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.2_DFFE_PP_.IQN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.2_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.2_DFFE_PP_.QN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.2_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.3'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.3' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.3_DFFE_PP_.CLK'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.3_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.3_DFFE_PP_.D'..
+EQY 11:08:10 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.3_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.3_DFFE_PP_.IQN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.3_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.3_DFFE_PP_.QN'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.3_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.4'..
+EQY 11:08:10 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.4' using strategy 'basic'
+EQY 11:08:10 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.4_DFFE_PP_.CLK'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.4_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.4_DFFE_PP_.D'..
+EQY 11:08:11 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.4_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.4_DFFE_PP_.IQN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.4_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.4_DFFE_PP_.QN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.4_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.5'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.5' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.5_DFFE_PP_.CLK'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.5_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.5_DFFE_PP_.D'..
+EQY 11:08:11 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.5_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.5_DFFE_PP_.IQN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.5_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.5_DFFE_PP_.QN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.5_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.6'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.6' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.6_DFFE_PP_.CLK'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.6_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.6_DFFE_PP_.D'..
+EQY 11:08:11 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.6_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.6_DFFE_PP_.IQN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.6_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.6_DFFE_PP_.QN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.6_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.7'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.7' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.7_DFFE_PP_.CLK'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.7_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.7_DFFE_PP_.D'..
+EQY 11:08:11 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.7_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.7_DFFE_PP_.IQN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.7_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.7_DFFE_PP_.QN'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.7_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.8'..
+EQY 11:08:11 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.8' using strategy 'basic'
+EQY 11:08:11 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.8_DFFE_PP_.CLK'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.8_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.8_DFFE_PP_.D'..
+EQY 11:08:12 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.8_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.8_DFFE_PP_.IQN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.8_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.8_DFFE_PP_.QN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.8_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.9'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.9' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.9_DFFE_PP_.CLK'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.9_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.9_DFFE_PP_.D'..
+EQY 11:08:12 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin0.9_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.9_DFFE_PP_.IQN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.9_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin0.9_DFFE_PP_.QN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin0.9_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.0'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.0' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.0_DFFE_PP_.CLK'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.0_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.0_DFFE_PP_.D'..
+EQY 11:08:12 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.0_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.0_DFFE_PP_.IQN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.0_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.0_DFFE_PP_.QN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.0_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.1'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.1' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.10_DFFE_PP_.CLK'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.10_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.10_DFFE_PP_.D'..
+EQY 11:08:12 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.10_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.10_DFFE_PP_.IQN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.10_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.10_DFFE_PP_.QN'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.10_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.11_DFFE_PP_.CLK'..
+EQY 11:08:12 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.11_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:12 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.11_DFFE_PP_.D'..
+EQY 11:08:13 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.11_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.11_DFFE_PP_.IQN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.11_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.11_DFFE_PP_.QN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.11_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.12_DFFE_PP_.CLK'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.12_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.12_DFFE_PP_.D'..
+EQY 11:08:13 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.12_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.12_DFFE_PP_.IQN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.12_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.12_DFFE_PP_.QN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.12_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.13_DFFE_PP_.CLK'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.13_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.13_DFFE_PP_.D'..
+EQY 11:08:13 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.13_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.13_DFFE_PP_.IQN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.13_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.13_DFFE_PP_.QN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.13_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.14_DFFE_PP_.CLK'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.14_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.14_DFFE_PP_.D'..
+EQY 11:08:13 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.14_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.14_DFFE_PP_.IQN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.14_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.14_DFFE_PP_.QN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.14_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.15_DFFE_PP_.CLK'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.15_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.15_DFFE_PP_.D'..
+EQY 11:08:13 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.15_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.15_DFFE_PP_.IQN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.15_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.15_DFFE_PP_.QN'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.15_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.1_DFFE_PP_.CLK'..
+EQY 11:08:13 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.1_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:13 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.1_DFFE_PP_.D'..
+EQY 11:08:14 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.1_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.1_DFFE_PP_.IQN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.1_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.1_DFFE_PP_.QN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.1_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.2_DFFE_PP_.CLK'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.2_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.2_DFFE_PP_.D'..
+EQY 11:08:14 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.2_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.2_DFFE_PP_.IQN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.2_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.2_DFFE_PP_.QN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.2_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.3_DFFE_PP_.CLK'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.3_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.3_DFFE_PP_.D'..
+EQY 11:08:14 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.3_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.3_DFFE_PP_.IQN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.3_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.3_DFFE_PP_.QN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.3_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.4_DFFE_PP_.CLK'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.4_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.4_DFFE_PP_.D'..
+EQY 11:08:14 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.4_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.4_DFFE_PP_.IQN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.4_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.4_DFFE_PP_.QN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.4_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.5_DFFE_PP_.CLK'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.5_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.5_DFFE_PP_.D'..
+EQY 11:08:14 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.5_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.5_DFFE_PP_.IQN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.5_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.5_DFFE_PP_.QN'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.5_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.6_DFFE_PP_.CLK'..
+EQY 11:08:14 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.6_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:14 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.6_DFFE_PP_.D'..
+EQY 11:08:15 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.6_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.6_DFFE_PP_.IQN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.6_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.6_DFFE_PP_.QN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.6_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.7_DFFE_PP_.CLK'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.7_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.7_DFFE_PP_.D'..
+EQY 11:08:15 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.7_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.7_DFFE_PP_.IQN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.7_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.7_DFFE_PP_.QN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.7_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.8_DFFE_PP_.CLK'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.8_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.8_DFFE_PP_.D'..
+EQY 11:08:15 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.8_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.8_DFFE_PP_.IQN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.8_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.8_DFFE_PP_.QN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.8_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.9_DFFE_PP_.CLK'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.9_DFFE_PP_.CLK' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.9_DFFE_PP_.D'..
+EQY 11:08:15 [gcd_strash] run: Could not prove equivalence of partition 'gcd.dpatha_lt_bin1.9_DFFE_PP_.D' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.9_DFFE_PP_.IQN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.9_DFFE_PP_.IQN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.dpatha_lt_bin1.9_DFFE_PP_.QN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.dpatha_lt_bin1.9_DFFE_PP_.QN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.req_rdy'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.req_rdy' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.req_rdy_DFF_P_.CLK'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.req_rdy_DFF_P_.CLK' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.req_rdy_DFF_P_.D'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.req_rdy_DFF_P_.D' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.req_rdy_DFF_P_.IQN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.req_rdy_DFF_P_.IQN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.req_rdy_DFF_P_.QN'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.req_rdy_DFF_P_.QN' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.0'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.0' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.1'..
+EQY 11:08:15 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.1' using strategy 'basic'
+EQY 11:08:15 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.10'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.10' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.11'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.11' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.12'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.12' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.13'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.13' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.14'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.14' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.15'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.15' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.2'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.2' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.3'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.3' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.4'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.4' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.5'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.5' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.6'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.6' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.7'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.7' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.8'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.8' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_msg.9'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_msg.9' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: Running strategy 'basic' on 'gcd.resp_val'..
+EQY 11:08:16 [gcd_strash] run: Proved equivalence of partition 'gcd.resp_val' using strategy 'basic'
+EQY 11:08:16 [gcd_strash] run: make -f strategies.mk summary
+EQY 11:08:16 [gcd_strash] run: make[1]: Entering directory '/home/k/work/OpenROAD/src/rmp/test/gcd_strash'
+EQY 11:08:17 [gcd_strash] run: make[1]: Leaving directory '/home/k/work/OpenROAD/src/rmp/test/gcd_strash'
+EQY 11:08:17 [gcd_strash] run: make: Leaving directory '/home/k/work/OpenROAD/src/rmp/test/gcd_strash'
+EQY 11:08:17 [gcd_strash] run: finished (returncode=0)
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_val
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.15
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.14
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.13
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.12
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.11
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.10
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.9
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.8
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.7
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.6
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.5
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.4
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.3
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.2
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.1
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.resp_msg.0
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.req_rdy_DFF_P_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.req_rdy_DFF_P_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.req_rdy_DFF_P_.D
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.req_rdy_DFF_P_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.req_rdy
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.9_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.9_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.9_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.8_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.8_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.8_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.7_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.7_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.7_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.6_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.6_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.6_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.5_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.5_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.5_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.4_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.4_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.4_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.3_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.3_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.3_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.2_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.2_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.2_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.1_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.1_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.1_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.1
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.15_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.15_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.15_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.14_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.14_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.14_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.13_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.13_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.13_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.12_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.12_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.12_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.11_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.11_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.11_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.10_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.10_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.10_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.0_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.0_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.0_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin1.0
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.9_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.9_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.9_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.9
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.8_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.8_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.8_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.8
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.7_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.7_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.7_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.7
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.6_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.6_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.6_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.6
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.5_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.5_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.5_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.5
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.4_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.4_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.4_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.4
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.3_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.3_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.3_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.3
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.2_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.2_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.2_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.2
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.1_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.1_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.1_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.1
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.15_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.15_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.15_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.15
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.14_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.14_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.14_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.14
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.13_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.13_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.13_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.13
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.12_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.12_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.12_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.12
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.11_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.11_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.11_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.11
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.10_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.10_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.10_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.10
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.0_DFFE_PP_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.0_DFFE_PP_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.dpatha_lt_bin0.0_DFFE_PP_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.ctrlstateout.2_DFF_P_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.ctrlstateout.2_DFF_P_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.ctrlstateout.2_DFF_P_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.ctrlstateout.1_DFF_P_.QN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.ctrlstateout.1_DFF_P_.IQN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd.ctrlstateout.1_DFF_P_.CLK
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._436_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._436_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._436_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._436_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._435_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._435_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._435_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._435_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._434_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._434_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._434_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._434_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._433_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._433_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._433_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._433_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._432_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._432_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._432_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._432_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._431_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._431_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._431_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._431_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._430_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._430_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._430_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._430_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._429_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._429_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._429_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._429_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._428_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._428_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._428_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._428_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._427_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._427_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._427_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._427_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._426_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._426_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._426_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._426_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._425_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._425_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._425_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._425_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._424_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._424_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._424_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._424_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._423_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._423_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._423_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._423_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._422_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._422_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._422_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._422_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._421_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._421_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._421_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._421_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._420_.SN
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._420_.CON
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._420_.CI
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._420_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._420_.A
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._261_.Y
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._261_.B
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._261_.A2
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._261_.A1
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._259_.Y
+EQY 11:08:17 [gcd_strash] Successfully proved equivalence of partition gcd._259_.A
+EQY 11:08:17 [gcd_strash] Warning: Failed to prove equivalence for 34/250 partitions:
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.9_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.8_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.7_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.6_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.5_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.4_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.3_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.2_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.1_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.15_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.14_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.13_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.12_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.11_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.10_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin1.0_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.9_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.8_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.7_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.6_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.5_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.4_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.3_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.2_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.1_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.15_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.14_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.13_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.12_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.11_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.10_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.dpatha_lt_bin0.0_DFFE_PP_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.ctrlstateout.2_DFF_P_.D
+EQY 11:08:17 [gcd_strash] Failed to prove equivalence of partition gcd.ctrlstateout.1_DFF_P_.D
+EQY 11:08:17 [gcd_strash] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:15 (15)
+EQY 11:08:17 [gcd_strash] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:15 (15)
+EQY 11:08:17 [gcd_strash] DONE (FAIL, rc=2)
+child process exited abnormally

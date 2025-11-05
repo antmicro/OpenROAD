@@ -28,6 +28,7 @@
 #include "cut/blif.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
+#include "noop_strategy.h"
 #include "odb/db.h"
 #include "rsz/Resizer.hh"
 #include "sta/Delay.hh"
@@ -43,6 +44,7 @@
 #include "sta/Sdc.hh"
 #include "sta/Search.hh"
 #include "sta/Sta.hh"
+#include "strash_strategy.h"
 #include "utl/Logger.h"
 #include "zero_slack_strategy.h"
 
@@ -74,6 +76,18 @@ void Restructure::deleteComponents()
 Restructure::~Restructure()
 {
   deleteComponents();
+}
+
+void Restructure::noop(sta::Corner* corner)
+{
+  NoopStrategy noop_strategy(corner, slack_threshold_);
+  noop_strategy.OptimizeDesign(open_sta_, name_generator_, resizer_, logger_);
+}
+
+void Restructure::strash(sta::Corner* corner)
+{
+  StrashStrategy strash_strategy(corner, slack_threshold_);
+  strash_strategy.OptimizeDesign(open_sta_, name_generator_, resizer_, logger_);
 }
 
 void Restructure::reset()

@@ -14,28 +14,12 @@ read_liberty -corner fast ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
 
 read_lef ./asap7/asap7_tech_1x_201209.lef
 read_lef ./asap7/asap7sc7p5t_28_R_1x_220121a.lef
-read_verilog ./gcd_asap7.v
-link_design gcd
-read_sdc ./gcd_asap7.sdc
+read_verilog ./aes_asap7.v
+link_design aes
+read_sdc ./aes_asap7.sdc
 
+resynth_noop -corner fast
+write_verilog aes_noop.v
 
-puts "-- Before --\n"
-report_cell_usage
-report_timing_histogram
-report_checks
-set_debug_level RMP annealing 1
-report_wns
-report_tns
-
-puts "-- After --\n"
-
-resynth_annealing -corner slow -revert_after 5
-report_timing_histogram
-report_cell_usage
-report_checks
-report_wns
-puts [worst_negative_slack -corner fast]
-puts [worst_negative_slack -corner slow]
-report_tns
-puts [total_negative_slack -corner fast]
-puts [total_negative_slack -corner slow]
+file delete -force aes_noop
+exec eqy aes_noop.eqy

@@ -126,7 +126,7 @@ void AnnealingStrategy::OptimizeDesign(sta::dbSta* sta,
   std::vector<GiaOp> all_ops
       = {[&](auto& gia) {
            // &st
-           debugPrint(logger, RMP, "annealing", 1, "Starting rehash");
+           debugPrint(logger, RMP, "annealing", 2, "Starting rehash");
            replaceGia(gia, Gia_ManRehash(gia, false));
          },
 
@@ -136,64 +136,64 @@ void AnnealingStrategy::OptimizeDesign(sta::dbSta* sta,
              debugPrint(logger,
                         RMP,
                         "annealing",
-                        1,
+                        2,
                         "Computing choices before equiv reduce");
              abc::Dch_Pars_t pars = {};
              Dch_ManSetDefaultParams(&pars);
              replaceGia(gia, Gia_ManPerformDch(gia, &pars));
            }
-           debugPrint(logger, RMP, "annealing", 1, "Starting equiv reduce");
+           debugPrint(logger, RMP, "annealing", 2, "Starting equiv reduce");
            replaceGia(gia, Gia_ManEquivReduce(gia, true, false, false, false));
          },
 
          [&](auto& gia) {
            // &syn2
-           debugPrint(logger, RMP, "annealing", 1, "Starting syn2");
+           debugPrint(logger, RMP, "annealing", 2, "Starting syn2");
            replaceGia(gia,
                       Gia_ManAigSyn2(gia, false, true, 0, 20, 0, false, false));
          },
 
          [&](auto& gia) {
            // &syn3
-           debugPrint(logger, RMP, "annealing", 1, "Starting syn3");
+           debugPrint(logger, RMP, "annealing", 2, "Starting syn3");
            replaceGia(gia, Gia_ManAigSyn3(gia, false, false));
          },
 
          [&](auto& gia) {
            // &syn4
-           debugPrint(logger, RMP, "annealing", 1, "Starting syn4");
+           debugPrint(logger, RMP, "annealing", 2, "Starting syn4");
            replaceGia(gia, Gia_ManAigSyn4(gia, false, false));
          },
 
          [&](auto& gia) {
            // &retime
-           debugPrint(logger, RMP, "annealing", 1, "Starting retime");
+           debugPrint(logger, RMP, "annealing", 2, "Starting retime");
            replaceGia(gia, Gia_ManRetimeForward(gia, 100, false));
          },
 
          [&](auto& gia) {
            // &dc2
-           debugPrint(logger, RMP, "annealing", 1, "Starting heavy rewriting");
+           debugPrint(logger, RMP, "annealing", 2, "Starting heavy rewriting");
            replaceGia(gia, Gia_ManCompress2(gia, true, false));
          },
 
          [&](auto& gia) {
            // &b
-           debugPrint(logger, RMP, "annealing", 1, "Starting &b");
+           debugPrint(logger, RMP, "annealing", 2, "Starting &b");
            replaceGia(
                gia, Gia_ManAreaBalance(gia, false, ABC_INFINITY, false, false));
          },
 
          [&](auto& gia) {
            // &b -d
-           debugPrint(logger, RMP, "annealing", 1, "Starting &b -d");
+           debugPrint(logger, RMP, "annealing", 2, "Starting &b -d");
            replaceGia(gia, Gia_ManBalance(gia, false, false, false));
          },
 
          [&](auto& gia) {
            // &false
            debugPrint(
-               logger, RMP, "annealing", 1, "Starting false path elimination");
+               logger, RMP, "annealing", 2, "Starting false path elimination");
            utl::SuppressStdout nostdout(logger);
            replaceGia(gia, Gia_ManCheckFalse(gia, 0, 0, false, false));
          },
@@ -204,14 +204,14 @@ void AnnealingStrategy::OptimizeDesign(sta::dbSta* sta,
              debugPrint(logger,
                         RMP,
                         "annealing",
-                        1,
+                        2,
                         "Computing choices before equiv reduce");
              abc::Dch_Pars_t pars = {};
              Dch_ManSetDefaultParams(&pars);
              replaceGia(gia, Gia_ManPerformDch(gia, &pars));
            }
            debugPrint(
-               logger, RMP, "annealing", 1, "Starting equiv reduce and remap");
+               logger, RMP, "annealing", 2, "Starting equiv reduce and remap");
            replaceGia(gia, Gia_ManEquivReduceAndRemap(gia, true, false));
          },
 
@@ -232,7 +232,7 @@ void AnnealingStrategy::OptimizeDesign(sta::dbSta* sta,
            pars.fTruth = true;
            pars.fCutMin = true;
            pars.fExpRed = false;
-           debugPrint(logger, RMP, "annealing", 1, "Starting SOP balancing");
+           debugPrint(logger, RMP, "annealing", 2, "Starting SOP balancing");
            replaceGia(gia, Gia_ManPerformMapping(gia, &pars));
          },
 
@@ -241,7 +241,7 @@ void AnnealingStrategy::OptimizeDesign(sta::dbSta* sta,
            abc::Dch_Pars_t pars = {};
            Dch_ManSetDefaultParams(&pars);
            pars.nBTLimit = 100;
-           debugPrint(logger, RMP, "annealing", 1, "Starting synch2");
+           debugPrint(logger, RMP, "annealing", 2, "Starting synch2");
            replaceGia(gia, Gia_ManAigSynch2(gia, &pars, 6, 20));
          }};
   /* Some ABC functions/commands that could be used, but crash in some
@@ -474,6 +474,10 @@ void AnnealingStrategy::OptimizeDesign(sta::dbSta* sta,
          FINAL_RESIZE_ITERS,
          name_generator,
          logger);
+  worst_vertex = nullptr;
+  sta->worstSlack(sta::MinMax::max(), worst_slack, worst_vertex);
+  debugPrint(
+      logger, RMP, "annealing", 1, "Final worst slack: {}", worst_slack);
 }
 
 void AnnealingStrategy::RunGia(
@@ -526,7 +530,7 @@ void AnnealingStrategy::RunGia(
     abc::Gia_Man_t* gia = nullptr;
 
     {
-      debugPrint(logger, RMP, "annealing", 1, "Converting to GIA");
+      debugPrint(logger, RMP, "annealing", 2, "Converting to GIA");
       auto ntk = current_network.get();
       assert(!Abc_NtkIsStrash(ntk));
       // derive comb GIA
@@ -552,7 +556,7 @@ void AnnealingStrategy::RunGia(
     }
 
     {
-      debugPrint(logger, RMP, "annealing", 1, "Converting GIA to network");
+      debugPrint(logger, RMP, "annealing", 2, "Converting GIA to network");
       abc::Extra_UtilGetoptReset();
 
       if (Gia_ManHasCellMapping(gia)) {

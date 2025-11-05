@@ -18,24 +18,8 @@ read_verilog ./gcd_asap7.v
 link_design gcd
 read_sdc ./gcd_asap7.sdc
 
+resynth_strash -corner fast
+write_verilog gcd_strash.v
 
-puts "-- Before --\n"
-report_cell_usage
-report_timing_histogram
-report_checks
-set_debug_level RMP annealing 1
-report_wns
-report_tns
-
-puts "-- After --\n"
-
-resynth_annealing -corner slow -revert_after 5
-report_timing_histogram
-report_cell_usage
-report_checks
-report_wns
-puts [worst_negative_slack -corner fast]
-puts [worst_negative_slack -corner slow]
-report_tns
-puts [total_negative_slack -corner fast]
-puts [total_negative_slack -corner slow]
+file delete -force gcd_strash
+exec eqy gcd_strash.eqy

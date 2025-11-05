@@ -1,0 +1,16 @@
+[gold]
+read_liberty -ignore_miss_func -overwrite ./asap7/asap7sc7p5t_AO_RVT_SS_nldm_211120.lib.gz ./asap7/asap7sc7p5t_INVBUF_RVT_SS_nldm_220122.lib.gz ./asap7/asap7sc7p5t_OA_RVT_SS_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SEQ_RVT_SS_nldm_220123.lib ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz ./asap7/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz ./asap7/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
+read_verilog -sv gcd_asap7.v
+prep -top gcd -flatten
+memory_map
+
+[gate]
+read_liberty -ignore_miss_func -overwrite ./asap7/asap7sc7p5t_AO_RVT_SS_nldm_211120.lib.gz ./asap7/asap7sc7p5t_INVBUF_RVT_SS_nldm_220122.lib.gz ./asap7/asap7sc7p5t_OA_RVT_SS_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SEQ_RVT_SS_nldm_220123.lib ./asap7/asap7sc7p5t_SIMPLE_RVT_SS_nldm_211120.lib.gz ./asap7/asap7sc7p5t_AO_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_INVBUF_RVT_FF_nldm_220122.lib.gz ./asap7/asap7sc7p5t_OA_RVT_FF_nldm_211120.lib.gz ./asap7/asap7sc7p5t_SEQ_RVT_FF_nldm_220123.lib ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
+read_verilog -sv gcd_strash.v
+prep -top gcd -flatten
+memory_map
+
+[strategy basic]
+use sat
+depth 10
+

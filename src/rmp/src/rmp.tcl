@@ -107,6 +107,22 @@ proc restructure { args } {
 
 sta::define_cmd_args "resynth" {[-corner corner]}
 
+proc resynth_noop { args } {
+  sta::parse_key_args "resynth_noop" args \
+    keys {-corner} \
+    flags {}
+  set corner [sta::parse_corner keys]
+  rmp::noop_cmd $corner
+}
+
+proc resynth_strash { args } {
+  sta::parse_key_args "resynth_strash" args \
+    keys {-corner} \
+    flags {}
+  set corner [sta::parse_corner keys]
+  rmp::strash_cmd $corner
+}
+
 proc resynth { args } {
   sta::parse_key_args "resynth" args \
     keys {-corner} \

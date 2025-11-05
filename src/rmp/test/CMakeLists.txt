@@ -20,6 +20,10 @@ or_integration_tests(
     aes_annealing
     gcd_annealing1
     gcd_annealing2
+    aes_noop
+    gcd_noop
+    aes_strash
+    gcd_strash
 )
 
 # Skipped

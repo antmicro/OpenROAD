@@ -68,6 +68,8 @@ class Restructure
               est::EstimateParasitics* estimate_parasitics);
   ~Restructure();
 
+  void noop(sta::Corner* corner);
+  void strash(sta::Corner* corner);
   void reset();
   void resynth(sta::Corner* corner);
   void resynthAnnealing(sta::Corner* corner);
