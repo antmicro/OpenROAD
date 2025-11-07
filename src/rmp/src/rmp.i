@@ -91,15 +91,15 @@ set_genetic_pop_size(int genetic_pop_size)
 }
 
 void
-  set_genetic_mut_size(int genetic_mut_size)
+  set_genetic_mut_prob(float genetic_mut_prob)
 {
-  getRestructure()->setGeneticMutSize(genetic_mut_size);
+  getRestructure()->setGeneticMutProb(genetic_mut_prob);
 }
 
 void
-set_genetic_cross_size(int genetic_cross_size)
+set_genetic_cross_prob(float genetic_cross_prob)
 {
-  getRestructure()->setGeneticCrossSize(genetic_cross_size);
+  getRestructure()->setGeneticCrossProb(genetic_cross_prob);
 }
 
 void

@@ -442,10 +442,12 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
 
   for (unsigned i = 0; i < iterations_; i++) {
     logger->info(RMP, 65, "Resynthesis: Iteration {} of genetic algorithm", i);
+    unsigned generation_size = population.size();
     // Crossover
-    for (unsigned j = 0; j < cross_size_; j++) {
-      auto rand1 = random_() % population.size();
-      auto rand2 = random_() % population.size();
+    unsigned cross_size = std::max<unsigned>(cross_prob_ * generation_size, 1);
+    for (unsigned j = 0; j < cross_size; j++) {
+      auto rand1 = random_() % generation_size;
+      auto rand2 = random_() % generation_size;
       if (rand1 == rand2) continue;
       Solution& parent1_sol = population[rand1].solution;
       Solution& parent2_sol = population[rand2].solution;
@@ -456,10 +458,10 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       population.push_back(std::move(child_sol_slack));
     }
     // Mutations
-    const size_t size_before_mutations = population.size();
-    for (unsigned j = 0; j < mut_size_; j++) {
+    unsigned mut_size = std::max<unsigned>(mut_prob_ * generation_size, 1);
+    for (unsigned j = 0; j < mut_size; j++) {
       SolutionSlack sol_slack;
-      auto rand = random_() % size_before_mutations;
+      auto rand = random_() % generation_size;
       sol_slack.solution = neighbor(population[rand].solution);
       population.push_back(std::move(sol_slack));
     }

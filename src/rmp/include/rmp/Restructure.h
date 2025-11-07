@@ -94,8 +94,8 @@ class Restructure
     genetic_seed_ = seed;
   }
   void setGeneticPopSize(unsigned pop_size) { genetic_pop_size_ = pop_size; }
-  void setGeneticMutSize(unsigned mut_size) { genetic_mut_size_ = mut_size; }
-  void setGeneticCrossSize(unsigned cross_size) { genetic_cross_size_ = cross_size; }
+  void setGeneticMutProb(float mut_prob) { genetic_mut_prob_ = mut_prob; }
+  void setGeneticCrossProb(float cross_prob) { genetic_cross_prob_ = cross_prob; }
   void setGeneticTournSize(unsigned tourn_size) { genetic_tourn_size_ = tourn_size; }
   void setGeneticTournProb(float tourn_prob) { genetic_tourn_prob_ = tourn_prob; }
   void setGeneticIters(unsigned iters) { genetic_iters_ = iters; }
@@ -145,8 +145,8 @@ class Restructure
   // Genetic
   std::optional<std::mt19937::result_type> genetic_seed_;
   unsigned genetic_pop_size_ = 4;
-  unsigned genetic_mut_size_ = 4;
-  unsigned genetic_cross_size_ = 4;
+  float genetic_mut_prob_ = 0.5;
+  float genetic_cross_prob_ = 0.5;
   unsigned genetic_tourn_size_ = 4;
   float genetic_tourn_prob_ = 0.8;
   unsigned genetic_iters_ = 10;

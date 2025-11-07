@@ -158,6 +158,9 @@ sta::define_cmd_args "resynth_genetic" {
                                             [-slack_threshold slack_threshold]
                                             [-seed seed]
                                             [-pop_size pop_size]
+                                            [-mut_prob mut_prob]
+                                            [-cross_prob cross_prob]
+                                            [-tourn_prob tourn_prob]
                                             [-tourn_size tourn_size]
                                             [-iters iters]
                                             [-initial_ops initial_ops]
@@ -165,7 +168,7 @@ sta::define_cmd_args "resynth_genetic" {
 
 proc resynth_genetic { args } {
   sta::parse_key_args "resynth_genetic" args \
-      keys {-corner -iters -seed -pop_size -mut_size -cross_size \
+      keys {-corner -iters -seed -pop_size -mut_prob -cross_prob \
                 -tourn_size -tourn_prob -initial_ops -slack_threshold} \
       flags {}
 
@@ -179,11 +182,11 @@ proc resynth_genetic { args } {
   if { [info exists keys(-pop_size)] } {
     rmp::set_genetic_pop_size $keys(-pop_size)
   }
-  if { [info exists keys(-mut_size)] } {
-    rmp::set_genetic_mut_size $keys(-mut_size)
+  if { [info exists keys(-mut_prob)] } {
+    rmp::set_genetic_mut_prob $keys(-mut_prob)
   }
-  if { [info exists keys(-cross_size)] } {
-    rmp::set_genetic_cross_size $keys(-cross_size)
+  if { [info exists keys(-cross_prob)] } {
+    rmp::set_genetic_cross_prob $keys(-cross_prob)
   }
   if { [info exists keys(-tourn_size)] } {
     rmp::set_genetic_tourn_size $keys(-tourn_size)
