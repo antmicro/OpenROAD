@@ -28,8 +28,8 @@
 #include "cut/blif.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
+#include "genetic_strategy.h"
 #include "odb/db.h"
-#include "genetic_algorithm.h"
 #include "rsz/Resizer.hh"
 #include "sta/Delay.hh"
 #include "sta/Graph.hh"
@@ -105,17 +105,17 @@ void Restructure::resynthAnnealing(sta::Corner* corner)
 
 void Restructure::resynthGenetic(sta::Corner* corner)
 {
-  GeneticAlgorithm genetic_algorithm(corner,
-                                     slack_threshold_,
-                                     genetic_seed_,
-                                     genetic_pop_size_,
-                                     genetic_mut_prob_,
-                                     genetic_cross_prob_,
-                                     genetic_tourn_size_,
-                                     genetic_tourn_prob_,
-                                     genetic_iters_,
-                                     genetic_init_ops_);
-  genetic_algorithm.OptimizeDesign(
+  GeneticStrategy genetic_strategy(corner,
+                                   slack_threshold_,
+                                   genetic_seed_,
+                                   genetic_pop_size_,
+                                   genetic_mut_prob_,
+                                   genetic_cross_prob_,
+                                   genetic_tourn_size_,
+                                   genetic_tourn_prob_,
+                                   genetic_iters_,
+                                   genetic_init_ops_);
+  genetic_strategy.OptimizeDesign(
       open_sta_, name_generator_, resizer_, logger_);
 }
 

@@ -16,19 +16,19 @@ namespace rmp {
 
 using GiaOp = std::function<void(abc::Gia_Man_t*&)>;
 
-class GeneticAlgorithm : public ResynthesisStrategy
+class GeneticStrategy : public ResynthesisStrategy
 {
  public:
-  explicit GeneticAlgorithm(sta::Corner* corner,
-                            sta::Slack slack_threshold,
-                            std::optional<std::mt19937::result_type> seed,
-                            unsigned pop_size,
-                            float mut_prob,
-                            float cross_prob,
-                            unsigned tourn_size,
-                            float tourn_prob,
-                            unsigned iterations,
-                            unsigned initial_ops)
+  explicit GeneticStrategy(sta::Corner* corner,
+                           sta::Slack slack_threshold,
+                           std::optional<std::mt19937::result_type> seed,
+                           unsigned pop_size,
+                           float mut_prob,
+                           float cross_prob,
+                           unsigned tourn_size,
+                           float tourn_prob,
+                           unsigned iterations,
+                           unsigned initial_ops)
       : corner_(corner),
         slack_threshold_(slack_threshold),
         pop_size_(pop_size),

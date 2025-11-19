@@ -107,28 +107,59 @@ Derived GENLIB library "asap7sc7p5t_AO_RVT_SS_nldm_211120" with 169 gates.
 [INFO RMP-0065] Resynthesis: Iteration 7 of genetic algorithm
 [INFO RMP-0065] Resynthesis: Iteration 8 of genetic algorithm
 [INFO RMP-0065] Resynthesis: Iteration 9 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 10 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 11 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 12 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 13 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 14 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 15 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 16 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 17 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 18 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 19 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 20 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 21 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 22 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 23 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 24 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 25 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 26 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 27 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 28 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 29 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 30 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 31 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 32 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 33 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 34 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 35 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 36 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 37 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 38 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 39 of genetic algorithm
 [INFO RMP-0059] Resynthesis: End of genetic algorithm, applying operations
 [INFO RMP-0063] Resynthesis: Applying ABC operations
-[INFO RMP-0066] Resynthesis: Best result is of individual 6: -6.236736e-11
-[INFO RMP-0067] Resynthesis: Worst slack is -6.236736e-11
-[-62.367, -29.617): ************************************************** (36)
-[-29.617,   3.133): *********** (8)
-[  3.133,  35.884): *** (2)
-[ 35.884,  68.634): * (1)
-[ 68.634, 101.384): *** (2)
-[101.384, 134.134):  (0)
-[134.134, 166.885): * (1)
-[166.885, 199.635): * (1)
-[199.635, 232.385): * (1)
-[232.385, 265.136]: * (1)
+[INFO RMP-0066] Resynthesis: Best result is of individual 0: -4.3344994e-11
+[INFO RMP-0067] Resynthesis: Worst slack is -4.3344994e-11
+[-43.345, -14.379): ************************************************** (37)
+[-14.379,  14.588): ******* (5)
+[ 14.588,  43.554): ***** (4)
+[ 43.554,  72.521): * (1)
+[ 72.521, 101.487): * (1)
+[101.487, 130.454): * (1)
+[130.454, 159.420): * (1)
+[159.420, 188.387): *** (2)
+[188.387, 217.353):  (0)
+[217.353, 246.320]: * (1)
 Cell type report:                       Count       Area
-  Inverter                                 77       3.65
+  Inverter                                 66       3.46
   Sequential cell                          35      10.21
-  Multi-Input combinational cell          483      33.56
-  Total                                   595      47.41
-Startpoint: dpath/a_lt_b$in1[0]$_DFFE_PP_
+  Multi-Input combinational cell          415      29.06
+  Total                                   516      42.72
+Startpoint: dpath/a_lt_b$in0[5]$_DFFE_PP_
             (rising edge-triggered flip-flop clocked by core_clock)
-Endpoint: resp_msg[12] (output port clocked by core_clock)
+Endpoint: ctrl/state/out[1]$_DFF_P_
+          (rising edge-triggered flip-flop clocked by core_clock)
 Path Group: core_clock
 Path Type: max
 Corner: slow
@@ -137,36 +168,36 @@ Corner: slow
 ---------------------------------------------------------
    0.00    0.00   clock core_clock (rise edge)
    0.00    0.00   clock network delay (ideal)
-   0.00    0.00 ^ dpath/a_lt_b$in1[0]$_DFFE_PP_/CLK (DFFHQNx1_ASAP7_75t_R)
-  69.04   69.04 ^ dpath/a_lt_b$in1[0]$_DFFE_PP_/QN (DFFHQNx1_ASAP7_75t_R)
-  19.13   88.17 v cut_78246/Y (INVx1_ASAP7_75t_R)
-  26.19  114.36 ^ _421_/CON (HAxp5_ASAP7_75t_R)
-  27.31  141.67 v cut_78402/Y (INVx1_ASAP7_75t_R)
-  46.10  187.77 ^ _420_/CON (FAx1_ASAP7_75t_R)
-  26.34  214.11 v cut_78216/Y (INVx1_ASAP7_75t_R)
-  19.79  233.90 ^ cut_78217/Y (NOR2x1_ASAP7_75t_R)
-  28.23  262.13 v cut_78218/Y (NOR2xp33_ASAP7_75t_R)
-  44.08  306.21 ^ cut_78219/Y (NOR2xp33_ASAP7_75t_R)
-  35.75  341.96 v cut_78220/Y (NOR2x1_ASAP7_75t_R)
-  35.47  377.43 ^ cut_78221/Y (NOR2x2_ASAP7_75t_R)
-  25.71  403.14 v cut_78565/Y (NOR2xp33_ASAP7_75t_R)
-  19.98  423.12 ^ cut_78566/Y (NOR2xp33_ASAP7_75t_R)
-  26.17  449.28 v cut_78571/Y (NAND2xp33_ASAP7_75t_R)
-  13.08  462.37 ^ cut_78681/Y (INVx1_ASAP7_75t_R)
-   0.00  462.37 ^ resp_msg[12] (out)
-         462.37   data arrival time
+   0.00    0.00 ^ dpath/a_lt_b$in0[5]$_DFFE_PP_/CLK (DFFHQNx1_ASAP7_75t_R)
+  69.26   69.26 ^ dpath/a_lt_b$in0[5]$_DFFE_PP_/QN (DFFHQNx1_ASAP7_75t_R)
+  18.99   88.25 v cut_245468/Y (INVx1_ASAP7_75t_R)
+  95.39  183.64 v _432_/SN (HAxp5_ASAP7_75t_R)
+  39.25  222.88 ^ cut_245380/Y (NAND2x2_ASAP7_75t_R)
+  17.97  240.85 v cut_245382/Y (NAND2x1p5_ASAP7_75t_R)
+  31.84  272.69 v cut_245383/Y (AND2x2_ASAP7_75t_R)
+  19.74  292.43 ^ cut_245386/Y (NOR2xp33_ASAP7_75t_R)
+  25.22  317.65 v cut_245399/Y (NAND2xp5_ASAP7_75t_R)
+  28.64  346.29 ^ cut_245400/Y (NAND2xp5_ASAP7_75t_R)
+  26.64  372.93 v cut_245401/Y (NAND2x1_ASAP7_75t_R)
+  55.20  428.13 ^ cut_245402/Y (NAND2x2_ASAP7_75t_R)
+  47.67  475.79 ^ cut_245403/Y (AND2x2_ASAP7_75t_R)
+  11.99  487.78 v cut_245405/Y (NAND2xp5_ASAP7_75t_R)
+  25.75  513.54 ^ cut_245413/Y (NAND2xp33_ASAP7_75t_R)
+   0.00  513.54 ^ ctrl/state/out[1]$_DFF_P_/D (DFFHQNx1_ASAP7_75t_R)
+         513.54   data arrival time
 
  500.00  500.00   clock core_clock (rise edge)
    0.00  500.00   clock network delay (ideal)
    0.00  500.00   clock reconvergence pessimism
--100.00  400.00   output external delay
-         400.00   data required time
+         500.00 ^ ctrl/state/out[1]$_DFF_P_/CLK (DFFHQNx1_ASAP7_75t_R)
+ -29.81  470.19   library setup time
+         470.19   data required time
 ---------------------------------------------------------
-         400.00   data required time
-        -462.37   data arrival time
+         470.19   data required time
+        -513.54   data arrival time
 ---------------------------------------------------------
-         -62.37   slack (VIOLATED)
+         -43.34   slack (VIOLATED)
 
 
-wns max -62.37
-tns max -1786.37
+wns max -43.34
+tns max -896.68

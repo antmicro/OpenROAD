@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2025-2025, The OpenROAD Authors
 
-#include "genetic_algorithm.h"
-#include "annealing_strategy.h"
-
 #include <fcntl.h>
 
 #include <algorithm>
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 #include "aig/gia/gia.h"
 #include "aig/gia/giaAig.h"
+#include "annealing_strategy.h"
 #include "base/abc/abc.h"
 #include "base/main/main.h"
 #include "cut/abc_library_factory.h"
@@ -19,6 +17,7 @@
 #include "cut/logic_extractor.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
+#include "genetic_strategy.h"
 #include "map/if/if.h"
 #include "map/scl/sclSize.h"
 #include "misc/vec/vecPtr.h"
@@ -130,9 +129,11 @@ struct SolutionSlack
   Solution solution;
   float worst_slack = -100000;
   bool computed_slack = false;
-  std::string toString() const {
+  std::string toString() const
+  {
     std::ostringstream resStream;
-    resStream << '[' << (solution.size() > 0 ? std::to_string(solution[0]) : "");
+    resStream << '['
+              << (solution.size() > 0 ? std::to_string(solution[0]) : "");
     for (int i = 1; i < solution.size(); i++) {
       resStream << ", " << std::to_string(solution[i]);
     }
@@ -146,16 +147,26 @@ struct SolutionSlack
   }
 };
 
-std::vector<GiaOp> getSolutionOps(const Solution& sol, const std::vector<GiaOp>& all_ops) {
+std::vector<GiaOp> getSolutionOps(const Solution& sol,
+                                  const std::vector<GiaOp>& all_ops)
+{
   std::vector<GiaOp> solOps;
   solOps.reserve(sol.size());
-  for (int i = 0; i < sol.size(); i++) solOps.push_back(all_ops[sol[i]]);
+  for (int i = 0; i < sol.size(); i++) {
+    solOps.push_back(all_ops[sol[i]]);
+  }
   return solOps;
 }
 
-void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>& candidate_vertices,
-                      cut::AbcLibrary& abc_library, sta::Corner* corner, sta::dbSta* sta,
-                      utl::UniqueName& name_generator, utl::Logger* logger, const std::vector<GiaOp>& all_ops) {
+void evaluateSolution(SolutionSlack& sol_slack,
+                      const std::vector<sta::Vertex*>& candidate_vertices,
+                      cut::AbcLibrary& abc_library,
+                      sta::Corner* corner,
+                      sta::dbSta* sta,
+                      utl::UniqueName& name_generator,
+                      utl::Logger* logger,
+                      const std::vector<GiaOp>& all_ops)
+{
   auto block = sta->db()->getChip()->getBlock();
   odb::dbDatabase::beginEco(block);
 
@@ -170,45 +181,60 @@ void evaluateSolution(SolutionSlack& sol_slack, const std::vector<sta::Vertex*>&
   odb::dbDatabase::endEco(block);
 
   sta::Vertex* worst_vertex_placeholder;
-  sta->worstSlack(corner, sta::MinMax::max(), sol_slack.worst_slack, worst_vertex_placeholder);
+  sta->worstSlack(corner,
+                  sta::MinMax::max(),
+                  sol_slack.worst_slack,
+                  worst_vertex_placeholder);
   sol_slack.computed_slack = true;
 
   odb::dbDatabase::undoEco(block);
 }
 
-float getWorstSlack(sta::dbSta* sta, sta::Corner* corner) {
+float getWorstSlack(sta::dbSta* sta, sta::Corner* corner)
+{
   float worst_slack;
   sta::Vertex* worst_vertex_placeholder;
-  sta->worstSlack(corner, sta::MinMax::max(), worst_slack, worst_vertex_placeholder);
+  sta->worstSlack(
+      corner, sta::MinMax::max(), worst_slack, worst_vertex_placeholder);
   return worst_slack;
 }
 
-void removeDuplicates(std::vector<SolutionSlack>& population, utl::Logger* logger) {
-  struct HashVector {
-    size_t operator()(const Solution& sol) const {
-    std::size_t res = 0;
-    for (const auto& item : sol) res += item;
-    return res;
+void removeDuplicates(std::vector<SolutionSlack>& population,
+                      utl::Logger* logger)
+{
+  struct HashVector
+  {
+    size_t operator()(const Solution& sol) const
+    {
+      std::size_t res = 0;
+      for (const auto& item : sol) {
+        res += item;
+      }
+      return res;
     }
   };
   std::unordered_set<Solution, HashVector> taken;
-  population.erase(std::remove_if(population.begin(), population.end(),
-                                  [&taken, logger](const SolutionSlack& s) {
-                                    if (!taken.insert(s.solution).second) {
-                                      debugPrint(logger, RMP, "genetic", 2, "Removing: " + s.toString());
-                                      return true;
-                                    } else {
-                                      debugPrint(logger, RMP, "genetic", 2, "Keeping: " + s.toString());
-                                      return false;
-                                    }
-                                  }),
-                   population.end());
+  population.erase(
+      std::remove_if(
+          population.begin(),
+          population.end(),
+          [&taken, logger](const SolutionSlack& s) {
+            if (!taken.insert(s.solution).second) {
+              debugPrint(
+                  logger, RMP, "genetic", 2, "Removing: " + s.toString());
+              return true;
+            } else {
+              debugPrint(logger, RMP, "genetic", 2, "Keeping: " + s.toString());
+              return false;
+            }
+          }),
+      population.end());
 }
 
-void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
-                                       utl::UniqueName& name_generator,
-                                       rsz::Resizer* resizer,
-                                       utl::Logger* logger)
+void GeneticStrategy::OptimizeDesign(sta::dbSta* sta,
+                                     utl::UniqueName& name_generator,
+                                     rsz::Resizer* resizer,
+                                     utl::Logger* logger)
 {
   sta->ensureGraph();
   sta->ensureLevelized();
@@ -433,10 +459,20 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     }
   }
 
-  logger->info(RMP, 62, "Resynthesis: starting genetic algorithm, Worst slack is {}", getWorstSlack(sta, corner_));
+  logger->info(RMP,
+               62,
+               "Resynthesis: starting genetic algorithm, Worst slack is {}",
+               getWorstSlack(sta, corner_));
 
   for (unsigned i = 0; i < pop_size_; i++) {
-    evaluateSolution(population[i], candidate_vertices, abc_library, corner_, sta, name_generator, logger, all_ops);
+    evaluateSolution(population[i],
+                     candidate_vertices,
+                     abc_library,
+                     corner_,
+                     sta,
+                     name_generator,
+                     logger,
+                     all_ops);
     debugPrint(logger, RMP, "genetic", 1, population[i].toString());
   }
 
@@ -448,11 +484,16 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     for (unsigned j = 0; j < cross_size; j++) {
       auto rand1 = random_() % generation_size;
       auto rand2 = random_() % generation_size;
-      if (rand1 == rand2) continue;
+      if (rand1 == rand2) {
+        continue;
+      }
       Solution& parent1_sol = population[rand1].solution;
       Solution& parent2_sol = population[rand2].solution;
-      Solution child_sol(parent1_sol.begin(), parent1_sol.begin() + parent1_sol.size() / 2);
-      child_sol.insert(child_sol.end(), parent2_sol.begin() + parent2_sol.size() / 2, parent2_sol.end());
+      Solution child_sol(parent1_sol.begin(),
+                         parent1_sol.begin() + parent1_sol.size() / 2);
+      child_sol.insert(child_sol.end(),
+                       parent2_sol.begin() + parent2_sol.size() / 2,
+                       parent2_sol.end());
       SolutionSlack child_sol_slack;
       child_sol_slack.solution = std::move(child_sol);
       population.push_back(std::move(child_sol_slack));
@@ -468,18 +509,33 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
     removeDuplicates(population, logger);
     // Evaluation
     for (auto& sol_slack : population) {
-      if (sol_slack.computed_slack) continue;
-      evaluateSolution(sol_slack, candidate_vertices, abc_library, corner_, sta, name_generator, logger, all_ops);
+      if (sol_slack.computed_slack) {
+        continue;
+      }
+      evaluateSolution(sol_slack,
+                       candidate_vertices,
+                       abc_library,
+                       corner_,
+                       sta,
+                       name_generator,
+                       logger,
+                       all_ops);
     }
     // Selection
-    std::sort(population.begin(), population.end(), [](const auto& a, const auto& b) { return a.worst_slack > b.worst_slack;});
+    std::sort(
+        population.begin(), population.end(), [](const auto& a, const auto& b) {
+          return a.worst_slack > b.worst_slack;
+        });
     std::vector<SolutionSlack> newPopulation;
     newPopulation.reserve(pop_size_);
     for (int j = 0; j < pop_size_; j++) {
       std::vector<size_t> tournament(tourn_size_);
-      std::generate_n(tournament.begin(), tourn_size_, [&](){ return random_() % population.size();});
+      std::generate_n(tournament.begin(), tourn_size_, [&]() {
+        return random_() % population.size();
+      });
       std::sort(tournament.begin(), tournament.end());
-      tournament.erase(std::unique(tournament.begin(), tournament.end()), tournament.end());
+      tournament.erase(std::unique(tournament.begin(), tournament.end()),
+                       tournament.end());
       std::bernoulli_distribution bern_dist{tourn_prob_};
       for (int k = 0; k < tournament.size(); k++) {
         if (bern_dist(random_)) {
@@ -500,10 +556,15 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
       RMP, 59, "Resynthesis: End of genetic algorithm, applying operations");
   logger->info(RMP, 63, "Resynthesis: Applying ABC operations");
 
-  auto best_it = std::max_element(population.begin(), population.end(),
-                                  [](const auto& a, const auto& b) { return a.worst_slack < b.worst_slack;});
-  logger->info(RMP, 66, "Resynthesis: Best result is of individual {}: {}",
-               std::distance(population.begin(), best_it), best_it->worst_slack);
+  auto best_it = std::max_element(
+      population.begin(), population.end(), [](const auto& a, const auto& b) {
+        return a.worst_slack < b.worst_slack;
+      });
+  logger->info(RMP,
+               66,
+               "Resynthesis: Best result is of individual {}: {}",
+               std::distance(population.begin(), best_it),
+               best_it->worst_slack);
   // Apply the ops
   AnnealingStrategy::RunGia(sta,
                             candidate_vertices,
@@ -512,6 +573,7 @@ void GeneticAlgorithm::OptimizeDesign(sta::dbSta* sta,
                             FINAL_RESIZE_ITERS,
                             name_generator,
                             logger);
-  logger->info(RMP, 67, "Resynthesis: Worst slack is {}", getWorstSlack(sta, corner_));
+  logger->info(
+      RMP, 67, "Resynthesis: Worst slack is {}", getWorstSlack(sta, corner_));
 }
 }  // namespace rmp

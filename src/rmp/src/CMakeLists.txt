@@ -15,8 +15,8 @@ swig_lib(NAME      rmp
 add_library(rmp_lib
     Restructure.cpp
     annealing_strategy.cpp
-    genetic_algorithm.cpp
     delay_optimization_strategy.cpp
+    genetic_strategy.cpp
     utils.cpp
     zero_slack_strategy.cpp
 )

@@ -99,29 +99,68 @@ Derived GENLIB library "asap7sc7p5t_AO_RVT_SS_nldm_211120" with 169 gates.
 [INFO RMP-0065] Resynthesis: Iteration 7 of genetic algorithm
 [INFO RMP-0065] Resynthesis: Iteration 8 of genetic algorithm
 [INFO RMP-0065] Resynthesis: Iteration 9 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 10 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 11 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 12 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 13 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 14 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 15 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 16 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 17 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 18 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 19 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 20 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 21 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 22 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 23 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 24 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 25 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 26 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 27 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 28 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 29 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 30 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 31 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 32 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 33 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 34 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 35 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 36 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 37 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 38 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 39 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 40 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 41 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 42 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 43 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 44 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 45 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 46 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 47 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 48 of genetic algorithm
+[INFO RMP-0065] Resynthesis: Iteration 49 of genetic algorithm
 [INFO RMP-0059] Resynthesis: End of genetic algorithm, applying operations
 [INFO RMP-0063] Resynthesis: Applying ABC operations
-[INFO RMP-0066] Resynthesis: Best result is of individual 3: 2.2227775e-12
-[INFO RMP-0067] Resynthesis: Worst slack is 2.2227775e-12
-[  2.223,  84.731): ***** (18)
-[ 84.731, 167.240): ********************************* (128)
-[167.240, 249.749): **** (14)
-[249.749, 332.257):  (0)
-[332.257, 414.766):  (0)
-[414.766, 497.274): ************************************************** (195)
-[497.274, 579.783): ****************** (71)
-[579.783, 662.292): ** (6)
-[662.292, 744.800): ********************************* (130)
-[744.800, 827.309]: ********************************* (129)
+[INFO RMP-0066] Resynthesis: Best result is of individual 0: 2.6515123e-11
+[INFO RMP-0067] Resynthesis: Worst slack is 2.6515123e-11
+[ 26.515, 106.594): ********** (44)
+[106.594, 186.674): ************************* (110)
+[186.674, 266.753): * (6)
+[266.753, 346.833):  (0)
+[346.833, 426.912):  (0)
+[426.912, 506.991): ************************************************** (219)
+[506.991, 587.071): *********** (49)
+[587.071, 667.150): * (4)
+[667.150, 747.229): ****************************** (130)
+[747.229, 827.309]: ***************************** (129)
 Cell type report:                       Count       Area
   Buffer                                  990      72.03
-  Inverter                                597      27.26
+  Inverter                                612      27.96
   Sequential cell                         562     163.88
-  Multi-Input combinational cell        10376    1065.38
-  Total                                 12525    1328.54
-Startpoint: u0/w[0][9]$_DFF_P_
-            (rising edge-triggered flip-flop clocked by core_clock)
-Endpoint: u0/subword[17]$_DFF_P_
+  Multi-Input combinational cell        10601    1079.87
+  Total                                 12765    1343.74
+Startpoint: ld (input port clocked by core_clock)
+Endpoint: u0/subword[13]$_DFF_P_
           (rising edge-triggered flip-flop clocked by core_clock)
 Path Group: core_clock
 Path Type: max
@@ -131,43 +170,36 @@ Corner: slow
 ---------------------------------------------------------
    0.00    0.00   clock core_clock (rise edge)
    0.00    0.00   clock network delay (ideal)
-   0.00    0.00 ^ u0/w[0][9]$_DFF_P_/CLK (DFFHQNx1_ASAP7_75t_R)
-  86.37   86.37 v u0/w[0][9]$_DFF_P_/QN (DFFHQNx1_ASAP7_75t_R)
-  55.92  142.29 v cut_237003/Y (XNOR2xp5_ASAP7_75t_R)
-  63.54  205.83 v cut_237004/Y (XNOR2xp5_ASAP7_75t_R)
-  28.45  234.27 ^ cut_237006/Y (NAND3xp33_ASAP7_75t_R)
-  23.68  257.96 v cut_237007/Y (NAND2xp33_ASAP7_75t_R)
-  96.42  354.37 ^ cut_237008/Y (NOR2xp67_ASAP7_75t_R)
- 129.54  483.91 v cut_237009/Y (INVx1_ASAP7_75t_R)
-  80.19  564.10 ^ _23139_/CON (HAxp5_ASAP7_75t_R)
-  49.15  613.25 v _23139_/SN (HAxp5_ASAP7_75t_R)
-  46.45  659.70 ^ cut_236966/Y (INVx1_ASAP7_75t_R)
-  48.83  708.53 v cut_237013/Y (NOR2xp33_ASAP7_75t_R)
-  37.01  745.54 ^ cut_237021/Y (INVx1_ASAP7_75t_R)
-  19.77  765.31 v cut_237022/Y (NAND2x1p5_ASAP7_75t_R)
-  26.98  792.29 ^ cut_237179/Y (NOR2xp33_ASAP7_75t_R)
-  24.21  816.50 v cut_237181/Y (NOR2xp33_ASAP7_75t_R)
-  19.92  836.42 ^ cut_237182/Y (NOR2xp33_ASAP7_75t_R)
-  25.71  862.13 v cut_237183/Y (NOR2xp33_ASAP7_75t_R)
-  22.75  884.88 ^ cut_237184/Y (NOR2xp33_ASAP7_75t_R)
-  17.69  902.57 v cut_237200/Y (NAND2xp5_ASAP7_75t_R)
-  18.86  921.43 ^ cut_237201/Y (NAND2xp33_ASAP7_75t_R)
-  20.05  941.48 v cut_237202/Y (NOR2xp33_ASAP7_75t_R)
-  26.50  967.98 ^ cut_237203/Y (NOR2xp33_ASAP7_75t_R)
-   0.00  967.98 ^ u0/subword[17]$_DFF_P_/D (DFFHQNx1_ASAP7_75t_R)
-         967.98   data arrival time
+ 200.00  200.00 v input external delay
+   0.00  200.00 v ld (in)
+  38.82  238.82 v cut_383738/Y (OR3x1_ASAP7_75t_R)
+  31.84  270.67 ^ cut_383740/Y (NAND2xp33_ASAP7_75t_R)
+  70.29  340.95 v cut_383741/Y (NOR2x1_ASAP7_75t_R)
+  93.87  434.83 ^ _13443_/Y (INVx1_ASAP7_75t_R)
+ 127.76  562.58 ^ _23153_/SN (HAxp5_ASAP7_75t_R)
+  48.27  610.85 v cut_383852/Y (INVx1_ASAP7_75t_R)
+  73.35  684.20 ^ cut_384009/Y (NAND2xp33_ASAP7_75t_R)
+  47.65  731.86 v cut_384022/Y (NAND2xp33_ASAP7_75t_R)
+  32.26  764.11 ^ cut_384441/Y (INVx1_ASAP7_75t_R)
+  16.51  780.62 v _13793_/Y (AOI21x1_ASAP7_75t_R)
+  52.01  832.63 v _13794_/Y (AO32x1_ASAP7_75t_R)
+  47.89  880.52 v _13798_/Y (OA211x2_ASAP7_75t_R)
+  49.67  930.19 v _13799_/Y (OR3x1_ASAP7_75t_R)
+  13.34  943.53 ^ _13800_/Y (OAI21x1_ASAP7_75t_R)
+   0.00  943.53 ^ u0/subword[13]$_DFF_P_/D (DFFHQNx1_ASAP7_75t_R)
+         943.53   data arrival time
 
 1000.00 1000.00   clock core_clock (rise edge)
    0.00 1000.00   clock network delay (ideal)
    0.00 1000.00   clock reconvergence pessimism
-        1000.00 ^ u0/subword[17]$_DFF_P_/CLK (DFFHQNx1_ASAP7_75t_R)
- -29.80  970.20   library setup time
-         970.20   data required time
+        1000.00 ^ u0/subword[13]$_DFF_P_/CLK (DFFHQNx1_ASAP7_75t_R)
+ -29.95  970.05   library setup time
+         970.05   data required time
 ---------------------------------------------------------
-         970.20   data required time
-        -967.98   data arrival time
+         970.05   data required time
+        -943.53   data arrival time
 ---------------------------------------------------------
-           2.22   slack (MET)
+          26.52   slack (MET)
 
 
 wns max 0.00
