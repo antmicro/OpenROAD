@@ -9,13 +9,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "aig/gia/gia.h"
-#include "base/abc/abc.h"
 #include "cut/abc_library_factory.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
 #include "gia.h"
-#include "misc/vec/vecPtr.h"
 #include "rsz/Resizer.hh"
 #include "sta/Graph.hh"
 #include "sta/MinMax.hh"

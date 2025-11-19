@@ -6,7 +6,6 @@
 #include <random>
 
 #include "db_sta/dbSta.hh"
-#include "gia.h"
 #include "resynthesis_strategy.h"
 #include "sta/Corner.hh"
 #include "utl/Logger.h"
