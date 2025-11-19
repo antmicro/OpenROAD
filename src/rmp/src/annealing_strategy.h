@@ -3,12 +3,9 @@
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
 #include <optional>
 #include <random>
 
-#include "cut/abc_library_factory.h"
 #include "db_sta/dbSta.hh"
 #include "resynthesis_strategy.h"
 #include "rsz/Resizer.hh"
@@ -18,8 +15,6 @@
 #include "utl/unique_name.h"
 
 namespace rmp {
-
-using GiaOp = std::function<void(abc::Gia_Man_t*&)>;
 
 class AnnealingStrategy : public ResynthesisStrategy
 {
@@ -46,13 +41,6 @@ class AnnealingStrategy : public ResynthesisStrategy
                       utl::UniqueName& name_generator,
                       rsz::Resizer* resizer,
                       utl::Logger* logger) override;
-  static void RunGia(sta::dbSta* sta,
-                     const std::vector<sta::Vertex*>& candidate_vertices,
-                     cut::AbcLibrary& abc_library,
-                     const std::vector<GiaOp>& gia_ops,
-                     size_t resize_iters,
-                     utl::UniqueName& name_generator,
-                     utl::Logger* logger);
 
  private:
   sta::Corner* corner_;

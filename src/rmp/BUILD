@@ -20,6 +20,8 @@ cc_library(
         "src/delay_optimization_strategy.h",
         "src/genetic_strategy.cpp",
         "src/genetic_strategy.h",
+        "src/gia.cpp",
+        "src/gia.h",
         "src/logic_optimization_strategy.h",
         "src/resynthesis_strategy.h",
         "src/utils.cpp",

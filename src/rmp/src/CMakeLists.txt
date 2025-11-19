@@ -17,6 +17,7 @@ add_library(rmp_lib
     annealing_strategy.cpp
     delay_optimization_strategy.cpp
     genetic_strategy.cpp
+    gia.cpp
     utils.cpp
     zero_slack_strategy.cpp
 )
