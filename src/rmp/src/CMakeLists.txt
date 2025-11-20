@@ -58,6 +58,7 @@ target_link_libraries(rmp_lib
     rsz_lib
     utl_lib
     cut
+    mockturtle
     ${ABC_LIBRARY}
 )
 

@@ -56,3 +56,7 @@ add_compile_options(
   add_subdirectory(abc)
 
 endif()
+
+set(MOCKTURTLE_BUILD_EXAMPLES OFF)
+
+add_subdirectory(mockturtle)
