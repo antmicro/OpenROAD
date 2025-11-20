@@ -46,6 +46,16 @@
 #include "utl/Logger.h"
 #include "zero_slack_strategy.h"
 
+#ifdef MOCKTURTLE_USE_ABC
+#undef MOCKTURTLE_USE_ABC
+#endif
+
+#include <mockturtle/networks/aig.hpp>
+#include <mockturtle/networks/klut.hpp>
+#include <mockturtle/networks/block.hpp>
+#include <mockturtle/views/cell_view.hpp>
+#include <mockturtle/algorithms/emap.hpp>
+
 using utl::RMP;
 using namespace abc;
 using cut::Blif;
