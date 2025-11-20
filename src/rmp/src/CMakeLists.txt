@@ -48,6 +48,11 @@ target_include_directories(rmp
 target_include_directories(rmp_lib
   PUBLIC
     ../include
+  PRIVATE
+    ${MOCKTURTLE_HOME}/include
+    ${MOCKTURTLE_HOME}/lib/lorina
+    ${MOCKTURTLE_HOME}/lib/parallel_hashmap
+    ${MOCKTURTLE_HOME}/lib/kitty
 )
 
 target_link_libraries(rmp_lib
@@ -58,7 +63,7 @@ target_link_libraries(rmp_lib
     rsz_lib
     utl_lib
     cut
-    mockturtle
+    # mockturtle
     ${ABC_LIBRARY}
 )
 
