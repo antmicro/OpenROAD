@@ -152,3 +152,14 @@ proc resynth_annealing { args } {
 
   rmp::resynth_annealing_cmd $corner
 }
+
+sta::define_cmd_args "resynth_mockturtle" {
+                                          }
+
+proc resynth_mockturtle { args } {
+  sta::parse_key_args "resynth_mockturtle" args \
+    keys {} \
+    flags {}
+
+  rmp::resynth_mockturtle_cmd
+}

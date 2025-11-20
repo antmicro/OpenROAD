@@ -112,4 +112,8 @@ int blif_read(cut::Blif* blif_, const char* file_name){
   return blif_->readBlif(file_name, getOpenRoad()->getDb()->getChip()->getBlock());
 }
 
+void resynth_mockturtle_cmd() {
+  
+}
+
 %}
