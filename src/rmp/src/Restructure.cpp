@@ -46,10 +46,6 @@
 #include "utl/Logger.h"
 #include "zero_slack_strategy.h"
 
-#ifdef MOCKTURTLE_USE_ABC
-#undef MOCKTURTLE_USE_ABC
-#endif
-
 #include <mockturtle/networks/aig.hpp>
 #include <mockturtle/networks/klut.hpp>
 #include <mockturtle/networks/block.hpp>
