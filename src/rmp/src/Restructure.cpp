@@ -28,6 +28,14 @@
 #include "cut/blif.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
+#include "lorina/blif.hpp"
+#include "lorina/genlib.hpp"
+#include "mockturtle/algorithms/emap.hpp"
+#include "mockturtle/networks/block.hpp"
+#include "mockturtle/networks/klut.hpp"
+#include "mockturtle/views/cell_view.hpp"
+#include <mockturtle/io/blif_reader.hpp>
+#include <mockturtle/io/genlib_reader.hpp>
 #include "odb/db.h"
 #include "rsz/Resizer.hh"
 #include "sta/Delay.hh"
@@ -45,12 +53,6 @@
 #include "sta/Sta.hh"
 #include "utl/Logger.h"
 #include "zero_slack_strategy.h"
-
-#include <mockturtle/networks/aig.hpp>
-#include <mockturtle/networks/klut.hpp>
-#include <mockturtle/networks/block.hpp>
-#include <mockturtle/views/cell_view.hpp>
-#include <mockturtle/algorithms/emap.hpp>
 
 using utl::RMP;
 using namespace abc;
@@ -710,4 +712,79 @@ bool Restructure::readAbcLog(std::string abc_file_name,
   }
   return status;
 }
+
+void Restructure::emap(char* genlib_file_name, char* workdir_name)
+{
+  const std::string prefix
+      = work_dir_name_ + std::string(block_->getConstName());
+  input_blif_file_name_ = prefix + "_db.blif";
+  std::vector<std::string> files_to_remove;
+
+  Blif blif_(
+      logger_, open_sta_, locell_, loport_, hicell_, hiport_, ++blif_call_id_);
+  blif_.writeBlif(input_blif_file_name_.c_str(), !is_area_mode_);
+  debugPrint(
+      logger_, RMP, "remap", 1, "Writing blif file {}", input_blif_file_name_);
+  files_to_remove.emplace_back(input_blif_file_name_);
+
+  mockturtle::emap_params ps;
+
+  switch (opt_mode_) {
+    case Mode::AREA_1: {
+      ps.area_oriented_mapping = true;
+      break;
+    }
+    case Mode::DELAY_1: {
+      ps.area_oriented_mapping = false;
+      ps.relax_required = 0.0;
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+
+  mockturtle::klut_network ntk;
+
+  {
+    auto code = lorina::read_blif(
+        input_blif_file_name_, mockturtle::blif_reader(ntk));
+
+    if (code != lorina::return_code::success) {
+      logger_->report("Error reading BLIF");
+      return;
+    }
+  }
+
+  std::vector<mockturtle::gate> gates;
+  {
+    auto code = lorina::read_genlib(std::string(genlib_file_name), mockturtle::genlib_reader(gates));
+
+    if (code != lorina::return_code::success) {
+      logger_->report("Error reading lib file");
+      return;
+    }
+  }
+
+  static constexpr unsigned MaxInputs = 9u;
+  mockturtle::tech_library<MaxInputs> tech_lib(gates);
+
+  mockturtle::emap_stats st;
+
+  mockturtle::cell_view<mockturtle::block_network> mapped_ntk
+      = mockturtle::emap(ntk, tech_lib, ps, &st);
+
+  logger_->report(
+      "Extended technology mapping stats:\n\tarea: {}\n\tdelay: {}\n\tpower: "
+      "{}\n\tinverters: {}\n\t multioutput gates: {}\n\t time multioutput: "
+      "{}\n\t time total: {}",
+      st.area,
+      st.delay,
+      st.power,
+      st.inverters,
+      st.multioutput_gates,
+      st.time_multioutput,
+      st.time_total);
+}
+
 }  // namespace rmp
