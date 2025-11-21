@@ -716,16 +716,16 @@ bool Restructure::readAbcLog(std::string abc_file_name,
 void Restructure::emap(char* genlib_file_name, char* workdir_name)
 {
   const std::string prefix
-      = work_dir_name_ + std::string(block_->getConstName());
+      = work_dir_name_ + "xxx";
   input_blif_file_name_ = prefix + "_db.blif";
-  std::vector<std::string> files_to_remove;
+  // std::vector<std::string> files_to_remove;
 
   Blif blif_(
       logger_, open_sta_, locell_, loport_, hicell_, hiport_, ++blif_call_id_);
   blif_.writeBlif(input_blif_file_name_.c_str(), !is_area_mode_);
   debugPrint(
       logger_, RMP, "remap", 1, "Writing blif file {}", input_blif_file_name_);
-  files_to_remove.emplace_back(input_blif_file_name_);
+  // files_to_remove.emplace_back(input_blif_file_name_);
 
   mockturtle::emap_params ps;
 
