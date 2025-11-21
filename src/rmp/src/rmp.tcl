@@ -153,13 +153,33 @@ proc resynth_annealing { args } {
   rmp::resynth_annealing_cmd $corner
 }
 
-sta::define_cmd_args "resynth_mockturtle" {
-                                          }
+sta::define_cmd_args "emap" {
+                              [-target area|timing]\
+                              [-genlib_file genlib_file]\
+                              [-work_dir workdir_name]
+                            }
 
-proc resynth_mockturtle { args } {
-  sta::parse_key_args "resynth_mockturtle" args \
-    keys {} \
+proc emap { args } {
+  sta::parse_key_args "emap" args \
+    keys { -target -genlib_file -work_dir} \
     flags {}
 
-  rmp::resynth_mockturtle_cmd
+  set target "area"
+  set workdir_name "."
+
+  if { [info exists keys(-target)] } {
+    set target $keys(-target)
+  }
+
+  if { [info exists keys(-genlib_file)] } {
+    set genlib_file_name $keys(-genlib_file)
+  } else {
+    utl::error RMP 12 "Missing argument -genlib_file"
+  }
+
+  if { [info exists keys(-work_dir)] } {
+    set workdir_name $keys(-work_dir)
+  }
+
+  rmp::emap_cmd $genlib_file_name $target $workdir_name
 }

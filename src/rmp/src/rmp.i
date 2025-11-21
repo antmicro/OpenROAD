@@ -112,8 +112,9 @@ int blif_read(cut::Blif* blif_, const char* file_name){
   return blif_->readBlif(file_name, getOpenRoad()->getDb()->getChip()->getBlock());
 }
 
-void resynth_mockturtle_cmd() {
-  
+void emap_cmd(char* genlib_file_name, char* target, char* workdir_name) {
+  getRestructure()->setMode(target);
+  getRestructure()->emap(genlib_file_name, workdir_name);
 }
 
 %}
