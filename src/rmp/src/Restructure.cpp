@@ -20,11 +20,14 @@
 #include <utility>
 #include <vector>
 
+#include "aig/gia/giaAig.h"
 #include "annealing_strategy.h"
 #include "base/abc/abc.h"
 #include "base/main/abcapis.h"
 #include "cut/abc_init.h"
 #include "cut/abc_library_factory.h"
+#include "cut/logic_cut.h"
+#include "cut/logic_extractor.h"
 #include "cut/blif.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
@@ -32,7 +35,7 @@
 #include "lorina/genlib.hpp"
 #include "mockturtle/algorithms/emap.hpp"
 #include "mockturtle/networks/block.hpp"
-#include "mockturtle/networks/klut.hpp"
+#include "mockturtle/networks/aig.hpp"
 #include "mockturtle/views/cell_view.hpp"
 #include <mockturtle/io/blif_reader.hpp>
 #include <mockturtle/io/genlib_reader.hpp>
@@ -40,6 +43,7 @@
 #include "rsz/Resizer.hh"
 #include "sta/Delay.hh"
 #include "sta/Graph.hh"
+#include "sta/GraphDelayCalc.hh"
 #include "sta/Liberty.hh"
 #include "sta/Network.hh"
 #include "sta/NetworkClass.hh"
@@ -53,6 +57,12 @@
 #include "sta/Sta.hh"
 #include "utl/Logger.h"
 #include "zero_slack_strategy.h"
+#include "utils.h"
+
+namespace abc {
+extern void Abc_FrameSetLibGen(void* pLib);
+extern Aig_Man_t* Abc_NtkToDar(Abc_Ntk_t* pNtk, int fExors, int fRegisters);
+}  // namespace abc
 
 using utl::RMP;
 using namespace abc;
@@ -713,20 +723,66 @@ bool Restructure::readAbcLog(std::string abc_file_name,
   return status;
 }
 
-void Restructure::emap(char* genlib_file_name, char* workdir_name)
+static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
 {
-  const std::string prefix
-      = work_dir_name_ + "xxx";
-  input_blif_file_name_ = prefix + "_db.blif";
-  // std::vector<std::string> files_to_remove;
+  using aig_ntk = mockturtle::aig_network;
+  aig_ntk ntk;
 
-  Blif blif_(
-      logger_, open_sta_, locell_, loport_, hicell_, hiport_, ++blif_call_id_);
-  blif_.writeBlif(input_blif_file_name_.c_str(), !is_area_mode_);
-  debugPrint(
-      logger_, RMP, "remap", 1, "Writing blif file {}", input_blif_file_name_);
-  // files_to_remove.emplace_back(input_blif_file_name_);
+  // Map ABC nodes to mockturtle signals
+  std::unordered_map<Aig_Obj_t*, aig_ntk::signal> node_to_sig;
 
+  // 1) Constant 0
+  auto const0 = ntk.get_constant(false);
+  node_to_sig[Aig_ManConst0(pMan)] = const0;
+
+  // 2) Primary inputs (CIs)
+  Aig_Obj_t* pObj;
+  int i;
+
+  Aig_ManForEachCi(pMan, pObj, i)
+  {
+    auto s = ntk.create_pi();
+    node_to_sig[pObj] = s;
+  }
+
+  // 3) Internal AND nodes (AIG nodes) in topological order
+  Aig_ManForEachNode(pMan, pObj, i)
+  {
+    Aig_Obj_t* pF0 = Aig_ObjFanin0(pObj);
+    Aig_Obj_t* pF1 = Aig_ObjFanin1(pObj);
+
+    // get signals for fanins
+    auto s0 = node_to_sig.at(pF0);
+    auto s1 = node_to_sig.at(pF1);
+
+    // apply input polarities (complemented edges)
+    if ( Aig_ObjFaninC0(pObj) ) {
+      s0 = ntk.create_not(s0);
+    }
+    if ( Aig_ObjFaninC1(pObj) ) {
+      s1 = ntk.create_not(s1);
+    }
+
+    auto s = ntk.create_and(s0, s1);
+    node_to_sig[pObj] = s;
+  }
+
+  // 4) Primary outputs (COs)
+  Aig_ManForEachCo(pMan, pObj, i)
+  {
+    Aig_Obj_t* pF = Aig_ObjFanin0(pObj);
+    auto s = node_to_sig.at(pF);
+    if ( Aig_ObjFaninC0(pObj) ) {
+      s = ntk.create_not(s);
+    }
+    ntk.create_po(s);
+  }
+
+  return ntk;
+}
+
+void Restructure::emap(sta::Corner* corner, char* genlib_file_name, char* workdir_name)
+{
   mockturtle::emap_params ps;
 
   switch (opt_mode_) {
@@ -744,24 +800,70 @@ void Restructure::emap(char* genlib_file_name, char* workdir_name)
     }
   }
 
-  mockturtle::klut_network ntk;
+  logger_->report("Creating AIG network");
+
+  sta::dbNetwork* network = open_sta_->getDbNetwork();
+
+  // Disable incremental timing.
+  open_sta_->graphDelayCalc()->delaysInvalid();
+  open_sta_->search()->arrivalsInvalid();
+  open_sta_->search()->endpointsInvalid();
+
+  
+  cut::LogicExtractorFactory logic_extractor(open_sta_, logger_);
+  for (sta::Vertex* endpoint : *open_sta_->endpoints()) {
+    logic_extractor.AppendEndpoint(endpoint);
+  }
+
+  Aig_Man_t *aig;
+
+  cut::AbcLibraryFactory factory(logger_);
+  factory.AddDbSta(open_sta_);
+  factory.AddResizer(resizer_);
+  factory.SetCorner(corner);
+  cut::AbcLibrary abc_library = factory.Build();
+
+  cut::LogicCut cut = logic_extractor.BuildLogicCut(abc_library);
+
+  utl::UniquePtrWithDeleter<abc::Abc_Ntk_t> mapped_abc_network
+      = cut.BuildMappedAbcNetwork(abc_library, network, logger_);
+
+  utl::UniquePtrWithDeleter<abc::Abc_Ntk_t> current_network(
+      abc::Abc_NtkToLogic(
+          const_cast<abc::Abc_Ntk_t*>(mapped_abc_network.get())),
+      &abc::Abc_NtkDelete);
 
   {
-    auto code = lorina::read_blif(
-        input_blif_file_name_, mockturtle::blif_reader(ntk));
+    auto library = static_cast<abc::Mio_Library_t*>(mapped_abc_network->pManFunc);
 
-    if (code != lorina::return_code::success) {
-      logger_->report("Error reading BLIF");
-      return;
+    // Install library for NtkMap
+    abc::Abc_FrameSetLibGen(library);
+
+    logger_->report("Mapped ABC network has {} nodes and {} POs.",
+               abc::Abc_NtkNodeNum(current_network.get()),
+               abc::Abc_NtkPoNum(current_network.get()));
+
+    current_network->pManFunc = library;
+
+    {
+      auto ntk = current_network.get();
+      assert(!Abc_NtkIsStrash(ntk));
+      // derive comb GIA
+      auto strash = Abc_NtkStrash(ntk, false, true, false);
+      aig = Abc_NtkToDar(strash, false, false);
+      Abc_NtkDelete(strash);
     }
   }
 
+  mockturtle::aig_network ntk = abc_to_mockturtle_aig(aig);
+
+  logger_->report("Reading genlib file {}", genlib_file_name);
   std::vector<mockturtle::gate> gates;
   {
     auto code = lorina::read_genlib(std::string(genlib_file_name), mockturtle::genlib_reader(gates));
 
     if (code != lorina::return_code::success) {
-      logger_->report("Error reading lib file");
+      logger_->report("Error reading geblib file");
       return;
     }
   }
@@ -771,13 +873,14 @@ void Restructure::emap(char* genlib_file_name, char* workdir_name)
 
   mockturtle::emap_stats st;
 
+  logger_->report("Running emap");
   mockturtle::cell_view<mockturtle::block_network> mapped_ntk
       = mockturtle::emap(ntk, tech_lib, ps, &st);
 
   logger_->report(
       "Extended technology mapping stats:\n\tarea: {}\n\tdelay: {}\n\tpower: "
-      "{}\n\tinverters: {}\n\t multioutput gates: {}\n\t time multioutput: "
-      "{}\n\t time total: {}",
+      "{}\n\tinverters: {}\n\tmultioutput gates: {}\n\ttime multioutput: "
+      "{}\n\ttime total: {}",
       st.area,
       st.delay,
       st.power,
@@ -785,6 +888,10 @@ void Restructure::emap(char* genlib_file_name, char* workdir_name)
       st.multioutput_gates,
       st.time_multioutput,
       st.time_total);
+
+  mapped_ntk.report_cells_usage();
+  mapped_ntk.report_stats();
+
 }
 
 }  // namespace rmp

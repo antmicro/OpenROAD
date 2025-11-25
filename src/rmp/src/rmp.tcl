@@ -154,6 +154,7 @@ proc resynth_annealing { args } {
 }
 
 sta::define_cmd_args "emap" {
+                              [-corner corner]
                               [-target area|timing]\
                               [-genlib_file genlib_file]\
                               [-work_dir workdir_name]
@@ -161,9 +162,10 @@ sta::define_cmd_args "emap" {
 
 proc emap { args } {
   sta::parse_key_args "emap" args \
-    keys { -target -genlib_file -work_dir} \
+    keys {-corner -target -genlib_file -work_dir} \
     flags {}
 
+  set corner [sta::parse_corner keys]
   set target "area"
   set workdir_name "."
 
@@ -181,5 +183,5 @@ proc emap { args } {
     set workdir_name $keys(-work_dir)
   }
 
-  rmp::emap_cmd $genlib_file_name $target $workdir_name
+  rmp::emap_cmd $corner $genlib_file_name $target $workdir_name
 }
