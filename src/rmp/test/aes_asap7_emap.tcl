@@ -28,9 +28,10 @@ report_tns
 
 puts "-- After --\n"
 
-emap -genlib_file ../../../third-party/mockturtle/experiments/cell_libraries/asap7.genlib
-report_timing_histogram
-report_cell_usage
-report_checks
-report_wns
-report_tns
+# emap -corner fast -genlib_file ../../../third-party/mockturtle/experiments/cell_libraries/asap7.genlib -target area
+emap -corner fast -genlib_file ../../../third-party/mockturtle/experiments/cell_libraries/asap7.genlib -target timing
+# report_timing_histogram
+# report_cell_usage
+# report_checks
+# report_wns
+# report_tns
