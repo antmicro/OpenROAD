@@ -37,9 +37,11 @@
 #include "mockturtle/networks/block.hpp"
 #include "mockturtle/networks/aig.hpp"
 #include "mockturtle/views/cell_view.hpp"
-#include <mockturtle/io/blif_reader.hpp>
+#include "mockturtle/views/topo_view.hpp"
 #include <mockturtle/io/genlib_reader.hpp>
+#include <mockturtle/io/write_verilog.hpp>
 #include "odb/db.h"
+#include "ord/OpenRoad.hh"
 #include "rsz/Resizer.hh"
 #include "sta/Delay.hh"
 #include "sta/Graph.hh"
@@ -772,7 +774,7 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
   {
     Aig_Obj_t* pF = Aig_ObjFanin0(pObj);
     auto s = node_to_sig.at(pF);
-    if ( Aig_ObjFaninC0(pObj) ) {
+    if (Aig_ObjFaninC0(pObj)) {
       s = ntk.create_not(s);
     }
     ntk.create_po(s);
@@ -781,9 +783,29 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
   return ntk;
 }
 
-void Restructure::emap(sta::Corner* corner, char* genlib_file_name, char* workdir_name)
+static void mockturtle_to_netlist(const mockturtle::cell_view<mockturtle::block_network> &mapped_ntk, sta::dbSta *sta) {
+  mockturtle::topo_view ntk_topo{mapped_ntk};
+
+  auto *chip = sta->db()->getChip();
+  auto *block = chip->getBlock();
+
+  ntk_topo.foreach_node( [&]( auto const& n, auto ) {
+      if (mapped_ntk.is_constant(n)) {
+        
+      } else if (mapped_ntk.is_pi(n)) {
+        
+      } else if (mapped_ntk.has_cell(n)) {
+        
+      }
+  });
+}
+
+void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_multioutput, bool verbose, char* workdir_name)
 {
   mockturtle::emap_params ps;
+
+  ps.map_multioutput = map_multioutput;
+  ps.verbose = verbose;
 
   switch (opt_mode_) {
     case Mode::AREA_1: {
@@ -892,6 +914,9 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, char* workdi
   mapped_ntk.report_cells_usage();
   mapped_ntk.report_stats();
 
+  mockturtle::write_verilog_with_cell(mapped_ntk, "mapped.v");
+  
+  mockturtle_to_netlist(mapped_ntk, open_sta_);
 }
 
 }  // namespace rmp
