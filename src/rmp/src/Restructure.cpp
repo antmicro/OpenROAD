@@ -733,11 +733,11 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
   // Map ABC nodes to mockturtle signals
   std::unordered_map<Aig_Obj_t*, aig_ntk::signal> node_to_sig;
 
-  // 1) Constant 0
+  // Constant 0
   auto const0 = ntk.get_constant(false);
   node_to_sig[Aig_ManConst0(pMan)] = const0;
 
-  // 2) Primary inputs (CIs)
+  // Primary inputs (CIs)
   Aig_Obj_t* pObj;
   int i;
 
@@ -747,7 +747,7 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
     node_to_sig[pObj] = s;
   }
 
-  // 3) Internal AND nodes (AIG nodes) in topological order
+  // Internal AND nodes (AIG nodes) in topological order
   Aig_ManForEachNode(pMan, pObj, i)
   {
     Aig_Obj_t* pF0 = Aig_ObjFanin0(pObj);
@@ -769,7 +769,7 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
     node_to_sig[pObj] = s;
   }
 
-  // 4) Primary outputs (COs)
+  // Primary outputs (COs)
   Aig_ManForEachCo(pMan, pObj, i)
   {
     Aig_Obj_t* pF = Aig_ObjFanin0(pObj);
@@ -783,21 +783,320 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
   return ntk;
 }
 
-static void mockturtle_to_netlist(const mockturtle::cell_view<mockturtle::block_network> &mapped_ntk, sta::dbSta *sta) {
-  mockturtle::topo_view ntk_topo{mapped_ntk};
 
-  auto *chip = sta->db()->getChip();
-  auto *block = chip->getBlock();
+using BlockNtk = mockturtle::cell_view<mockturtle::block_network>;
+using Node     = BlockNtk::node;
+using Signal   = BlockNtk::signal;
 
-  ntk_topo.foreach_node( [&]( auto const& n, auto ) {
-      if (mapped_ntk.is_constant(n)) {
-        
-      } else if (mapped_ntk.is_pi(n)) {
-        
-      } else if (mapped_ntk.has_cell(n)) {
-        
+// Mapping info for one cell instance
+struct CellMapping
+{
+  std::string              master_name;  // dbMaster / Liberty cell name
+  std::vector<std::string> input_pins;   // in fanin order (from gate::pins)
+};
+
+static odb::dbMaster* findMasterOrDie(odb::dbLib* lib,
+                                      const std::string& name)
+{
+  if (!lib) {
+    throw std::runtime_error("findMasterOrDie: dbLib is null");
+  }
+  odb::dbMaster* master = lib->findMaster(name.c_str());
+  if (!master) {
+    std::ostringstream oss;
+    oss << "Cannot find dbMaster \"" << name << "\" in dbLib \""
+        << lib->getName() << "\"";
+    throw std::runtime_error(oss.str());
+  }
+  return master;
+}
+
+static std::vector<odb::dbMTerm*> getSignalOutputs(odb::dbMaster* master)
+{
+  std::vector<odb::dbMTerm*> outs;
+
+  for (auto* mterm : master->getMTerms()) {
+    auto io  = mterm->getIoType();
+    auto sig = mterm->getSigType();
+
+    if (sig == odb::dbSigType::POWER || sig == odb::dbSigType::GROUND) {
+      continue;
+    }
+    if (io == odb::dbIoType::INPUT) {
+      continue;
+    }
+    // Accept OUTPUT, INOUT, FEEDTHRU here as "outputs"
+    outs.push_back(mterm);
+  }
+
+  auto by_name = [](odb::dbMTerm* a, odb::dbMTerm* b) {
+    return std::strcmp(a->getName().c_str(), b->getName().c_str()) < 0;
+  };
+  std::sort(outs.begin(), outs.end(), by_name);
+
+  return outs;
+}
+
+static CellMapping map_cell_from_standard_cell(const BlockNtk& ntk,
+                                               const Node&     n,
+                                               utl::Logger* logger)
+{
+  CellMapping m;
+
+  const auto& sc = ntk.get_cell(n);  // cell_view API
+  m.master_name  = sc.name;          // must match Liberty/LEF cell name
+
+  // logger->report("mapping cell {}", sc.name);
+
+  if (sc.gates.empty()) {
+    std::ostringstream oss;
+    oss << "standard_cell \"" << sc.name << "\" has no gates (node "
+        << ntk.node_to_index(n) << ")";
+    throw std::runtime_error(oss.str());
+  }
+
+  const auto& first_gate = sc.gates.front();
+  for (const auto& p : first_gate.pins) {
+    m.input_pins.push_back(p.name);
+  }
+
+  return m;
+}
+
+static void import_block_network_to_db(sta::dbSta *sta,
+                                       const BlockNtk& ntk_raw,
+                                       odb::dbLib* lib,
+                                       const std::string& block_name,
+                                       utl::Logger* logger)
+{
+  mockturtle::topo_view<BlockNtk> ntk{ntk_raw};
+
+  odb::dbChip* chip = sta->db()->getChip();
+
+  odb::dbBlock* block = chip->getBlock();
+  if (!block) {
+    block = odb::dbBlock::create(chip, block_name.c_str());
+  } else if (std::string(block->getName()) != block_name) {
+    block = odb::dbBlock::create(chip, block_name.c_str());
+  }
+
+  const auto num_nodes = ntk.size();
+  std::vector<std::vector<odb::dbNet*>> node_out_nets(num_nodes);
+
+  // Const nets (for constant fanins)
+  logger->report("const nets");
+  odb::dbNet* const0_net = nullptr;
+  odb::dbNet* const1_net = nullptr;
+
+  auto ensure_const_net = [&](bool value) -> odb::dbNet* {
+    const char* net_name = value ? "CONST1" : "CONST0";
+    odb::dbNet*& cache   = value ? const1_net : const0_net;
+
+    if (cache) {
+      return cache;
+    }
+
+    odb::dbNet* net = block->findNet(net_name);
+    if (!net) {
+      net = odb::dbNet::create(block, net_name);
+    }
+    if (!net) {
+      std::ostringstream oss;
+      oss << "Failed to create or find const net " << net_name;
+      throw std::runtime_error(oss.str());
+    }
+
+    cache = net;
+    return net;
+  };
+
+  auto node_index = [&](const Node& n) -> std::size_t {
+    return static_cast<std::size_t>(ntk.node_to_index(n));
+  };
+
+  // Primary inputs: nets + BTerms
+  logger->report("primary inputs");
+  {
+    uint32_t pi_idx = 0;
+    ntk.foreach_pi([&](const Node& n) {
+      const auto idx = node_index(n);
+      std::string name = "pi_" + std::to_string(pi_idx++);
+
+      odb::dbNet* net = odb::dbNet::create(block, name.c_str());
+      if (!net) {
+        std::ostringstream oss;
+        oss << "Failed to create PI net " << name;
+        throw std::runtime_error(oss.str());
       }
+
+      odb::dbBTerm* bt = odb::dbBTerm::create(net, name.c_str());
+      bt->setSigType(odb::dbSigType::SIGNAL);
+      bt->setIoType(odb::dbIoType::INPUT);
+
+      node_out_nets[idx].resize(1);
+      node_out_nets[idx][0] = net;
+
+      logger->report("\t{}", name);
+    });
+  }
+
+  // Gates: create instances + output nets (no inputs connected yet)
+  logger->report("gates");
+  ntk.foreach_gate([&](const Node& n) {
+    const auto idx = node_index(n);
+
+    CellMapping mapping = map_cell_from_standard_cell(ntk, n, logger);
+    odb::dbMaster* master = findMasterOrDie(lib, mapping.master_name);
+
+    std::string inst_name = "n_" + std::to_string(idx);
+    odb::dbInst* inst = odb::dbInst::create(block, master, inst_name.c_str());
+    if (!inst) {
+      std::ostringstream oss;
+      oss << "Failed to create dbInst " << inst_name
+          << " for master " << mapping.master_name;
+      throw std::runtime_error(oss.str());
+    }
+
+    auto out_mterms = getSignalOutputs(master);
+    const uint32_t num_cell_outputs = static_cast<uint32_t>(out_mterms.size());
+    const uint32_t num_node_outputs = ntk.num_outputs(n); // block_network API
+
+    if (num_node_outputs == 0) {
+      // Shouldn't happen for mapped logic; skip
+      return;
+    }
+
+    if (num_cell_outputs < num_node_outputs) {
+      std::ostringstream oss;
+      oss << "Cell " << mapping.master_name << " has only "
+          << num_cell_outputs << " signal outputs but node "
+          << idx << " has " << num_node_outputs << " outputs";
+      throw std::runtime_error(oss.str());
+    }
+
+    node_out_nets[idx].resize(num_node_outputs);
+
+    for (uint32_t out_pin_idx = 0; out_pin_idx < num_node_outputs; ++out_pin_idx) {
+      odb::dbMTerm* o_mterm = out_mterms[out_pin_idx];
+      const char*   pin_name = o_mterm->getName().c_str();
+
+      odb::dbITerm* o_iterm = inst->findITerm(pin_name);
+      if (!o_iterm) {
+        std::ostringstream oss;
+        oss << "Instance " << inst_name
+            << " has no OUTPUT ITerm \"" << pin_name << "\"";
+        throw std::runtime_error(oss.str());
+      }
+
+      std::string net_name =
+          "n_" + std::to_string(idx) + "_o" + std::to_string(out_pin_idx);
+
+      odb::dbNet* net = odb::dbNet::create(block, net_name.c_str());
+      if (!net) {
+        std::ostringstream oss;
+        oss << "Failed to create net " << net_name;
+        throw std::runtime_error(oss.str());
+      }
+
+      o_iterm->connect(net);
+      node_out_nets[idx][out_pin_idx] = net;
+    }
   });
+
+    ntk.foreach_gate([&](const Node& n) {
+    const auto idx = node_index(n);
+
+    CellMapping mapping = map_cell_from_standard_cell(ntk, n, logger);
+    std::string inst_name = "n_" + std::to_string(idx);
+    odb::dbInst* inst = block->findInst(inst_name.c_str());
+    if (!inst) {
+      std::ostringstream oss;
+      oss << "Internal error: instance " << inst_name << " not found";
+      throw std::runtime_error(oss.str());
+    }
+
+    uint32_t fanin_idx = 0;
+    ntk.foreach_fanin(n, [&](const Signal& f) {
+      if (fanin_idx >= mapping.input_pins.size()) {
+        std::ostringstream oss;
+        oss << "Not enough input pins in cell " << mapping.master_name
+            << " (node " << idx << "), fanins=" << fanin_idx
+            << " inputs=" << mapping.input_pins.size();
+        throw std::runtime_error(oss.str());
+      }
+
+      odb::dbNet* src_net = nullptr;
+      const Node src_node = ntk.get_node(f);
+
+      if (ntk.is_constant(src_node)) {
+        // constant node; complemented = 1
+        const bool value = ntk.is_complemented(f);
+        src_net = ensure_const_net(value);
+      } else {
+        const auto src_idx = node_index(src_node);
+        uint32_t out_pin_idx = 0;
+        if (ntk.is_multioutput(src_node)) {
+          out_pin_idx = ntk.get_output_pin(f);
+        }
+
+        if (src_idx >= node_out_nets.size() ||
+            out_pin_idx >= node_out_nets[src_idx].size() ||
+            node_out_nets[src_idx][out_pin_idx] == nullptr) {
+          std::ostringstream oss;
+          oss << "Missing driver net for fanin of node " << idx;
+          throw std::runtime_error(oss.str());
+        }
+        src_net = node_out_nets[src_idx][out_pin_idx];
+      }
+
+      const std::string& pin_name = mapping.input_pins[fanin_idx++];
+      odb::dbITerm* it = inst->findITerm(pin_name.c_str());
+      if (!it) {
+        std::ostringstream oss;
+        oss << "Master " << mapping.master_name
+            << " has no input ITerm \"" << pin_name << "\"";
+        throw std::runtime_error(oss.str());
+      }
+      it->connect(src_net);
+    });
+  });
+
+  // Primary Outputs: BTerms attached to driver nets
+  logger->report("primary outputs");
+  {
+    uint32_t po_idx = 0;
+    ntk.foreach_po([&](const Signal& f) {
+      odb::dbNet* src_net = nullptr;
+      const Node src_node = ntk.get_node(f);
+
+      if (ntk.is_constant(src_node)) {
+        const bool value = ntk.is_complemented(f);
+        src_net = ensure_const_net(value);
+      } else {
+        const auto idx = node_index(src_node);
+        uint32_t out_pin_idx = 0;
+        if (ntk.is_multioutput(src_node)) {
+          out_pin_idx = ntk.get_output_pin(f);
+        }
+
+        if (idx >= node_out_nets.size() ||
+            out_pin_idx >= node_out_nets[idx].size() ||
+            node_out_nets[idx][out_pin_idx] == nullptr) {
+          std::ostringstream oss;
+          oss << "Missing driver net for PO " << po_idx;
+          throw std::runtime_error(oss.str());
+        }
+        src_net = node_out_nets[idx][out_pin_idx];
+      }
+
+      std::string name = "po_" + std::to_string(po_idx++);
+      odb::dbBTerm* bt = odb::dbBTerm::create(src_net, name.c_str());
+      bt->setSigType(odb::dbSigType::SIGNAL);
+      bt->setIoType(odb::dbIoType::OUTPUT);
+    });
+  }
+
+  logger->report("import done");
 }
 
 void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_multioutput, bool verbose, char* workdir_name)
@@ -885,7 +1184,7 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
     auto code = lorina::read_genlib(std::string(genlib_file_name), mockturtle::genlib_reader(gates));
 
     if (code != lorina::return_code::success) {
-      logger_->report("Error reading geblib file");
+      logger_->report("Error reading genlib file");
       return;
     }
   }
@@ -915,8 +1214,13 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
   mapped_ntk.report_stats();
 
   mockturtle::write_verilog_with_cell(mapped_ntk, "mapped.v");
+
+  odb::dbLib *lib = *ord::OpenRoad::openRoad()->getDb()->getLibs().begin();
   
-  mockturtle_to_netlist(mapped_ntk, open_sta_);
+  import_block_network_to_db(open_sta_, mapped_ntk, lib, "aes", logger_);
+
+  // Notify OpenROAD
+  ord::OpenRoad::openRoad()->designCreated();
 }
 
 }  // namespace rmp

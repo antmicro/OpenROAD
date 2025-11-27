@@ -40,7 +40,7 @@ set_layer_rc -via V6 -resistance 8.20E-03
 set_layer_rc -via V7 -resistance 8.20E-03
 set_layer_rc -via V8 -resistance 6.30E-03
 
-repair_timing
+# repair_timing
 
 puts "-- Before --\n"
 report_cell_usage
