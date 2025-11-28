@@ -869,22 +869,29 @@ static void import_block_network_to_db(sta::dbSta *sta,
                                        const std::string& block_name,
                                        utl::Logger* logger)
 {
+  const int N = 1150;
   mockturtle::topo_view<BlockNtk> ntk{ntk_raw};
 
   odb::dbChip* chip = sta->db()->getChip();
 
   odb::dbBlock* block = chip->getBlock();
-  if (!block) {
-    block = odb::dbBlock::create(chip, block_name.c_str());
-  } else if (std::string(block->getName()) != block_name) {
-    block = odb::dbBlock::create(chip, block_name.c_str());
+
+  for (auto* inst : block->getInsts()) {
+    odb::dbInst::destroy(inst);
+  }
+  
+  for (auto* net : block->getNets()) {
+      odb::dbNet::destroy(net);
+  }
+  
+  for (auto* bterm : block->getBTerms()) {
+      odb::dbBTerm::destroy(bterm);
   }
 
   const auto num_nodes = ntk.size();
   std::vector<std::vector<odb::dbNet*>> node_out_nets(num_nodes);
 
   // Const nets (for constant fanins)
-  logger->report("const nets");
   odb::dbNet* const0_net = nullptr;
   odb::dbNet* const1_net = nullptr;
 
@@ -936,8 +943,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
       node_out_nets[idx].resize(1);
       node_out_nets[idx][0] = net;
 
-      logger->report("\t{}", name);
+      // logger->report("\t{}", name);
     });
+    logger->report("\tcount: {}", pi_idx);
   }
 
   // Gates: create instances + output nets (no inputs connected yet)
@@ -959,7 +967,7 @@ static void import_block_network_to_db(sta::dbSta *sta,
 
     auto out_mterms = getSignalOutputs(master);
     const uint32_t num_cell_outputs = static_cast<uint32_t>(out_mterms.size());
-    const uint32_t num_node_outputs = ntk.num_outputs(n); // block_network API
+    const uint32_t num_node_outputs = ntk.num_outputs(n);
 
     if (num_node_outputs == 0) {
       // Shouldn't happen for mapped logic; skip
@@ -976,11 +984,15 @@ static void import_block_network_to_db(sta::dbSta *sta,
 
     node_out_nets[idx].resize(num_node_outputs);
 
+    if (idx < N) {
+      logger->report("\t{} {} {} {}", inst_name, mapping.master_name, num_cell_outputs, num_node_outputs);
+    }
+
     for (uint32_t out_pin_idx = 0; out_pin_idx < num_node_outputs; ++out_pin_idx) {
       odb::dbMTerm* o_mterm = out_mterms[out_pin_idx];
-      const char*   pin_name = o_mterm->getName().c_str();
+      const std::string pin_name = o_mterm->getName();
 
-      odb::dbITerm* o_iterm = inst->findITerm(pin_name);
+      odb::dbITerm* o_iterm = inst->findITerm(pin_name.c_str());
       if (!o_iterm) {
         std::ostringstream oss;
         oss << "Instance " << inst_name
@@ -1000,10 +1012,14 @@ static void import_block_network_to_db(sta::dbSta *sta,
 
       o_iterm->connect(net);
       node_out_nets[idx][out_pin_idx] = net;
+
+      if (idx < N) {
+        logger->report("\t\t{} {}", pin_name, net_name);
+      }
     }
   });
 
-    ntk.foreach_gate([&](const Node& n) {
+  ntk.foreach_gate([&](const Node& n) {
     const auto idx = node_index(n);
 
     CellMapping mapping = map_cell_from_standard_cell(ntk, n, logger);
@@ -1013,6 +1029,10 @@ static void import_block_network_to_db(sta::dbSta *sta,
       std::ostringstream oss;
       oss << "Internal error: instance " << inst_name << " not found";
       throw std::runtime_error(oss.str());
+    }
+
+    if (idx < N) {
+      logger->report("\t{}", inst_name);
     }
 
     uint32_t fanin_idx = 0;
@@ -1047,6 +1067,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
           throw std::runtime_error(oss.str());
         }
         src_net = node_out_nets[src_idx][out_pin_idx];
+        if (idx < N) {
+          logger->report("\t\t{} -> {}", src_idx, out_pin_idx);
+        }
       }
 
       const std::string& pin_name = mapping.input_pins[fanin_idx++];
@@ -1058,6 +1081,10 @@ static void import_block_network_to_db(sta::dbSta *sta,
         throw std::runtime_error(oss.str());
       }
       it->connect(src_net);
+
+      if (idx < N) {
+        logger->report("\t\t{} {}", pin_name, src_node);
+      }
     });
   });
 
@@ -1093,7 +1120,10 @@ static void import_block_network_to_db(sta::dbSta *sta,
       odb::dbBTerm* bt = odb::dbBTerm::create(src_net, name.c_str());
       bt->setSigType(odb::dbSigType::SIGNAL);
       bt->setIoType(odb::dbIoType::OUTPUT);
+
+      // logger->report("\t{}", name);
     });
+    logger->report("\tcount: {}", po_idx);
   }
 
   logger->report("import done");
