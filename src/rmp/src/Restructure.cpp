@@ -31,6 +31,7 @@
 #include "cut/logic_extractor.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
+#include "sta/FuncExpr.hh"
 #define FMT_CONSTEVAL
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
@@ -1144,13 +1145,15 @@ static void import_block_network_to_db(sta::dbSta* sta,
   logger->report("import done");
 }
 
+template <size_t MaxInputs>
 static auto exportToMockturtle(utl::Logger* logger,
                                sta::dbNetwork* const network)
 {
   logger->report("Exporting to mockturtle");
   std::vector<mockturtle::gate> gates;
 
-  sta::LibertyLibraryIterator* lib_iter = network->libertyLibraryIterator();
+  auto lib_iter = std::unique_ptr<sta::LibertyLibraryIterator>(
+      network->libertyLibraryIterator());
   while (lib_iter->hasNext()) {
     sta::LibertyLibrary* lib = lib_iter->next();
     sta::LibertyCellIterator cell_iter(lib);
@@ -1158,29 +1161,62 @@ static auto exportToMockturtle(utl::Logger* logger,
       auto cell = cell_iter.next();
       if (cell->dontUse()) {
         logger->warn(
-            RMP, 11, "Skipping gate cell {}. Reason: dontUse", cell->name());
+            RMP, 110, "Skipping gate cell {}. Reason: dontUse", cell->name());
         continue;
       } else if (cell->isMemory()) {
         logger->warn(
-            RMP, 12, "Skipping gate cell {}. Reason: isMemory", cell->name());
+            RMP, 111, "Skipping gate cell {}. Reason: isMemory", cell->name());
+        continue;
+      } else if (cell->portCount() > MaxInputs) {
+        logger->warn(
+            RMP, 112, "Skipping gate cell {}. Reason: portCount", cell->name());
         continue;
       }
-      logger->info(RMP, 13, "Considering gate cell {}", cell->name());
 
-      mockturtle::gate gate;
+      logger->info(RMP, 113, "Considering cell {}", cell->name());
+
+      std::vector<mockturtle::pin> pp;
+      pp.reserve(cell->portCount());
+      std::vector<std::string> pin_names;
+      pin_names.reserve(cell->portCount());
+
       sta::LibertyCellPortIterator port_iter(cell);
+      std::unordered_map<std::string, std::string> pins_formulas;
       while (port_iter.hasNext()) {
         auto port = port_iter.next();
-        logger->info(RMP, 14, "Considering port {}", port->name());
-
-        mockturtle::pin pin;
-        gate.pins.emplace_back(pin);
+        if (port->direction()->isAnyInput()) {
+          assert(!port->function());
+          pp.emplace_back(mockturtle::pin{
+              port->name(), mockturtle::phase_type(0), 0, 0, 0, 0, 0, 0});
+          pin_names.emplace_back(port->name());
+        } else if (auto expr = port->function()) {
+          pins_formulas.emplace(port->name(), expr->to_string());
+        }
       }
 
-      gates.emplace_back(gate);
+      for (const auto& [pin, formula] : pins_formulas) {
+        const uint32_t num_vars = pp.size();
+        kitty::dynamic_truth_table tt{num_vars};
+
+        logger->info(RMP, 115, "Parsing formula {}", formula);
+        if (!kitty::create_from_formula(tt, formula, pin_names)) {
+          /* formula error, skip gate */
+          logger->warn(RMP, 116, "Failed parsing formula {}", formula);
+          continue;
+        }
+
+        gates.emplace_back(
+            mockturtle::gate{.id = static_cast<unsigned int>(gates.size()),
+                             .name = cell->name(),
+                             .expression = formula,
+                             .num_vars = num_vars,
+                             .function = tt,
+                             .area = static_cast<float>(cell->area()),
+                             .pins = pp,
+                             .output_name = pin});
+      }
     }
   }
-  delete lib_iter;
   return gates;
 }
 
@@ -1271,6 +1307,9 @@ void Restructure::emap(sta::Corner* corner,
 
   logger_->report("Reading genlib file {}", genlib_file_name);
   std::vector<mockturtle::gate> gates;
+  // FIXME make this an optional argument
+  genlib_file_name = nullptr;
+  static constexpr unsigned MaxInputs = 15u;
   if (genlib_file_name) {
     {
       auto code = lorina::read_genlib(std::string(genlib_file_name),
@@ -1282,10 +1321,9 @@ void Restructure::emap(sta::Corner* corner,
       }
     }
   } else {
-    gates = exportToMockturtle(logger_, open_sta_->getDbNetwork());
+    gates = exportToMockturtle<MaxInputs>(logger_, open_sta_->getDbNetwork());
   }
 
-  static constexpr unsigned MaxInputs = 9u;
   auto tech_lib = mockturtle::tech_library<MaxInputs>{gates};
 
   logger_->report("Running emap");
