@@ -1194,6 +1194,7 @@ static auto exportToMockturtle(utl::Logger* logger,
         }
       }
 
+      assert(pp.size() == pin_names.size());
       for (const auto& [pin, formula] : pins_formulas) {
         const uint32_t num_vars = pp.size();
         kitty::dynamic_truth_table tt{num_vars};
@@ -1324,7 +1325,14 @@ void Restructure::emap(sta::Corner* corner,
     gates = exportToMockturtle<MaxInputs>(logger_, open_sta_->getDbNetwork());
   }
 
-  auto tech_lib = mockturtle::tech_library<MaxInputs>{gates};
+  mockturtle::tech_library_params params{
+      .load_large_gates = true,
+      .load_multioutput_gates = true,
+      .load_multioutput_gates_single = true,
+      .ignore_symmetries = true,
+      .very_verbose = true /* FIXME test only */};
+
+  auto tech_lib = mockturtle::tech_library<MaxInputs>{gates, params};
 
   logger_->report("Running emap");
   mockturtle::cell_view<mockturtle::block_network> mapped_ntk
