@@ -93,7 +93,11 @@ class Restructure
   void setTieLoPort(sta::LibertyPort* loport);
   void setTieHiPort(sta::LibertyPort* hiport);
 
-  void emap(sta::Corner* corner, char *genlib_file_name, bool map_multioutput, bool verbose, char *workdir_name);
+  void emap(sta::Corner* corner,
+            char* genlib_file_name,
+            bool map_multioutput,
+            bool verbose,
+            char* workdir_name);
 
  private:
   void deleteComponents();

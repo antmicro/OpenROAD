@@ -26,20 +26,32 @@
 #include "base/main/abcapis.h"
 #include "cut/abc_init.h"
 #include "cut/abc_library_factory.h"
+#include "cut/blif.h"
 #include "cut/logic_cut.h"
 #include "cut/logic_extractor.h"
-#include "cut/blif.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
+#define FMT_CONSTEVAL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#pragma clang diagnostic ignored "-Wbitfield-constant-conversion"
+#pragma clang diagnostic ignored "-Wreorder-ctor"
+#pragma clang diagnostic ignored "-Wparentheses"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wdeprecated-builtins"
+#pragma clang diagnostic ignored "-Wreturn-type"
 #include "lorina/blif.hpp"
 #include "lorina/genlib.hpp"
 #include "mockturtle/algorithms/emap.hpp"
-#include "mockturtle/networks/block.hpp"
+#include "mockturtle/io/genlib_reader.hpp"
+#include "mockturtle/io/write_verilog.hpp"
 #include "mockturtle/networks/aig.hpp"
+#include "mockturtle/networks/block.hpp"
 #include "mockturtle/views/cell_view.hpp"
 #include "mockturtle/views/topo_view.hpp"
-#include <mockturtle/io/genlib_reader.hpp>
-#include <mockturtle/io/write_verilog.hpp>
+#pragma clang diagnostic pop
+#undef FMT_CONSEVAL
 #include "odb/db.h"
 #include "ord/OpenRoad.hh"
 #include "rsz/Resizer.hh"
@@ -57,9 +69,9 @@
 #include "sta/Sdc.hh"
 #include "sta/Search.hh"
 #include "sta/Sta.hh"
+#include "utils.h"
 #include "utl/Logger.h"
 #include "zero_slack_strategy.h"
-#include "utils.h"
 
 namespace abc {
 extern void Abc_FrameSetLibGen(void* pLib);
@@ -758,10 +770,10 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
     auto s1 = node_to_sig.at(pF1);
 
     // apply input polarities (complemented edges)
-    if ( Aig_ObjFaninC0(pObj) ) {
+    if (Aig_ObjFaninC0(pObj)) {
       s0 = ntk.create_not(s0);
     }
-    if ( Aig_ObjFaninC1(pObj) ) {
+    if (Aig_ObjFaninC1(pObj)) {
       s1 = ntk.create_not(s1);
     }
 
@@ -783,20 +795,18 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
   return ntk;
 }
 
-
 using BlockNtk = mockturtle::cell_view<mockturtle::block_network>;
-using Node     = BlockNtk::node;
-using Signal   = BlockNtk::signal;
+using Node = BlockNtk::node;
+using Signal = BlockNtk::signal;
 
 // Mapping info for one cell instance
 struct CellMapping
 {
-  std::string              master_name;  // dbMaster / Liberty cell name
-  std::vector<std::string> input_pins;   // in fanin order (from gate::pins)
+  std::string master_name;              // dbMaster / Liberty cell name
+  std::vector<std::string> input_pins;  // in fanin order (from gate::pins)
 };
 
-static odb::dbMaster* findMasterOrDie(odb::dbLib* lib,
-                                      const std::string& name)
+static odb::dbMaster* findMasterOrDie(odb::dbLib* lib, const std::string& name)
 {
   if (!lib) {
     throw std::runtime_error("findMasterOrDie: dbLib is null");
@@ -816,7 +826,7 @@ static std::vector<odb::dbMTerm*> getSignalOutputs(odb::dbMaster* master)
   std::vector<odb::dbMTerm*> outs;
 
   for (auto* mterm : master->getMTerms()) {
-    auto io  = mterm->getIoType();
+    auto io = mterm->getIoType();
     auto sig = mterm->getSigType();
 
     if (sig == odb::dbSigType::POWER || sig == odb::dbSigType::GROUND) {
@@ -838,13 +848,13 @@ static std::vector<odb::dbMTerm*> getSignalOutputs(odb::dbMaster* master)
 }
 
 static CellMapping map_cell_from_standard_cell(const BlockNtk& ntk,
-                                               const Node&     n,
+                                               const Node& n,
                                                utl::Logger* logger)
 {
   CellMapping m;
 
   const auto& sc = ntk.get_cell(n);  // cell_view API
-  m.master_name  = sc.name;          // must match Liberty/LEF cell name
+  m.master_name = sc.name;           // must match Liberty/LEF cell name
 
   // logger->report("mapping cell {}", sc.name);
 
@@ -863,7 +873,7 @@ static CellMapping map_cell_from_standard_cell(const BlockNtk& ntk,
   return m;
 }
 
-static void import_block_network_to_db(sta::dbSta *sta,
+static void import_block_network_to_db(sta::dbSta* sta,
                                        const BlockNtk& ntk_raw,
                                        odb::dbLib* lib,
                                        const std::string& block_name,
@@ -879,13 +889,13 @@ static void import_block_network_to_db(sta::dbSta *sta,
   for (auto* inst : block->getInsts()) {
     odb::dbInst::destroy(inst);
   }
-  
+
   for (auto* net : block->getNets()) {
-      odb::dbNet::destroy(net);
+    odb::dbNet::destroy(net);
   }
-  
+
   for (auto* bterm : block->getBTerms()) {
-      odb::dbBTerm::destroy(bterm);
+    odb::dbBTerm::destroy(bterm);
   }
 
   const auto num_nodes = ntk.size();
@@ -897,7 +907,7 @@ static void import_block_network_to_db(sta::dbSta *sta,
 
   auto ensure_const_net = [&](bool value) -> odb::dbNet* {
     const char* net_name = value ? "CONST1" : "CONST0";
-    odb::dbNet*& cache   = value ? const1_net : const0_net;
+    odb::dbNet*& cache = value ? const1_net : const0_net;
 
     if (cache) {
       return cache;
@@ -960,8 +970,8 @@ static void import_block_network_to_db(sta::dbSta *sta,
     odb::dbInst* inst = odb::dbInst::create(block, master, inst_name.c_str());
     if (!inst) {
       std::ostringstream oss;
-      oss << "Failed to create dbInst " << inst_name
-          << " for master " << mapping.master_name;
+      oss << "Failed to create dbInst " << inst_name << " for master "
+          << mapping.master_name;
       throw std::runtime_error(oss.str());
     }
 
@@ -976,32 +986,37 @@ static void import_block_network_to_db(sta::dbSta *sta,
 
     if (num_cell_outputs < num_node_outputs) {
       std::ostringstream oss;
-      oss << "Cell " << mapping.master_name << " has only "
-          << num_cell_outputs << " signal outputs but node "
-          << idx << " has " << num_node_outputs << " outputs";
+      oss << "Cell " << mapping.master_name << " has only " << num_cell_outputs
+          << " signal outputs but node " << idx << " has " << num_node_outputs
+          << " outputs";
       throw std::runtime_error(oss.str());
     }
 
     node_out_nets[idx].resize(num_node_outputs);
 
     if (idx < N) {
-      logger->report("\t{} {} {} {}", inst_name, mapping.master_name, num_cell_outputs, num_node_outputs);
+      logger->report("\t{} {} {} {}",
+                     inst_name,
+                     mapping.master_name,
+                     num_cell_outputs,
+                     num_node_outputs);
     }
 
-    for (uint32_t out_pin_idx = 0; out_pin_idx < num_node_outputs; ++out_pin_idx) {
+    for (uint32_t out_pin_idx = 0; out_pin_idx < num_node_outputs;
+         ++out_pin_idx) {
       odb::dbMTerm* o_mterm = out_mterms[out_pin_idx];
       const std::string pin_name = o_mterm->getName();
 
       odb::dbITerm* o_iterm = inst->findITerm(pin_name.c_str());
       if (!o_iterm) {
         std::ostringstream oss;
-        oss << "Instance " << inst_name
-            << " has no OUTPUT ITerm \"" << pin_name << "\"";
+        oss << "Instance " << inst_name << " has no OUTPUT ITerm \"" << pin_name
+            << "\"";
         throw std::runtime_error(oss.str());
       }
 
-      std::string net_name =
-          "n_" + std::to_string(idx) + "_o" + std::to_string(out_pin_idx);
+      std::string net_name
+          = "n_" + std::to_string(idx) + "_o" + std::to_string(out_pin_idx);
 
       odb::dbNet* net = odb::dbNet::create(block, net_name.c_str());
       if (!net) {
@@ -1059,9 +1074,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
           out_pin_idx = ntk.get_output_pin(f);
         }
 
-        if (src_idx >= node_out_nets.size() ||
-            out_pin_idx >= node_out_nets[src_idx].size() ||
-            node_out_nets[src_idx][out_pin_idx] == nullptr) {
+        if (src_idx >= node_out_nets.size()
+            || out_pin_idx >= node_out_nets[src_idx].size()
+            || node_out_nets[src_idx][out_pin_idx] == nullptr) {
           std::ostringstream oss;
           oss << "Missing driver net for fanin of node " << idx;
           throw std::runtime_error(oss.str());
@@ -1076,8 +1091,8 @@ static void import_block_network_to_db(sta::dbSta *sta,
       odb::dbITerm* it = inst->findITerm(pin_name.c_str());
       if (!it) {
         std::ostringstream oss;
-        oss << "Master " << mapping.master_name
-            << " has no input ITerm \"" << pin_name << "\"";
+        oss << "Master " << mapping.master_name << " has no input ITerm \""
+            << pin_name << "\"";
         throw std::runtime_error(oss.str());
       }
       it->connect(src_net);
@@ -1106,9 +1121,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
           out_pin_idx = ntk.get_output_pin(f);
         }
 
-        if (idx >= node_out_nets.size() ||
-            out_pin_idx >= node_out_nets[idx].size() ||
-            node_out_nets[idx][out_pin_idx] == nullptr) {
+        if (idx >= node_out_nets.size()
+            || out_pin_idx >= node_out_nets[idx].size()
+            || node_out_nets[idx][out_pin_idx] == nullptr) {
           std::ostringstream oss;
           oss << "Missing driver net for PO " << po_idx;
           throw std::runtime_error(oss.str());
@@ -1160,13 +1175,12 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
   open_sta_->search()->arrivalsInvalid();
   open_sta_->search()->endpointsInvalid();
 
-  
   cut::LogicExtractorFactory logic_extractor(open_sta_, logger_);
   for (sta::Vertex* endpoint : *open_sta_->endpoints()) {
     logic_extractor.AppendEndpoint(endpoint);
   }
 
-  Aig_Man_t *aig;
+  Aig_Man_t* aig;
 
   cut::AbcLibraryFactory factory(logger_);
   factory.AddDbSta(open_sta_);
@@ -1185,14 +1199,15 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
       &abc::Abc_NtkDelete);
 
   {
-    auto library = static_cast<abc::Mio_Library_t*>(mapped_abc_network->pManFunc);
+    auto library
+        = static_cast<abc::Mio_Library_t*>(mapped_abc_network->pManFunc);
 
     // Install library for NtkMap
     abc::Abc_FrameSetLibGen(library);
 
     logger_->report("Mapped ABC network has {} nodes and {} POs.",
-               abc::Abc_NtkNodeNum(current_network.get()),
-               abc::Abc_NtkPoNum(current_network.get()));
+                    abc::Abc_NtkNodeNum(current_network.get()),
+                    abc::Abc_NtkPoNum(current_network.get()));
 
     current_network->pManFunc = library;
 
@@ -1245,8 +1260,8 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
 
   mockturtle::write_verilog_with_cell(mapped_ntk, "mapped.v");
 
-  odb::dbLib *lib = *ord::OpenRoad::openRoad()->getDb()->getLibs().begin();
-  
+  odb::dbLib* lib = *ord::OpenRoad::openRoad()->getDb()->getLibs().begin();
+
   import_block_network_to_db(open_sta_, mapped_ntk, lib, "aes", logger_);
 
   // Notify OpenROAD
