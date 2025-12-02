@@ -1144,7 +1144,51 @@ static void import_block_network_to_db(sta::dbSta* sta,
   logger->report("import done");
 }
 
-void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_multioutput, bool verbose, char* workdir_name)
+static auto exportToMockturtle(utl::Logger* logger,
+                               sta::dbNetwork* const network)
+{
+  logger->report("Exporting to mockturtle");
+  std::vector<mockturtle::gate> gates;
+
+  sta::LibertyLibraryIterator* lib_iter = network->libertyLibraryIterator();
+  while (lib_iter->hasNext()) {
+    sta::LibertyLibrary* lib = lib_iter->next();
+    sta::LibertyCellIterator cell_iter(lib);
+    while (cell_iter.hasNext()) {
+      auto cell = cell_iter.next();
+      if (cell->dontUse()) {
+        logger->warn(
+            RMP, 11, "Skipping gate cell {}. Reason: dontUse", cell->name());
+        continue;
+      } else if (cell->isMemory()) {
+        logger->warn(
+            RMP, 12, "Skipping gate cell {}. Reason: isMemory", cell->name());
+        continue;
+      }
+      logger->info(RMP, 13, "Considering gate cell {}", cell->name());
+
+      mockturtle::gate gate;
+      sta::LibertyCellPortIterator port_iter(cell);
+      while (port_iter.hasNext()) {
+        auto port = port_iter.next();
+        logger->info(RMP, 14, "Considering port {}", port->name());
+
+        mockturtle::pin pin;
+        gate.pins.emplace_back(pin);
+      }
+
+      gates.emplace_back(gate);
+    }
+  }
+  delete lib_iter;
+  return gates;
+}
+
+void Restructure::emap(sta::Corner* corner,
+                       char* genlib_file_name,
+                       bool map_multioutput,
+                       bool verbose,
+                       char* workdir_name)
 {
   mockturtle::emap_params ps;
 
@@ -1223,21 +1267,26 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
 
   mockturtle::aig_network ntk = abc_to_mockturtle_aig(aig);
 
+  mockturtle::emap_stats st;
+
   logger_->report("Reading genlib file {}", genlib_file_name);
   std::vector<mockturtle::gate> gates;
-  {
-    auto code = lorina::read_genlib(std::string(genlib_file_name), mockturtle::genlib_reader(gates));
+  if (genlib_file_name) {
+    {
+      auto code = lorina::read_genlib(std::string(genlib_file_name),
+                                      mockturtle::genlib_reader(gates));
 
-    if (code != lorina::return_code::success) {
-      logger_->report("Error reading genlib file");
-      return;
+      if (code != lorina::return_code::success) {
+        logger_->report("Error reading genlib file");
+        return;
+      }
     }
+  } else {
+    gates = exportToMockturtle(logger_, open_sta_->getDbNetwork());
   }
 
   static constexpr unsigned MaxInputs = 9u;
-  mockturtle::tech_library<MaxInputs> tech_lib(gates);
-
-  mockturtle::emap_stats st;
+  auto tech_lib = mockturtle::tech_library<MaxInputs>{gates};
 
   logger_->report("Running emap");
   mockturtle::cell_view<mockturtle::block_network> mapped_ntk
