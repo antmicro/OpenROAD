@@ -42,6 +42,8 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic ignored "-Wdeprecated-builtins"
 #pragma clang diagnostic ignored "-Wreturn-type"
+// TODO
+// #include <mockturtle/mockturtle.hpp>
 #include "lorina/blif.hpp"
 #include "lorina/genlib.hpp"
 #include "mockturtle/algorithms/emap.hpp"
@@ -1157,6 +1159,7 @@ static auto exportToMockturtle(utl::Logger* logger,
   while (lib_iter->hasNext()) {
     sta::LibertyLibrary* lib = lib_iter->next();
     sta::LibertyCellIterator cell_iter(lib);
+    logger->info(RMP, 109, "Reading library {}", lib->name());
     while (cell_iter.hasNext()) {
       auto cell = cell_iter.next();
       if (cell->dontUse()) {
@@ -1186,9 +1189,12 @@ static auto exportToMockturtle(utl::Logger* logger,
         auto port = port_iter.next();
         if (port->direction()->isAnyInput()) {
           assert(!port->function());
-          pp.emplace_back(mockturtle::pin{
-              port->name(), mockturtle::phase_type(0), 0, 0, 0, 0, 0, 0});
-          pin_names.emplace_back(port->name());
+          if (std::find(pin_names.begin(), pin_names.end(), port->name())
+              == pin_names.end()) {
+            pp.emplace_back(mockturtle::pin{
+                port->name(), mockturtle::phase_type(0), 0, 0, 0, 0, 0, 0});
+            pin_names.emplace_back(port->name());
+          }
         } else if (auto expr = port->function()) {
           pins_formulas.emplace(port->name(), expr->to_string());
         }
@@ -1217,6 +1223,8 @@ static auto exportToMockturtle(utl::Logger* logger,
                              .output_name = pin});
       }
     }
+    // FIXME support slow/fast libraries
+    break;
   }
   return gates;
 }
@@ -1328,11 +1336,10 @@ void Restructure::emap(sta::Corner* corner,
   mockturtle::tech_library_params params{
       .load_large_gates = true,
       .load_multioutput_gates = true,
-      .load_multioutput_gates_single = true,
-      .ignore_symmetries = true,
-      .very_verbose = true /* FIXME test only */};
+      .load_multioutput_gates_single = false,
+      .very_verbose = false /* FIXME test only */};
 
-  auto tech_lib = mockturtle::tech_library<MaxInputs>{gates, params};
+  mockturtle::tech_library<MaxInputs> tech_lib(gates, params);
 
   logger_->report("Running emap");
   mockturtle::cell_view<mockturtle::block_network> mapped_ntk
