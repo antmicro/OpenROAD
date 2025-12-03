@@ -844,7 +844,7 @@ static CellMapping map_cell_from_standard_cell(const BlockNtk& ntk,
   CellMapping m;
 
   const auto& sc = ntk.get_cell(n);  // cell_view API
-  m.master_name  = sc.name;          // must match Liberty/LEF cell name
+  m.master_name = sc.name;          // must match Liberty/LEF cell name
 
   // logger->report("mapping cell {}", sc.name);
 
@@ -866,28 +866,59 @@ static CellMapping map_cell_from_standard_cell(const BlockNtk& ntk,
 static void import_block_network_to_db(sta::dbSta *sta,
                                        const BlockNtk& ntk_raw,
                                        odb::dbLib* lib,
-                                       const std::string& block_name,
+                                       cut::LogicCut& cut,
                                        utl::Logger* logger)
 {
-  const int N = 1150;
+  const int N = 1300;
   mockturtle::topo_view<BlockNtk> ntk{ntk_raw};
 
   odb::dbChip* chip = sta->db()->getChip();
 
   odb::dbBlock* block = chip->getBlock();
-
-  for (auto* inst : block->getInsts()) {
-    odb::dbInst::destroy(inst);
-  }
   
-  for (auto* net : block->getNets()) {
-      odb::dbNet::destroy(net);
+  // copied from logic_cut.cpp:512 DeleteExistingLogicCut
+  // Delete nets that only belong to the cut set.
+  sta::NetSet nets_to_be_deleted(sta->getDbNetwork());
+  std::unordered_set<sta::Net*> primary_input_or_output_nets;
+
+  for (sta::Net* net : cut.primary_inputs()) {
+    primary_input_or_output_nets.insert(net);
   }
-  
-  for (auto* bterm : block->getBTerms()) {
-      odb::dbBTerm::destroy(bterm);
+  for (sta::Net* net : cut.primary_outputs()) {
+    primary_input_or_output_nets.insert(net);
   }
 
+  for (const sta::Instance* instance : cut.cut_instances()) {
+    auto pin_iterator = std::unique_ptr<sta::InstancePinIterator>(
+        sta->getDbNetwork()->pinIterator(instance));
+    while (pin_iterator->hasNext()) {
+      sta::Pin* pin = pin_iterator->next();
+      sta::Net* connected_net = sta->getDbNetwork()->net(pin);
+      if (connected_net == nullptr) {
+        // This net is not connected to anything, so we cannot delete it.
+        // This can happen if you have an unconnected output port.
+        // For example one of Sky130's tie cell has both high and low outputs
+        // and only one is connected to a net.
+        continue;
+      }
+      // If pin isn't a primary input or output add to deleted list. The only
+      // way this can happen is if a net is only used within the cutset, and
+      // in that case we want to delete it.
+      if (primary_input_or_output_nets.find(connected_net)
+          == primary_input_or_output_nets.end()) {
+        nets_to_be_deleted.insert(connected_net);
+      }
+    }
+  }
+  for (const sta::Instance* instance : cut.cut_instances()) {
+    sta->getDbNetwork()->deleteInstance(const_cast<sta::Instance*>(instance));
+  }
+
+  for (const sta::Net* net : nets_to_be_deleted) {
+    sta->getDbNetwork()->deleteNet(const_cast<sta::Net*>(net));
+  }
+
+  // Add mapped network into design
   const auto num_nodes = ntk.size();
   std::vector<std::vector<odb::dbNet*>> node_out_nets(num_nodes);
 
@@ -1031,9 +1062,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
       throw std::runtime_error(oss.str());
     }
 
-    if (idx < N) {
-      logger->report("\t{}", inst_name);
-    }
+    // if (idx < N) {
+    //   logger->report("\t{}", inst_name);
+    // }
 
     uint32_t fanin_idx = 0;
     ntk.foreach_fanin(n, [&](const Signal& f) {
@@ -1067,9 +1098,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
           throw std::runtime_error(oss.str());
         }
         src_net = node_out_nets[src_idx][out_pin_idx];
-        if (idx < N) {
-          logger->report("\t\t{} -> {}", src_idx, out_pin_idx);
-        }
+        // if (idx < N) {
+        //   logger->report("\t\t{} -> {}", src_idx, out_pin_idx);
+        // }
       }
 
       const std::string& pin_name = mapping.input_pins[fanin_idx++];
@@ -1082,9 +1113,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
       }
       it->connect(src_net);
 
-      if (idx < N) {
-        logger->report("\t\t{} {}", pin_name, src_node);
-      }
+      // if (idx < N) {
+      //   logger->report("\t\t{} {}", pin_name, src_node);
+      // }
     });
   });
 
@@ -1125,6 +1156,47 @@ static void import_block_network_to_db(sta::dbSta *sta,
     });
     logger->report("\tcount: {}", po_idx);
   }
+
+  // TODO: Connect existing and mapped instances
+
+  // print ntk elements (for debugging)
+  mockturtle::topo_view<BlockNtk> ntk_topo{ntk};
+
+  logger->report("Mapped ntk nodes");
+  ntk_topo.foreach_node([&](const Node& n) {
+    CellMapping mapping = map_cell_from_standard_cell(ntk, n, logger);
+
+    logger->report("\tNode: {}, name: {}", n, mapping.master_name);
+    logger->report("\tInputs:");
+    for (const auto & input_pin : mapping.input_pins) {
+      logger->report("\t\t{}", input_pin);
+    }
+    ntk_topo.foreach_fanin(n, [&](const Signal &f) {
+      const Node src_node = ntk_topo.get_node(f);
+      const auto output_pin = ntk_topo.get_output_pin(f);
+      CellMapping mapping = map_cell_from_standard_cell(ntk, src_node, logger);
+
+      logger->report("\t\t\tfanin {} {}.{}", src_node, mapping.master_name, output_pin);
+    });
+  });
+
+  logger->report("Combinational inputs");
+  ntk_topo.foreach_ci([&](const Signal &f) {
+    const Node src_node = ntk_topo.get_node(f);
+    const auto output_pin = ntk_topo.get_output_pin(f);
+    CellMapping mapping = map_cell_from_standard_cell(ntk, src_node, logger);
+
+    logger->report("\t{} {}.{}", src_node, mapping.master_name, output_pin);
+  });
+
+  logger->report("Combinational outputs");
+  ntk_topo.foreach_co([&](const Signal &f) {
+    const Node src_node = ntk_topo.get_node(f);
+    const auto output_pin = ntk_topo.get_output_pin(f);
+    CellMapping mapping = map_cell_from_standard_cell(ntk, src_node, logger);
+
+    logger->report("\t{} {}.{}", src_node, mapping.master_name, output_pin);
+  });
 
   logger->report("import done");
 }
@@ -1190,8 +1262,9 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
     // Install library for NtkMap
     abc::Abc_FrameSetLibGen(library);
 
-    logger_->report("Mapped ABC network has {} nodes and {} POs.",
+    logger_->report("Mapped ABC network has {} nodes, {} PIs, {} POs.",
                abc::Abc_NtkNodeNum(current_network.get()),
+               abc::Abc_NtkPiNum(current_network.get()),
                abc::Abc_NtkPoNum(current_network.get()));
 
     current_network->pManFunc = library;
@@ -1207,6 +1280,24 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
   }
 
   mockturtle::aig_network ntk = abc_to_mockturtle_aig(aig);
+
+  logger_->report("ntk nodes");
+  ntk.foreach_node([&](const mockturtle::aig_network::node& n) {
+    logger_->report("\tNode: {}", n);
+    ntk.foreach_fanin(n, [&](const mockturtle::aig_network::signal &f) {
+      const Node src_node = ntk.get_node(f);
+
+      logger_->report("\t\tfanin {} {} {}", src_node, f.index, f.complement);
+    });
+  });
+
+
+  logger_->report("Combinational outputs");
+  ntk.foreach_co([&](const mockturtle::aig_network::signal &f) {
+    const Node src_node = ntk.get_node(f);
+
+    logger_->report("\t{}", src_node);
+  });
 
   logger_->report("Reading genlib file {}", genlib_file_name);
   std::vector<mockturtle::gate> gates;
@@ -1246,8 +1337,8 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
   mockturtle::write_verilog_with_cell(mapped_ntk, "mapped.v");
 
   odb::dbLib *lib = *ord::OpenRoad::openRoad()->getDb()->getLibs().begin();
-  
-  import_block_network_to_db(open_sta_, mapped_ntk, lib, "aes", logger_);
+
+  import_block_network_to_db(open_sta_, mapped_ntk, lib, cut, logger_);
 
   // Notify OpenROAD
   ord::OpenRoad::openRoad()->designCreated();
