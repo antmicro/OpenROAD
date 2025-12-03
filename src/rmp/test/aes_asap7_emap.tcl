@@ -14,8 +14,10 @@ read_liberty -corner fast ./asap7/asap7sc7p5t_SIMPLE_RVT_FF_nldm_211120.lib.gz
 
 read_lef ./asap7/asap7_tech_1x_201209.lef
 read_lef ./asap7/asap7sc7p5t_28_R_1x_220121a.lef
-read_verilog ./aes_asap7.v
-link_design aes
+# read_verilog ./aes_asap7.v
+# link_design aes
+read_verilog ./sample.v
+link_design sample
 read_sdc ./aes_asap7.sdc
 
 set_layer_rc -layer M1 -resistance 7.04175E-02 -capacitance 1e-10
@@ -56,7 +58,11 @@ emap -corner fast \
 
 read_sdc ./aes_asap7.sdc
 
-repair_timing
+# write_verilog ./aes_asap7_emap.v
+write_verilog ./sample_emap.v
+
+# estimate_parasitics -placement
+# repair_timing
 
 report_cell_usage
 report_timing_histogram
@@ -64,3 +70,4 @@ report_cell_usage
 report_checks
 report_wns
 report_tns
+
