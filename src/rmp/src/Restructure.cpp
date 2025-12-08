@@ -9,6 +9,7 @@
 
 #include <cstring>
 #include <ctime>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -38,8 +39,10 @@
 #include "mockturtle/networks/aig.hpp"
 #include "mockturtle/views/cell_view.hpp"
 #include "mockturtle/views/topo_view.hpp"
+#include "mockturtle/views/names_view.hpp"
 #include <mockturtle/io/genlib_reader.hpp>
 #include <mockturtle/io/write_verilog.hpp>
+#include <mockturtle/utils/name_utils.hpp>
 #include "odb/db.h"
 #include "ord/OpenRoad.hh"
 #include "rsz/Resizer.hh"
@@ -725,9 +728,9 @@ bool Restructure::readAbcLog(std::string abc_file_name,
   return status;
 }
 
-static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
+static mockturtle::names_view<mockturtle::aig_network> abc_to_mockturtle_aig(Abc_Ntk_t *pNtk, Aig_Man_t* pMan)
 {
-  using aig_ntk = mockturtle::aig_network;
+  using aig_ntk = mockturtle::names_view<mockturtle::aig_network>;
   aig_ntk ntk;
 
   // Map ABC nodes to mockturtle signals
@@ -743,7 +746,8 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
 
   Aig_ManForEachCi(pMan, pObj, i)
   {
-    auto s = ntk.create_pi();
+    auto pCi = Abc_NtkPi(pNtk, i);
+    auto s = ntk.create_pi(abc::Abc_ObjName(pCi));
     node_to_sig[pObj] = s;
   }
 
@@ -772,12 +776,13 @@ static mockturtle::aig_network abc_to_mockturtle_aig(Aig_Man_t* pMan)
   // Primary outputs (COs)
   Aig_ManForEachCo(pMan, pObj, i)
   {
+    auto pCo = Abc_NtkPo(pNtk, i);
     Aig_Obj_t* pF = Aig_ObjFanin0(pObj);
     auto s = node_to_sig.at(pF);
     if (Aig_ObjFaninC0(pObj)) {
       s = ntk.create_not(s);
     }
-    ntk.create_po(s);
+    ntk.create_po(s, abc::Abc_ObjName(pCo));
   }
 
   return ntk;
@@ -864,7 +869,7 @@ static CellMapping map_cell_from_standard_cell(const BlockNtk& ntk,
 }
 
 static void import_block_network_to_db(sta::dbSta *sta,
-                                       const BlockNtk& ntk_raw,
+                                       const mockturtle::names_view<BlockNtk>& ntk_raw,
                                        odb::dbLib* lib,
                                        cut::LogicCut& cut,
                                        utl::Logger* logger)
@@ -958,25 +963,32 @@ static void import_block_network_to_db(sta::dbSta *sta,
     uint32_t pi_idx = 0;
     ntk.foreach_pi([&](const Node& n) {
       const auto idx = node_index(n);
-      std::string name = "pi_" + std::to_string(pi_idx++);
+      std::string name = ntk_raw.get_name(ntk.make_signal(n));
 
-      odb::dbNet* net = odb::dbNet::create(block, name.c_str());
+      logger->report("\t{}", name);
+
+      odb::dbNet* net = block->findNet( name.c_str() );
+
       if (!net) {
-        std::ostringstream oss;
-        oss << "Failed to create PI net " << name;
-        throw std::runtime_error(oss.str());
-      }
+        // should not happen
+        logger->report("Net {} not found, creating it", name);
+        net = odb::dbNet::create(block, name.c_str());
 
-      odb::dbBTerm* bt = odb::dbBTerm::create(net, name.c_str());
-      bt->setSigType(odb::dbSigType::SIGNAL);
-      bt->setIoType(odb::dbIoType::INPUT);
+        if (!net) {
+          std::ostringstream oss;
+          oss << "Failed to create PI net " << name;
+          throw std::runtime_error(oss.str());
+        }
+
+        odb::dbBTerm* bt = odb::dbBTerm::create(net, name.c_str());
+        bt->setSigType(odb::dbSigType::SIGNAL);
+        bt->setIoType(odb::dbIoType::INPUT);
+      }
 
       node_out_nets[idx].resize(1);
       node_out_nets[idx][0] = net;
-
-      // logger->report("\t{}", name);
+      logger->report("\tnode_out_nets {} {}", idx, 0);
     });
-    logger->report("\tcount: {}", pi_idx);
   }
 
   // Gates: create instances + output nets (no inputs connected yet)
@@ -1018,6 +1030,11 @@ static void import_block_network_to_db(sta::dbSta *sta,
     if (idx < N) {
       logger->report("\t{} {} {} {}", inst_name, mapping.master_name, num_cell_outputs, num_node_outputs);
     }
+    if (ntk_raw.has_name(ntk_raw.make_signal(n))) {
+      logger->report("\t{}", ntk_raw.get_name(ntk_raw.make_signal(n)));
+    } else {
+      logger->report("\tno name found");
+    }
 
     for (uint32_t out_pin_idx = 0; out_pin_idx < num_node_outputs; ++out_pin_idx) {
       odb::dbMTerm* o_mterm = out_mterms[out_pin_idx];
@@ -1043,6 +1060,7 @@ static void import_block_network_to_db(sta::dbSta *sta,
 
       o_iterm->connect(net);
       node_out_nets[idx][out_pin_idx] = net;
+      logger->report("\t\tnode_out_nets {} {}", idx, out_pin_idx);
 
       if (idx < N) {
         logger->report("\t\t{} {}", pin_name, net_name);
@@ -1124,40 +1142,39 @@ static void import_block_network_to_db(sta::dbSta *sta,
   {
     uint32_t po_idx = 0;
     ntk.foreach_po([&](const Signal& f) {
-      odb::dbNet* src_net = nullptr;
-      const Node src_node = ntk.get_node(f);
+      logger->report("\t{}", ntk_raw.get_name(f));
+    //   odb::dbNet* src_net = nullptr;
+    //   const Node src_node = ntk.get_node(f);
 
-      if (ntk.is_constant(src_node)) {
-        const bool value = ntk.is_complemented(f);
-        src_net = ensure_const_net(value);
-      } else {
-        const auto idx = node_index(src_node);
-        uint32_t out_pin_idx = 0;
-        if (ntk.is_multioutput(src_node)) {
-          out_pin_idx = ntk.get_output_pin(f);
-        }
+    //   if (ntk.is_constant(src_node)) {
+    //     const bool value = ntk.is_complemented(f);
+    //     src_net = ensure_const_net(value);
+    //   } else {
+    //     const auto idx = node_index(src_node);
+    //     uint32_t out_pin_idx = 0;
+    //     if (ntk.is_multioutput(src_node)) {
+    //       out_pin_idx = ntk.get_output_pin(f);
+    //     }
 
-        if (idx >= node_out_nets.size() ||
-            out_pin_idx >= node_out_nets[idx].size() ||
-            node_out_nets[idx][out_pin_idx] == nullptr) {
-          std::ostringstream oss;
-          oss << "Missing driver net for PO " << po_idx;
-          throw std::runtime_error(oss.str());
-        }
-        src_net = node_out_nets[idx][out_pin_idx];
-      }
+    //     if (idx >= node_out_nets.size() ||
+    //         out_pin_idx >= node_out_nets[idx].size() ||
+    //         node_out_nets[idx][out_pin_idx] == nullptr) {
+    //       std::ostringstream oss;
+    //       oss << "Missing driver net for PO " << po_idx;
+    //       throw std::runtime_error(oss.str());
+    //     }
+    //     src_net = node_out_nets[idx][out_pin_idx];
+    //   }
 
-      std::string name = "po_" + std::to_string(po_idx++);
-      odb::dbBTerm* bt = odb::dbBTerm::create(src_net, name.c_str());
-      bt->setSigType(odb::dbSigType::SIGNAL);
-      bt->setIoType(odb::dbIoType::OUTPUT);
+    //   std::string name = "po_" + std::to_string(po_idx++);
+    //   odb::dbBTerm* bt = odb::dbBTerm::create(src_net, name.c_str());
+    //   bt->setSigType(odb::dbSigType::SIGNAL);
+    //   bt->setIoType(odb::dbIoType::OUTPUT);
 
-      // logger->report("\t{}", name);
+    //   // logger->report("\t{}", name);
     });
-    logger->report("\tcount: {}", po_idx);
+    // logger->report("\tcount: {}", po_idx);
   }
-
-  // TODO: Connect existing and mapped instances
 
   // print ntk elements (for debugging)
   mockturtle::topo_view<BlockNtk> ntk_topo{ntk};
@@ -1239,6 +1256,7 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
   }
 
   Aig_Man_t *aig;
+  Abc_Ntk_t *abc_ntk;
 
   cut::AbcLibraryFactory factory(logger_);
   factory.AddDbSta(open_sta_);
@@ -1270,16 +1288,16 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
     current_network->pManFunc = library;
 
     {
-      auto ntk = current_network.get();
+      abc_ntk = current_network.get();
       assert(!Abc_NtkIsStrash(ntk));
       // derive comb GIA
-      auto strash = Abc_NtkStrash(ntk, false, true, false);
+      auto strash = Abc_NtkStrash(abc_ntk, false, true, false);
       aig = Abc_NtkToDar(strash, false, false);
       Abc_NtkDelete(strash);
     }
   }
 
-  mockturtle::aig_network ntk = abc_to_mockturtle_aig(aig);
+  auto ntk = abc_to_mockturtle_aig(abc_ntk, aig);
 
   logger_->report("ntk nodes");
   ntk.foreach_node([&](const mockturtle::aig_network::node& n) {
@@ -1316,8 +1334,10 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
   mockturtle::emap_stats st;
 
   logger_->report("Running emap");
-  mockturtle::cell_view<mockturtle::block_network> mapped_ntk
-      = mockturtle::emap(ntk, tech_lib, ps, &st);
+  auto mapped_ntk
+      = mockturtle::names_view(mockturtle::emap(ntk, tech_lib, ps, &st));
+
+  mockturtle::restore_pio_names_by_order(ntk, mapped_ntk);
 
   logger_->report(
       "Extended technology mapping stats:\n\tarea: {}\n\tdelay: {}\n\tpower: "
