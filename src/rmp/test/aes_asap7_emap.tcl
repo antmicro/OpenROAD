@@ -61,8 +61,8 @@ read_sdc ./aes_asap7.sdc
 write_verilog ./aes_asap7_emap.v
 # write_verilog ./sample_emap.v
 
-# estimate_parasitics -placement
-# repair_timing
+estimate_parasitics -placement
+repair_timing
 
 report_cell_usage
 report_timing_histogram
