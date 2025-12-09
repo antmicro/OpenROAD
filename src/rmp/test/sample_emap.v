@@ -14,10 +14,6 @@ module sample (a,
  wire a_reg;
  wire b_reg1;
  wire b_reg2;
- wire n_5_o0;
- wire n_6_o0;
- wire n_7_o0;
- wire n_8_o0;
 
  DFFHQNx1_ASAP7_75t_R DFF_A (.CLK(clk),
     .D(a),
@@ -26,11 +22,11 @@ module sample (a,
     .D(b_reg1),
     .QN(b_reg2));
  INVx1_ASAP7_75t_R n_8 (.A(b),
-    .Y(n_8_o0));
+    .Y(b_reg1));
  INVx1_ASAP7_75t_R n_7 (.A(b_reg2),
-    .Y(n_7_o0));
+    .Y(b_inv1));
  BUFx2_ASAP7_75t_R n_6 (.A(a_reg),
-    .Y(n_6_o0));
+    .Y(a_inv2));
  INVx1_ASAP7_75t_R n_5 (.A(a_reg),
-    .Y(n_5_o0));
+    .Y(a_inv1));
 endmodule

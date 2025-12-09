@@ -728,10 +728,11 @@ bool Restructure::readAbcLog(std::string abc_file_name,
   return status;
 }
 
-static mockturtle::names_view<mockturtle::aig_network> abc_to_mockturtle_aig(Abc_Ntk_t *pNtk, Aig_Man_t* pMan)
+static mockturtle::names_view<mockturtle::aig_network> abc_to_mockturtle_aig(Abc_Ntk_t *pNtk, Aig_Man_t* pMan, utl::Logger *logger)
 {
   using aig_ntk = mockturtle::names_view<mockturtle::aig_network>;
   aig_ntk ntk;
+  logger->report("ABC to mt AIG");
 
   // Map ABC nodes to mockturtle signals
   std::unordered_map<Aig_Obj_t*, aig_ntk::signal> node_to_sig;
@@ -744,14 +745,17 @@ static mockturtle::names_view<mockturtle::aig_network> abc_to_mockturtle_aig(Abc
   Aig_Obj_t* pObj;
   int i;
 
+  logger->report("\tCIs");
   Aig_ManForEachCi(pMan, pObj, i)
   {
     auto pCi = Abc_NtkPi(pNtk, i);
     auto s = ntk.create_pi(abc::Abc_ObjName(pCi));
     node_to_sig[pObj] = s;
+    logger->report("\t\t{}", abc::Abc_ObjName(pCi));
   }
 
   // Internal AND nodes (AIG nodes) in topological order
+  logger->report("\tnodes");
   Aig_ManForEachNode(pMan, pObj, i)
   {
     Aig_Obj_t* pF0 = Aig_ObjFanin0(pObj);
@@ -774,6 +778,7 @@ static mockturtle::names_view<mockturtle::aig_network> abc_to_mockturtle_aig(Abc
   }
 
   // Primary outputs (COs)
+  logger->report("\tCOs");
   Aig_ManForEachCo(pMan, pObj, i)
   {
     auto pCo = Abc_NtkPo(pNtk, i);
@@ -783,6 +788,7 @@ static mockturtle::names_view<mockturtle::aig_network> abc_to_mockturtle_aig(Abc
       s = ntk.create_not(s);
     }
     ntk.create_po(s, abc::Abc_ObjName(pCo));
+    logger->report("\t\t{}", abc::Abc_ObjName(pCo));
   }
 
   return ntk;
@@ -960,34 +966,16 @@ static void import_block_network_to_db(sta::dbSta *sta,
   // Primary inputs: nets + BTerms
   logger->report("primary inputs");
   {
-    uint32_t pi_idx = 0;
     ntk.foreach_pi([&](const Node& n) {
       const auto idx = node_index(n);
       std::string name = ntk_raw.get_name(ntk.make_signal(n));
 
-      logger->report("\t{}", name);
-
       odb::dbNet* net = block->findNet( name.c_str() );
-
-      if (!net) {
-        // should not happen
-        logger->report("Net {} not found, creating it", name);
-        net = odb::dbNet::create(block, name.c_str());
-
-        if (!net) {
-          std::ostringstream oss;
-          oss << "Failed to create PI net " << name;
-          throw std::runtime_error(oss.str());
-        }
-
-        odb::dbBTerm* bt = odb::dbBTerm::create(net, name.c_str());
-        bt->setSigType(odb::dbSigType::SIGNAL);
-        bt->setIoType(odb::dbIoType::INPUT);
-      }
+      // TODO: error handling
 
       node_out_nets[idx].resize(1);
       node_out_nets[idx][0] = net;
-      logger->report("\tnode_out_nets {} {}", idx, 0);
+      logger->report("\tnode_out_nets {} {} {}", idx, 0, name);
     });
   }
 
@@ -1048,10 +1036,21 @@ static void import_block_network_to_db(sta::dbSta *sta,
         throw std::runtime_error(oss.str());
       }
 
-      std::string net_name =
-          "n_" + std::to_string(idx) + "_o" + std::to_string(out_pin_idx);
+      std::string net_name;
+      ntk.foreach_po([&](auto const& f, auto index) {
+        if ( ntk.get_node(f) == n && ntk.get_output_pin(f) == out_pin_idx ) {
+          net_name = ntk_raw.get_output_name(index);
+        }
+      });
 
-      odb::dbNet* net = odb::dbNet::create(block, net_name.c_str());
+      if (net_name.empty()) {
+        net_name = "n_" + std::to_string(idx) + "_o" + std::to_string(out_pin_idx);
+      }
+
+      odb::dbNet* net = block->findNet(net_name.c_str());
+      if (!net) {
+        net = odb::dbNet::create(block, net_name.c_str());
+      }
       if (!net) {
         std::ostringstream oss;
         oss << "Failed to create net " << net_name;
@@ -1140,40 +1139,37 @@ static void import_block_network_to_db(sta::dbSta *sta,
   // Primary Outputs: BTerms attached to driver nets
   logger->report("primary outputs");
   {
-    uint32_t po_idx = 0;
-    ntk.foreach_po([&](const Signal& f) {
-      logger->report("\t{}", ntk_raw.get_name(f));
-    //   odb::dbNet* src_net = nullptr;
-    //   const Node src_node = ntk.get_node(f);
+    ntk.foreach_po([&](const Signal& f, uint32_t index) {
+      odb::dbNet* src_net = nullptr;
+      const Node src_node = ntk.get_node(f);
 
-    //   if (ntk.is_constant(src_node)) {
-    //     const bool value = ntk.is_complemented(f);
-    //     src_net = ensure_const_net(value);
-    //   } else {
-    //     const auto idx = node_index(src_node);
-    //     uint32_t out_pin_idx = 0;
-    //     if (ntk.is_multioutput(src_node)) {
-    //       out_pin_idx = ntk.get_output_pin(f);
-    //     }
+      std::string name = ntk_raw.get_output_name(index);
+      if (ntk.is_constant(src_node)) {
+        const bool value = ntk.is_complemented(f);
+        src_net = ensure_const_net(value);
+      } else {
+        const auto idx = node_index(src_node);
+        uint32_t out_pin_idx = 0;
+        if (ntk.is_multioutput(src_node)) {
+          out_pin_idx = ntk.get_output_pin(f);
+        }
 
-    //     if (idx >= node_out_nets.size() ||
-    //         out_pin_idx >= node_out_nets[idx].size() ||
-    //         node_out_nets[idx][out_pin_idx] == nullptr) {
-    //       std::ostringstream oss;
-    //       oss << "Missing driver net for PO " << po_idx;
-    //       throw std::runtime_error(oss.str());
-    //     }
-    //     src_net = node_out_nets[idx][out_pin_idx];
-    //   }
+        if (idx >= node_out_nets.size() ||
+            out_pin_idx >= node_out_nets[idx].size() ||
+            node_out_nets[idx][out_pin_idx] == nullptr) {
+          std::ostringstream oss;
+          oss << "Missing driver net for PO " << name;
+          throw std::runtime_error(oss.str());
+        }
+        src_net = node_out_nets[idx][out_pin_idx];
+      }
 
-    //   std::string name = "po_" + std::to_string(po_idx++);
-    //   odb::dbBTerm* bt = odb::dbBTerm::create(src_net, name.c_str());
-    //   bt->setSigType(odb::dbSigType::SIGNAL);
-    //   bt->setIoType(odb::dbIoType::OUTPUT);
+      odb::dbBTerm* bt = block->findBTerm(name.c_str());
+      // bt->setSigType(odb::dbSigType::SIGNAL);
+      // bt->setIoType(odb::dbIoType::OUTPUT);
 
-    //   // logger->report("\t{}", name);
+      logger->report("\t{}", name);
     });
-    // logger->report("\tcount: {}", po_idx);
   }
 
   // print ntk elements (for debugging)
@@ -1184,6 +1180,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
     CellMapping mapping = map_cell_from_standard_cell(ntk, n, logger);
 
     logger->report("\tNode: {}, name: {}", n, mapping.master_name);
+    if (ntk_raw.has_name(ntk_raw.make_signal(n))) {
+      logger->report("\t\tout: {}", ntk_raw.get_name(ntk_raw.make_signal(n)));
+    }
     logger->report("\tInputs:");
     for (const auto & input_pin : mapping.input_pins) {
       logger->report("\t\t{}", input_pin);
@@ -1193,7 +1192,10 @@ static void import_block_network_to_db(sta::dbSta *sta,
       const auto output_pin = ntk_topo.get_output_pin(f);
       CellMapping mapping = map_cell_from_standard_cell(ntk, src_node, logger);
 
-      logger->report("\t\t\tfanin {} {}.{}", src_node, mapping.master_name, output_pin);
+      logger->report("\t\t\tfanin {} {}.{} {}", src_node, mapping.master_name, output_pin);
+      if (ntk_raw.has_name(f)) {
+        logger->report("\t\t\tin: {}", ntk_raw.get_name(f));
+      }
     });
   });
 
@@ -1204,6 +1206,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
     CellMapping mapping = map_cell_from_standard_cell(ntk, src_node, logger);
 
     logger->report("\t{} {}.{}", src_node, mapping.master_name, output_pin);
+    if (ntk_raw.has_name(f)) {
+      logger->report("\t {}", ntk_raw.get_name(f));
+    }
   });
 
   logger->report("Combinational outputs");
@@ -1213,6 +1218,9 @@ static void import_block_network_to_db(sta::dbSta *sta,
     CellMapping mapping = map_cell_from_standard_cell(ntk, src_node, logger);
 
     logger->report("\t{} {}.{}", src_node, mapping.master_name, output_pin);
+    if (ntk_raw.has_name(f)) {
+      logger->report("\t {}", ntk_raw.get_name(f));
+    }
   });
 
   logger->report("import done");
@@ -1297,24 +1305,36 @@ void Restructure::emap(sta::Corner* corner, char* genlib_file_name, bool map_mul
     }
   }
 
-  auto ntk = abc_to_mockturtle_aig(abc_ntk, aig);
+  auto ntk = abc_to_mockturtle_aig(abc_ntk, aig, logger_);
 
   logger_->report("ntk nodes");
   ntk.foreach_node([&](const mockturtle::aig_network::node& n) {
     logger_->report("\tNode: {}", n);
+    if (ntk.has_name(ntk.make_signal(n))) {
+      logger_->report("\t {}", ntk.get_name(ntk.make_signal(n)));
+    }
     ntk.foreach_fanin(n, [&](const mockturtle::aig_network::signal &f) {
-      const Node src_node = ntk.get_node(f);
+      auto src_node = ntk.get_node(f);
 
-      logger_->report("\t\tfanin {} {} {}", src_node, f.index, f.complement);
+      logger_->report("\t\tfanin {} {} {} {}", src_node, f.index, f.complement);
+      if (ntk.has_name(f)) {
+        logger_->report("\t\t {}", ntk.get_name(f));
+      }
     });
   });
 
-
-  logger_->report("Combinational outputs");
-  ntk.foreach_co([&](const mockturtle::aig_network::signal &f) {
-    const Node src_node = ntk.get_node(f);
-
-    logger_->report("\t{}", src_node);
+  logger_->report("ntk pos");
+  ntk.foreach_po([&](const mockturtle::aig_network::signal& f, uint32_t index) {
+    auto src_node = ntk.get_node(f);
+  
+    logger_->report("\tPO #{} fanin node {} (idx={} compl={})",
+                    index, src_node, f.index, f.complement);
+  
+    logger_->report("\t  output name: '{}'", ntk.get_output_name(index));
+  
+    if (ntk.has_name(f)) {
+      logger_->report("\t  fanin signal name: '{}'", ntk.get_name(f));
+    }
   });
 
   logger_->report("Reading genlib file {}", genlib_file_name);
