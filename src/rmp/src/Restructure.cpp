@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2019-2025, The OpenROAD Authors
 
+#include "rmp/Restructure.h"
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <cstring>
 #include <ctime>
-#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -19,26 +20,19 @@
 #include <utility>
 #include <vector>
 
-#include "aig/gia/giaAig.h"
 #include "annealing_strategy.h"
 #include "base/abc/abc.h"
 #include "base/main/abcapis.h"
 #include "cut/abc_init.h"
 #include "cut/abc_library_factory.h"
 #include "cut/blif.h"
-#include "cut/logic_cut.h"
-#include "cut/logic_extractor.h"
 #include "db_sta/dbNetwork.hh"
 #include "db_sta/dbSta.hh"
 #include "extended_technology_mapping.h"
-#include "lorina/blif.hpp"
 #include "odb/db.h"
-#include "ord/OpenRoad.hh"
-#include "rmp/Restructure.h"
 #include "rsz/Resizer.hh"
 #include "sta/Delay.hh"
 #include "sta/Graph.hh"
-#include "sta/GraphDelayCalc.hh"
 #include "sta/Liberty.hh"
 #include "sta/Network.hh"
 #include "sta/NetworkClass.hh"
@@ -50,14 +44,8 @@
 #include "sta/Sdc.hh"
 #include "sta/Search.hh"
 #include "sta/Sta.hh"
-#include "utils.h"
 #include "utl/Logger.h"
 #include "zero_slack_strategy.h"
-
-namespace abc {
-extern void Abc_FrameSetLibGen(void* pLib);
-extern Aig_Man_t* Abc_NtkToDar(Abc_Ntk_t* pNtk, int fExors, int fRegisters);
-}  // namespace abc
 
 using utl::RMP;
 using namespace abc;
