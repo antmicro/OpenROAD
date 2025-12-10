@@ -54,6 +54,7 @@ target_include_directories(rmp_lib
     ${MOCKTURTLE_HOME}/lib/lorina
     ${MOCKTURTLE_HOME}/lib/parallel_hashmap
     ${MOCKTURTLE_HOME}/lib/kitty
+    ${MOCKTURTLE_HOME}/lib/fmt
 )
 
 target_link_libraries(rmp_lib
