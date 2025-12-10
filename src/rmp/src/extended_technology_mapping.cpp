@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright (c) 2019-2025, The OpenROAD Authors
 
-#include <sstream>
-
 #include "aig/aig/aig.h"
-#include "aig/gia/giaAig.h"
 #include "base/abc/abc.h"
-#include "base/main/abcapis.h"
-#include "cut/abc_init.h"
 #include "cut/abc_library_factory.h"
 #include "cut/logic_cut.h"
 #include "cut/logic_extractor.h"
@@ -15,7 +10,6 @@
 #include "map/mio/mio.h"
 #include "mockturtle/algorithms/emap.hpp"
 #include "mockturtle/io/genlib_reader.hpp"
-#include "mockturtle/io/write_verilog.hpp"
 #include "mockturtle/networks/aig.hpp"
 #include "mockturtle/networks/block.hpp"
 #include "mockturtle/utils/name_utils.hpp"
@@ -28,8 +22,10 @@
 #include "utl/Logger.h"
 
 namespace abc {
+
 extern void Abc_FrameSetLibGen(void* pLib);
 extern Aig_Man_t* Abc_NtkToDar(Abc_Ntk_t* pNtk, int fExors, int fRegisters);
+
 }  // namespace abc
 
 namespace rmp {
@@ -227,7 +223,6 @@ static void import_mockturtle_mapped_network(sta::dbSta* sta,
   odb::dbChip* chip = sta->db()->getChip();
   odb::dbBlock* block = chip->getBlock();
 
-  // copied from logic_cut.cpp:512 DeleteExistingLogicCut
   // Delete nets that only belong to the cut set.
   sta::NetSet nets_to_be_deleted(sta->getDbNetwork());
   std::unordered_set<sta::Net*> primary_input_or_output_nets;
