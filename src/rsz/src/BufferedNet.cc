@@ -370,15 +370,11 @@ BufferedNetPtr Resizer::makeBufferedNet(const Pin* drvr_pin,
 {
   switch (estimate_parasitics_->getParasiticsSrc()) {
     case est::ParasiticsSrc::placement:
-      logger_->report("placement");
       return makeBufferedNetSteiner(drvr_pin, corner);
     case est::ParasiticsSrc::global_routing:
-      logger_->report("grt");
     case est::ParasiticsSrc::detailed_routing:
-      logger_->report("drt");
       return makeBufferedNetGroute(drvr_pin, corner);
     case est::ParasiticsSrc::none:
-      logger_->report("none");
       return nullptr;
   }
   return nullptr;

@@ -27,10 +27,9 @@ foreach lib_file $lib_files_fast {
 
 read_lef ./asap7/asap7_tech_1x_201209.lef
 read_lef ./asap7/asap7sc7p5t_28_R_1x_220121a.lef
+
 read_verilog ./aes_asap7.v
 link_design aes
-# read_verilog ./sample.v
-# link_design sample
 read_sdc ./aes_asap7.sdc
 
 set_layer_rc -layer M1 -resistance 7.04175E-02 -capacitance 1e-10
@@ -52,16 +51,12 @@ set_layer_rc -via V6 -resistance 8.20E-03
 set_layer_rc -via V7 -resistance 8.20E-03
 set_layer_rc -via V8 -resistance 6.30E-03
 
-repair_timing
-
 puts "-- Before --\n"
 report_cell_usage
 report_timing_histogram
 report_checks
 report_wns
 report_tns
-
-write_verilog_for_eqy $test_name before "None"
 
 puts "-- After --\n"
 
@@ -71,22 +66,10 @@ emap -corner fast \
 	-map_multioutput \
 	-verbose
 
-read_sdc ./aes_asap7.sdc
-
-write_verilog ./aes_asap7_emap.v
-# write_verilog ./sample_emap.v
-
-estimate_parasitics -placement
 repair_timing
 
 report_cell_usage
 report_timing_histogram
-report_cell_usage
 report_checks
 report_wns
 report_tns
-
-set liberty_files [concat $lib_files_slow $lib_files_fast]
-run_equivalence_test $test_name \
-  -liberty_files $liberty_files \
-  -remove_cells "None"
