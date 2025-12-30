@@ -21,6 +21,13 @@ add_library(rmp_lib
     zero_slack_strategy.cpp
 )
 
+foreach (WARNING unused-variable narrowing reorder range-loop-construct overflow return-type template-body)
+  check_cxx_compiler_flag("-Wno-${WARNING}" HAS_WNO_${WARNING})
+  if (HAS_WNO_${WARNING})
+    target_compile_options(rmp_lib PUBLIC -Wno-${WARNING})
+  endif()
+endforeach()
+
 # For ABC headers
 set_source_files_properties(annealing_strategy.cpp
   PROPERTIES COMPILE_FLAGS "-Wno-error=redundant-decls -Wno-error=unused-variable -Wno-error=unused-but-set-variable"

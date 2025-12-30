@@ -10,6 +10,9 @@ messages(
 TARGET cut
 )
 
+target_compile_options(cut PUBLIC -Wno-unused-variable)
+target_compile_options(cut PUBLIC -Wno-unused-function)
+
 target_include_directories(cut
   PUBLIC
     ../include
@@ -36,3 +39,10 @@ target_link_libraries(cut
     dbSta_lib
     utl_lib
  )
+
+foreach (WARNING template-body)
+  check_cxx_compiler_flag("-Wno-${WARNING}" HAS_WNO_${WARNING})
+  if (HAS_WNO_${WARNING})
+    target_compile_options(cut PUBLIC -Wno-${WARNING})
+  endif()
+endforeach()
