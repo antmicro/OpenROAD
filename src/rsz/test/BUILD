@@ -238,6 +238,7 @@ MANUAL_FOR_BAZEL_TESTS = [
     "repair_fanout1_hier",
     "repair_fanout2_hier",
     "repair_fanout3_hier",
+    "repair_setup2",
     "repair_setup4_flat",
     "repair_setup4_hier",
     "report_dont_use",
