@@ -102,7 +102,7 @@ proc run_equivalence_test { test args } {
   if { $liberty_files != "" } {
     puts $outfile "read_liberty -ignore_miss_func -overwrite $liberty_files"
   }
-  puts $outfile "read_verilog -sv $after_netlist $lib_files"
+  puts $outfile "read_verilog -sv $before_netlist $lib_files"
   puts $outfile "prep -top $top_cell -flatten"
   puts $outfile "memory_map\n"
 
