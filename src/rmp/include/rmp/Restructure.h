@@ -90,6 +90,7 @@ class Restructure
 
   void resynthEmap(sta::Corner* corner,
                    bool map_multioutput,
+                   float wireload_penalty,
                    bool verbose,
                    char* workdir_name);
 

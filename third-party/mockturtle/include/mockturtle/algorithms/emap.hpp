@@ -93,6 +93,9 @@ struct emap_params
   /*! \brief Maps using multi-output gates */
   bool map_multioutput{ false };
 
+  /*! \brief Penalty applied to deep logic to simulate wireload */
+  float wireload_penalty{0.0f};
+
   /*! \brief Matching mode
    *
    * Boolean uses Boolean matching (up to 6-input cells),
@@ -695,6 +698,7 @@ struct best_gate_emap
 {
   supergate<NInputs> const* gate;
   double arrival;
+  uint32_t depth;
   float area;
   float flow;
   unsigned phase : 16;
@@ -724,6 +728,8 @@ struct node_match_emap
   double required[2];
   /* area of the best matches */
   float area[2];
+  /* logic depth */
+  uint32_t depth[2];
 
   /* number of references in the cover 0: pos, 1: neg */
   uint32_t map_refs[2];
@@ -1109,6 +1115,7 @@ private:
       node_data.flows[0] = node_data.flows[1] = 0.0f;
       node_data.best_alternative[0].flow = node_data.best_alternative[1].flow = 0.0f;
       node_data.arrival[0] = node_data.arrival[1] = 0.0f;
+      node_data.depth[0] = node_data.depth[1] = 0;
       node_data.best_alternative[0].arrival = node_data.best_alternative[1].arrival = 0.0f;
       /* skip if cuts have been computed before */
       if ( cuts[index].size() == 0 )
@@ -1520,6 +1527,7 @@ private:
         /* all terminals have flow 0 */
         node_data.flows[0] = node_data.flows[1] = 0.0f;
         node_data.arrival[0] = node_data.arrival[1] = 0.0f;
+        node_data.depth[0] = node_data.depth[1] = 0;
         add_zero_cut( index );
         match_constants( index );
         continue;
@@ -2339,16 +2347,20 @@ private:
       /* compute arrival of use_phase */
       supergate<NInputs> const* best_gate = node_data.best_gate[use_phase];
       double worst_arrival = 0;
+      uint32_t worst_depth = 0;
       uint16_t best_phase = node_data.phase[use_phase];
       auto ctr = 0u;
       for ( auto l : cuts[index][node_data.best_cut[use_phase]] )
       {
         double arrival_pin = node_match[l].arrival[( best_phase >> ctr ) & 1] + best_gate->tdelay[ctr];
         worst_arrival = std::max( worst_arrival, arrival_pin );
+        uint32_t depth_pin = node_match[l].depth[( best_phase >> ctr ) & 1] + 1;
+        worst_depth = std::max(worst_depth, depth_pin);
         ++ctr;
       }
 
       node_data.arrival[use_phase] = worst_arrival;
+      node_data.depth[use_phase] = worst_depth;
 
       /* compute area */
       if ( node_data.map_refs[use_phase] > 0 || ( node_data.same_match && ( node_match[index].map_refs[0] || node_match[index].map_refs[1] ) ) )
@@ -2366,6 +2378,7 @@ private:
       if ( node_data.same_match )
       {
         node_data.arrival[use_phase] = worst_arrival + lib_inv_delay;
+        node_data.depth[use_phase] = worst_depth + 1;
         continue;
       }
 
@@ -2373,16 +2386,20 @@ private:
 
       best_gate = node_data.best_gate[use_phase];
       worst_arrival = 0;
+      worst_depth = 0;
       best_phase = node_data.phase[use_phase];
       ctr = 0u;
       for ( auto l : cuts[index][node_data.best_cut[use_phase]] )
       {
         double arrival_pin = node_match[l].arrival[( best_phase >> ctr ) & 1] + best_gate->tdelay[ctr];
         worst_arrival = std::max( worst_arrival, arrival_pin );
+        uint32_t depth_pin = node_match[l].depth[( best_phase >> ctr ) & 1] + 1;
+        worst_depth = std::max(worst_depth, depth_pin);
         ++ctr;
       }
 
       node_data.arrival[use_phase] = worst_arrival;
+      node_data.depth[use_phase] = worst_depth;
 
       if ( node_data.map_refs[use_phase] > 0 )
       {
@@ -2425,21 +2442,26 @@ private:
     /* compute arrival of use_phase */
     supergate<NInputs> const* best_gate = node_data.best_gate[use_phase];
     double worst_arrival = 0;
+    uint32_t worst_depth = 0;
     uint16_t best_phase = node_data.phase[use_phase];
     auto ctr = 0u;
     for ( auto l : cuts[index][node_data.best_cut[use_phase]] )
     {
       double arrival_pin = node_match[l].arrival[( best_phase >> ctr ) & 1] + best_gate->tdelay[ctr];
       worst_arrival = std::max( worst_arrival, arrival_pin );
+      uint32_t depth_pin = node_match[l].depth[( best_phase >> ctr ) & 1] + 1;
+      worst_depth = std::max(worst_depth, depth_pin);
       ++ctr;
     }
     node_data.arrival[use_phase] = worst_arrival;
+    node_data.depth[use_phase] = worst_depth;
 
     /* compute arrival of the other phase */
     use_phase ^= 1;
     if ( node_data.same_match )
     {
       node_data.arrival[use_phase] = worst_arrival + lib_inv_delay;
+      node_data.depth[use_phase] = worst_depth + 1;
       return;
     }
 
@@ -2447,16 +2469,20 @@ private:
 
     best_gate = node_data.best_gate[use_phase];
     worst_arrival = 0;
+    worst_depth = 0;
     best_phase = node_data.phase[use_phase];
     ctr = 0u;
     for ( auto l : cuts[index][node_data.best_cut[use_phase]] )
     {
       double arrival_pin = node_match[l].arrival[( best_phase >> ctr ) & 1] + best_gate->tdelay[ctr];
       worst_arrival = std::max( worst_arrival, arrival_pin );
+      uint32_t depth_pin = node_match[l].depth[( best_phase >> ctr ) & 1] + 1;
+      worst_depth = std::max(worst_depth, depth_pin);
       ++ctr;
     }
 
     node_data.arrival[use_phase] = worst_arrival;
+    node_data.depth[use_phase] = worst_depth;
   }
 
   template<bool DO_AREA>
@@ -2470,6 +2496,7 @@ private:
     node_data.arrival[phase] = std::numeric_limits<float>::max();
     node_data.flows[phase] = std::numeric_limits<float>::max();
     node_data.area[phase] = std::numeric_limits<float>::max();
+    node_data.depth[phase] = std::numeric_limits<uint32_t>::max();
     uint32_t best_size = UINT32_MAX;
 
     best_gate_emap<NInputs>& gA = node_data.best_alternative[phase];
@@ -2506,6 +2533,8 @@ private:
         uint16_t gate_polarity = gate.polarity ^ negation;
         double worst_arrival = 0.0f;
         double worst_arrivalA = 0.0f;
+        uint32_t worst_depth = 0;
+        uint32_t worst_depthA = 0;
         float area_local = gate.area;
         float area_localA = gate.area;
 
@@ -2517,6 +2546,9 @@ private:
           double arrival_pinA = node_match[l].best_alternative[leaf_phase].arrival + gate.tdelay[ctr];
           worst_arrivalA = std::max( worst_arrivalA, arrival_pinA );
 
+          uint32_t depth_pinA = node_match[l].best_alternative[leaf_phase].depth + 1;
+          worst_depthA = std::max( worst_depthA, depth_pinA );
+
           // if constexpr ( DO_AREA )
           // {
           //   if ( worst_arrivalA > node_data.required[phase] + epsilon || worst_arrivalA >= std::numeric_limits<float>::max() )
@@ -2525,6 +2557,9 @@ private:
 
           double arrival_pin = node_match[l].arrival[leaf_phase] + gate.tdelay[ctr];
           worst_arrival = std::max( worst_arrival, arrival_pin );
+
+          uint32_t depth_pin = node_match[l].depth[leaf_phase] + 1;
+          worst_depth = std::max( worst_depth, depth_pin );
 
           area_local += node_match[l].flows[leaf_phase];
           area_localA += node_match[l].best_alternative[leaf_phase].flow;
@@ -2540,10 +2575,11 @@ private:
             skip = true;
         }
 
-        if ( !skip && compare_map<DO_AREA>( worst_arrival, node_data.arrival[phase], area_local, node_data.flows[phase], cut->size(), best_size ) )
+        if ( !skip && compare_map<DO_AREA>( worst_arrival, node_data.arrival[phase], worst_depth, node_data.depth[phase], area_local, node_data.flows[phase], cut->size(), best_size ) )
         {
           node_data.best_gate[phase] = &gate;
           node_data.arrival[phase] = worst_arrival;
+          node_data.depth[phase] = worst_depth;
           node_data.flows[phase] = area_local;
           node_data.best_cut[phase] = cut_index;
           node_data.area[phase] = gate.area;
@@ -2552,7 +2588,7 @@ private:
         }
 
         /* compute the alternative */
-        if ( compare_map<!DO_AREA>( worst_arrivalA, gA.arrival, area_localA, gA.flow, cut->size(), best_sizeA ) )
+        if ( compare_map<!DO_AREA>( worst_arrivalA, gA.arrival, worst_depthA, gA.depth, area_localA, gA.flow, cut->size(), best_sizeA ) )
         {
           gA.gate = &gate;
           gA.arrival = worst_arrivalA;
@@ -2573,6 +2609,7 @@ private:
   void match_phase_exact( node<Ntk> const& n, uint8_t phase )
   {
     double best_arrival = std::numeric_limits<float>::max();
+    uint32_t best_depth = std::numeric_limits<uint32_t>::max();
     float best_exact_area = std::numeric_limits<float>::max();
     float best_area = std::numeric_limits<float>::max();
     uint32_t best_size = UINT32_MAX;
@@ -2632,12 +2669,15 @@ private:
       {
         uint16_t gate_polarity = gate.polarity ^ negation;
         double worst_arrival = 0.0f;
+        uint32_t worst_depth = 0;
 
         auto ctr = 0u;
         for ( auto l : *cut )
         {
           double arrival_pin = node_match[l].arrival[( gate_polarity >> ctr ) & 1] + gate.tdelay[ctr];
           worst_arrival = std::max( worst_arrival, arrival_pin );
+          uint32_t depth_pin = node_match[l].depth[( gate_polarity >> ctr ) & 1] + 1;
+          worst_depth = std::max( worst_depth, depth_pin );
           ++ctr;
         }
 
@@ -2648,9 +2688,10 @@ private:
         node_data.area[phase] = gate.area;
         float area_exact = cut_measure_mffc<SwitchActivity>( *cut, n, phase );
 
-        if ( compare_map<true>( worst_arrival, best_arrival, area_exact, best_exact_area, cut->size(), best_size ) )
+        if ( compare_map<true>( worst_arrival, best_arrival, worst_arrival, best_depth, area_exact, best_exact_area, cut->size(), best_size ) )
         {
           best_arrival = worst_arrival;
+          best_depth = worst_depth;
           best_exact_area = area_exact;
           best_area = gate.area;
           best_size = cut->size();
@@ -2665,6 +2706,7 @@ private:
 
     node_data.flows[phase] = best_exact_area;
     node_data.arrival[phase] = best_arrival;
+    node_data.depth[phase] = best_depth;
     node_data.area[phase] = best_area;
     node_data.best_cut[phase] = best_cut;
     node_data.phase[phase] = best_phase;
@@ -2685,13 +2727,15 @@ private:
     /* compute arrival adding an inverter to the other match phase */
     double worst_arrival_npos = node_data.arrival[1] + lib_inv_delay;
     double worst_arrival_nneg = node_data.arrival[0] + lib_inv_delay;
+    uint32_t worst_depth_npos = node_data.depth[1] + 1;
+    uint32_t worst_depth_nneg = node_data.depth[0] + 1;
     bool use_zero = false;
     bool use_one = false;
 
     /* only one phase is matched */
     if ( node_data.best_gate[0] == nullptr )
     {
-      set_match_complemented_phase( index, 1, worst_arrival_npos );
+      set_match_complemented_phase( index, 1, worst_arrival_npos, worst_depth_npos );
       if constexpr ( ELA )
       {
         if ( node_data.map_refs[0] || node_data.map_refs[1] )
@@ -2701,7 +2745,7 @@ private:
     }
     else if ( node_data.best_gate[1] == nullptr )
     {
-      set_match_complemented_phase( index, 0, worst_arrival_nneg );
+      set_match_complemented_phase( index, 0, worst_arrival_nneg, worst_depth_nneg );
       if constexpr ( ELA )
       {
         if ( node_data.map_refs[0] || node_data.map_refs[1] )
@@ -2756,7 +2800,7 @@ private:
           auto size_phase = cuts[index][node_data.best_cut[phase]].size();
           auto size_nphase = cuts[index][node_data.best_cut[nphase]].size();
 
-          if ( compare_map<DO_AREA>( node_data.arrival[nphase] + lib_inv_delay, node_data.arrival[phase], node_data.flows[nphase] + lib_inv_area, node_data.flows[phase], size_nphase, size_phase ) )
+          if ( compare_map<DO_AREA>( node_data.arrival[nphase] + lib_inv_delay, node_data.arrival[phase], node_data.depth[nphase] + 1, node_data.depth[phase], node_data.flows[nphase] + lib_inv_area, node_data.flows[phase], size_nphase, size_phase ) )
           {
             /* invert the choice */
             use_zero = !use_zero;
@@ -2800,7 +2844,7 @@ private:
 
         if ( use_one && use_zero )
         {
-          if ( compare_map<DO_AREA>( worst_arrival_nneg, worst_arrival_npos, node_data.flows[0], node_data.flows[1], size_zero, size_one ) )
+          if ( compare_map<DO_AREA>( worst_arrival_nneg, worst_arrival_npos, worst_depth_nneg, worst_depth_npos, node_data.flows[0], node_data.flows[1], size_zero, size_one ) )
             use_one = false;
           else
             use_zero = false;
@@ -2852,7 +2896,7 @@ private:
         else if ( node_data.map_refs[0] || node_data.map_refs[1] )
           cut_ref<false>( cuts[index][node_data.best_cut[0]], n, 0 );
       }
-      set_match_complemented_phase( index, 0, worst_arrival_nneg );
+      set_match_complemented_phase( index, 0, worst_arrival_nneg, worst_depth_nneg );
     }
     else
     {
@@ -2871,11 +2915,11 @@ private:
         else if ( node_data.map_refs[0] || node_data.map_refs[1] )
           cut_ref<false>( cuts[index][node_data.best_cut[1]], n, 1 );
       }
-      set_match_complemented_phase( index, 1, worst_arrival_npos );
+      set_match_complemented_phase( index, 1, worst_arrival_npos, worst_depth_npos );
     }
   }
 
-  inline void set_match_complemented_phase( uint32_t index, uint8_t phase, double worst_arrival_n )
+  inline void set_match_complemented_phase( uint32_t index, uint8_t phase, double worst_arrival_n, uint32_t worst_depth_n )
   {
     auto& node_data = node_match[index];
     auto phase_n = phase ^ 1;
@@ -2884,6 +2928,7 @@ private:
     node_data.best_cut[phase_n] = node_data.best_cut[phase];
     node_data.phase[phase_n] = node_data.phase[phase];
     node_data.arrival[phase_n] = worst_arrival_n;
+    node_data.depth[phase_n] = worst_depth_n;
     node_data.area[phase_n] = node_data.area[phase];
     node_data.flows[phase_n] = ( node_data.flows[phase] + lib_inv_area ) / node_data.est_refs[phase_n];
     node_data.flows[phase] = node_data.flows[phase] / node_data.est_refs[phase];
@@ -3017,6 +3062,7 @@ private:
     node_data.phase[phase] = bg.phase;
     node_data.best_cut[phase] = bg.cut;
     node_data.arrival[phase] = bg.arrival;
+    node_data.depth[phase] = bg.depth;
     node_data.area[phase] = bg.area;
     node_data.flows[phase] = bg.flow;
 
@@ -3029,6 +3075,7 @@ private:
     node_data.phase[phase] = bg.phase;
     node_data.best_cut[phase] = bg.cut;
     node_data.arrival[phase] = bg.arrival + lib_inv_delay;
+    node_data.depth[phase] = bg.depth + 1;
     node_data.area[phase] = bg.area;
     node_data.flows[phase] = ( bg.flow * node_data.est_refs[phase ^ 1] + lib_inv_area ) / node_data.est_refs[phase];
   }
@@ -3055,6 +3102,8 @@ private:
     node_data.flows[1] = lib_inv_area / node_data.est_ref[1];
     node_data.arrival[0] = 0.0f;
     node_data.arrival[1] = lib_inv_delay;
+    node_data.depth[0] = 0;
+    node_data.depth[1] = 1;
     node_data.area[0] = node_data.area[1] = 0;
 
     return true;
@@ -3068,16 +3117,20 @@ private:
 
     /* propagate arrival time */
     double arrival = 0;
+    uint32_t depth = 0;
     ntk.foreach_fanin( n, [&]( auto const& f, auto i ) {
       uint32_t f_index = ntk.node_to_index( ntk.get_node( f ) );
       uint8_t phase = ntk.is_complemented( f ) ? 1 : 0;
       double propagation_delay = std::max( gate.pins[i].rise_block_delay, gate.pins[i].fall_block_delay );
       arrival = std::max( arrival, node_match[f_index].arrival[phase] + propagation_delay );
+      depth = std::max( depth, node_match[f_index].depth[phase] + 1 );
     } );
 
     /* set data */
     node_data.arrival[0] = arrival;
     node_data.arrival[1] = arrival + lib_inv_delay;
+    node_data.depth[0] = depth;
+    node_data.depth[1] = depth + 1;
     node_data.area[0] = node_data.area[1] = gate.area;
     node_data.flows[1] = ( node_data.flows[0] + lib_inv_area ) / node_data.est_refs[1];
     node_data.flows[0] = node_data.area[0] / node_data.est_refs[0];
@@ -3128,6 +3181,7 @@ private:
     {
       node_data.best_gate[0] = &( ( *supergates_zero )[0] );
       node_data.arrival[0] = node_data.best_gate[0]->tdelay[0];
+      node_data.depth[0] = 1;
       node_data.area[0] = node_data.best_gate[0]->area;
       node_data.phase[0] = 0;
     }
@@ -3135,6 +3189,7 @@ private:
     {
       node_data.best_gate[1] = &( ( *supergates_one )[0] );
       node_data.arrival[1] = node_data.best_gate[1]->tdelay[0];
+      node_data.depth[1] = 1;
       node_data.area[1] = node_data.best_gate[1]->area;
       node_data.phase[1] = 0;
     }
@@ -3142,6 +3197,7 @@ private:
     {
       node_data.same_match = true;
       node_data.arrival[1] = node_data.arrival[0] + lib_inv_delay;
+      node_data.depth[1] = 1;
       node_data.area[1] = node_data.area[0] + lib_inv_area;
       node_data.phase[1] = 1;
     }
@@ -3149,6 +3205,7 @@ private:
     {
       node_data.same_match = true;
       node_data.arrival[0] = node_data.arrival[1] + lib_inv_delay;
+      node_data.depth[0] = node_data.depth[1] + 1;
       node_data.area[0] = node_data.area[1] + lib_inv_area;
       node_data.phase[0] = 1;
     }
@@ -3166,6 +3223,7 @@ private:
 
     /* local values storage */
     std::array<double, max_multioutput_output_size> arrival;
+    std::array<uint32_t, max_multioutput_output_size> depth;
     std::array<float, max_multioutput_output_size> area_flow;
     std::array<float, max_multioutput_output_size> area;
     std::array<uint8_t, max_multioutput_output_size> phase;
@@ -3205,11 +3263,14 @@ private:
 
         /* compute arrival */
         arrival[j] = 0.0;
+        depth[j] = 0.0;
         auto ctr = 0u;
         for ( auto l : cut )
         {
           double arrival_pin = node_match[l].arrival[( gate.polarity >> ctr ) & 1] + gate.tdelay[ctr];
           arrival[j] = std::max( arrival[j], arrival_pin );
+          uint32_t depth_pin = node_match[l].depth[( gate.polarity >> ctr ) & 1] + 1;
+          depth[j] = std::max( depth[j], depth_pin );
           ++ctr;
         }
 
@@ -3295,6 +3356,7 @@ private:
         node_data.best_cut[mapped_phase] = cut_index[j];
         node_data.phase[mapped_phase] = pin_phase[j];
         node_data.arrival[mapped_phase] = arrival[j];
+        node_data.depth[mapped_phase] = depth[j];
         node_data.area[mapped_phase] = area[j]; /* partial area contribution */
         node_data.flows[mapped_phase] = flow_sum_pos;
 
@@ -3307,6 +3369,7 @@ private:
         node_data.best_cut[mapped_phase] = cut_index[j];
         node_data.phase[mapped_phase] = pin_phase[j];
         node_data.arrival[mapped_phase] = arrival[j] + lib_inv_delay;
+        node_data.depth[mapped_phase] = depth[j] + 1;
         node_data.area[mapped_phase] = area[j]; /* partial area contribution */
         node_data.flows[mapped_phase] = flow_sum_neg;
 
@@ -3394,6 +3457,7 @@ private:
 
     /* local values storage */
     std::array<double, max_multioutput_output_size> arrival;
+    std::array<uint32_t, max_multioutput_output_size> depth;
     std::array<float, max_multioutput_output_size> area_exact;
     std::array<float, max_multioutput_output_size> area;
     std::array<uint8_t, max_multioutput_output_size> phase;
@@ -3430,11 +3494,14 @@ private:
 
         /* compute arrival */
         arrival[j] = 0.0;
+        depth[j] = 0;
         auto ctr = 0u;
         for ( auto l : cut )
         {
           double arrival_pin = node_match[l].arrival[( gate.polarity >> ctr ) & 1] + gate.tdelay[ctr];
           arrival[j] = std::max( arrival[j], arrival_pin );
+          uint32_t depth_pin = node_match[l].depth[( gate.polarity >> ctr ) & 1] + 1;
+          depth[j] = std::max(depth[j], depth_pin);
           ++ctr;
         }
 
@@ -3519,6 +3586,7 @@ private:
         node_data.best_cut[mapped_phase] = cut_index[j];
         node_data.phase[mapped_phase] = pin_phase[j];
         node_data.arrival[mapped_phase] = arrival[j];
+        node_data.depth[mapped_phase] = depth[j];
         node_data.area[mapped_phase] = area[j]; /* partial area contribution */
 
         node_data.flows[mapped_phase] = area_exact[j]; /* partial exact area contribution */
@@ -3529,6 +3597,7 @@ private:
         node_data.best_cut[mapped_phase] = cut_index[j];
         node_data.phase[mapped_phase] = pin_phase[j];
         node_data.arrival[mapped_phase] = arrival[j] + lib_inv_delay;
+        node_data.depth[mapped_phase] = depth[j] + 1;
         node_data.area[mapped_phase] = area[j]; /* partial area contribution */
         node_data.flows[mapped_phase] = area_exact[j];
 
@@ -4148,6 +4217,8 @@ private:
         auto& node_data = node_match[ntk.node_to_index( n )];
         node_data.arrival[0] = node_data.best_alternative[0].arrival = 0;
         node_data.arrival[1] = node_data.best_alternative[1].arrival = lib_inv_delay;
+        node_data.depth[0] = node_data.best_alternative[0].depth = 0;
+        node_data.depth[1] = node_data.best_alternative[1].depth = 1;
       } );
       return true;
     }
@@ -4163,6 +4234,8 @@ private:
       auto& node_data = node_match[ntk.node_to_index( n )];
       node_data.arrival[0] = node_data.best_alternative[0].arrival = ps.arrival_times[i];
       node_data.arrival[1] = node_data.best_alternative[1].arrival = ps.arrival_times[i] + lib_inv_delay;
+      node_data.depth[0] = node_data.best_alternative[0].depth = 0;
+      node_data.depth[1] = node_data.best_alternative[1].depth = 1;
     } );
 
     return true;
@@ -4923,8 +4996,12 @@ private:
     res->function = tt_res;
   }
 
+  float penalty(uint32_t depth) {
+    return depth * ps.wireload_penalty;
+  }
+
   template<bool DO_AREA>
-  inline bool compare_map( double arrival, double best_arrival, float area_flow, float best_area_flow, uint32_t size, uint32_t best_size )
+  inline bool compare_map( double arrival, double best_arrival, uint32_t depth, uint32_t best_depth, float area_flow, float best_area_flow, uint32_t size, uint32_t best_size )
   {
     if constexpr ( DO_AREA )
     {
@@ -4936,11 +5013,11 @@ private:
       {
         return false;
       }
-      else if ( arrival < best_arrival - epsilon )
+      else if ( arrival + penalty(depth) < best_arrival + penalty(best_depth) - epsilon )
       {
         return true;
       }
-      else if ( arrival > best_arrival + epsilon )
+      else if ( arrival + penalty(depth) > best_arrival + penalty(best_depth) + epsilon )
       {
         return false;
       }
@@ -4948,11 +5025,11 @@ private:
     }
     else
     {
-      if ( arrival < best_arrival - epsilon )
+      if ( arrival + penalty(depth) < best_arrival + penalty(best_depth) - epsilon )
       {
         return true;
       }
-      else if ( arrival > best_arrival + epsilon )
+      else if ( arrival + penalty(depth) > best_arrival + penalty(best_depth) + epsilon )
       {
         return false;
       }

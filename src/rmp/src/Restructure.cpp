@@ -711,6 +711,7 @@ bool Restructure::readAbcLog(const std::string& abc_file_name,
 
 void Restructure::resynthEmap(sta::Corner* corner,
                               bool map_multioutput,
+                              float wireload_penalty,
                               bool verbose,
                               char* workdir_name)
 {
@@ -721,6 +722,7 @@ void Restructure::resynthEmap(sta::Corner* corner,
                               corner,
                               map_multioutput,
                               area_oriented_mapping,
+                              wireload_penalty,
                               verbose,
                               resizer_,
                               logger_);

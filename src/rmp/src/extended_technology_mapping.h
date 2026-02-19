@@ -13,6 +13,7 @@ void extended_technology_mapping(sta::dbSta* sta,
                                  sta::Corner* corner,
                                  bool map_multioutput,
                                  bool area_oriented_mapping,
+                                 float wireload_penalty,
                                  bool verbose,
                                  rsz::Resizer* resizer,
                                  utl::Logger* logger);

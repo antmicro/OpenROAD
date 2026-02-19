@@ -157,18 +157,20 @@ sta::define_cmd_args "resynth_emap" {
                                       [-corner corner]
                                       [-target area|timing]\
                                       [-map_multioutput]\
+                                      [-wireload_penalty]\
                                       [-verbose]\
                                       [-work_dir workdir_name]
                                     }
 
 proc resynth_emap { args } {
   sta::parse_key_args "resynth_emap" args \
-    keys {-corner -target -work_dir} \
+    keys {-corner -target -wireload_penalty -work_dir} \
     flags {-map_multioutput -verbose}
 
   set corner [sta::parse_corner keys]
   set target "area"
   set map_multioutput [info exists flags(-map_multioutput)]
+  set wireload_penalty 0
   set verbose [info exists flags(-verbose)]
   set workdir_name "."
 
@@ -176,9 +178,13 @@ proc resynth_emap { args } {
     set target $keys(-target)
   }
 
+  if { [info exists keys(-wireload_penalty)] } {
+    set wireload_penalty $keys(-wireload_penalty)
+  }
+
   if { [info exists keys(-work_dir)] } {
     set workdir_name $keys(-work_dir)
   }
 
-  rmp::resynth_emap_cmd $corner $target $map_multioutput $verbose $workdir_name
+  rmp::resynth_emap_cmd $corner $target $map_multioutput $wireload_penalty $verbose $workdir_name
 }

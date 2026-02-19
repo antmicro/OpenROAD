@@ -457,6 +457,7 @@ void extended_technology_mapping(sta::dbSta* sta,
                                  sta::Corner* corner,
                                  bool map_multioutput,
                                  bool area_oriented_mapping,
+                                 float wireload_penalty,
                                  bool verbose,
                                  rsz::Resizer* resizer,
                                  utl::Logger* logger)
@@ -470,6 +471,7 @@ void extended_technology_mapping(sta::dbSta* sta,
   mockturtle::emap_params ps;
 
   ps.map_multioutput = map_multioutput;
+  ps.wireload_penalty = wireload_penalty;
   ps.verbose = verbose;
 
   if (area_oriented_mapping) {
