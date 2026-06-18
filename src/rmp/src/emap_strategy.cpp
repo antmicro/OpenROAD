@@ -250,6 +250,37 @@ odb::dbNet* EmapStrategy::EnsureConstNet(bool value,
   return net;
 }
 
+static std::unordered_map<std::string, odb::dbNet*> ExtractBoundaryDbNets(
+    const std::vector<sta::Net*>& sta_nets,
+    sta::dbSta* sta,
+    const char* direction,
+    utl::Logger* logger)
+{
+  sta::dbNetwork* db_network = sta->getDbNetwork();
+
+  std::unordered_map<std::string, odb::dbNet*> boundary_dbnets;
+  for (sta::Net* sta_net : sta_nets) {
+    std::string net_name = db_network->pathName(sta_net);
+    odb::dbNet* db_net = nullptr;
+    odb::dbModNet* db_mod_net = nullptr;
+    db_network->staToDb(sta_net, db_net, db_mod_net);
+    // Hierarchical net, use related net to find it.
+    if (db_mod_net) {
+      db_net = db_mod_net->findRelatedNet();
+    }
+    if (!db_net) {
+      logger->warn(utl::RMP,
+                   91,
+                   "cut primary {} net {} has no dbNet",
+                   direction,
+                   net_name);
+      continue;
+    }
+    boundary_dbnets.emplace(net_name, db_net);
+  }
+  return boundary_dbnets;
+}
+
 void EmapStrategy::ImportMockturtleMappedNetwork(sta::dbSta* sta,
                                                  const BlockNtk& ntk,
                                                  cut::LogicCut& cut,
@@ -267,6 +298,11 @@ void EmapStrategy::ImportMockturtleMappedNetwork(sta::dbSta* sta,
                                       cut.primary_inputs().end());
   primary_input_or_output_nets.insert(cut.primary_outputs().begin(),
                                       cut.primary_outputs().end());
+
+  std::unordered_map<std::string, odb::dbNet*> boundary_pi_dbnets
+      = ExtractBoundaryDbNets(cut.primary_inputs(), sta, "input", logger);
+  std::unordered_map<std::string, odb::dbNet*> boundary_po_dbnets
+      = ExtractBoundaryDbNets(cut.primary_outputs(), sta, "output", logger);
 
   for (const sta::Instance* instance : cut.cut_instances()) {
     auto pin_iterator = std::unique_ptr<sta::InstancePinIterator>(
@@ -305,6 +341,7 @@ void EmapStrategy::ImportMockturtleMappedNetwork(sta::dbSta* sta,
   };
 
   // Primary inputs
+  // Connect mapped PIs to the existing cut boundary nets
   topo_ntk.foreach_pi([&](const BlockNtk::node& n) {
     const auto idx = topo_ntk.node_to_index(n);
 
@@ -312,8 +349,12 @@ void EmapStrategy::ImportMockturtleMappedNetwork(sta::dbSta* sta,
     if (name.empty()) {
       logger->error(utl::RMP, 71, "PI node {} has empty name", idx);
     }
+    auto it = boundary_pi_dbnets.find(name);
+    if (it == boundary_pi_dbnets.end()) {
+      logger->error(utl::RMP, 92, "Missing boundary net for PO {}", name);
+    }
+    odb::dbNet* net = it->second;
 
-    odb::dbNet* net = block->findNet(name.c_str());
     if (!net) {
       logger->warn(utl::RMP, 72, "Failed to find PI net {}", name);
       return;
@@ -449,31 +490,34 @@ void EmapStrategy::ImportMockturtleMappedNetwork(sta::dbSta* sta,
         });
   });
 
-  // Connect mapped POs to the existing cut boundary nets
-  std::unordered_map<std::string, odb::dbNet*> boundary_po_dbnets;
-  for (sta::Net* sta_net : cut.primary_outputs()) {
-    odb::dbNet* db_net = db_network->staToDb(sta_net);
-    std::string net_name = db_network->name(sta_net);
-    if (!db_net) {
-      logger->error(
-          utl::RMP, 83, "cut primary output net {} has no dbNet", net_name);
-    }
-    boundary_po_dbnets.emplace(net_name, db_net);
-  }
-
   // Connect each mapped PO driver to corresponding boundary net by merging.
+  std::unordered_map<odb::dbNet*, odb::dbNet*> merged_nets;
+  auto resolve_net = [&](odb::dbNet* net) {
+    while (net != nullptr) {
+      auto it = merged_nets.find(net);
+      if (it == merged_nets.end() || it->second == net) {
+        break;
+      }
+      net = it->second;
+    }
+    return net;
+  };
   topo_ntk.foreach_po([&](const BlockNtk::signal& f, uint32_t po_index) {
     std::string po_name = topo_ntk.get_output_name(po_index);
+
     auto it = boundary_po_dbnets.find(po_name);
     if (it == boundary_po_dbnets.end()) {
       logger->error(utl::RMP, 84, "Missing boundary net for PO {}", po_name);
     }
-    odb::dbNet* boundary_net = it->second;
+    odb::dbNet* boundary_net = resolve_net(it->second);
 
-    odb::dbNet* driver_net
-        = GetDriverNet(topo_ntk, block, sta, logger, node_out_nets, f);
+    odb::dbNet* driver_net = resolve_net(
+        GetDriverNet(topo_ntk, block, sta, logger, node_out_nets, f));
     if (driver_net && boundary_net && driver_net != boundary_net) {
-      driver_net->mergeNet(boundary_net);
+      // Preserve the existing cut boundary net so later PO lookups and
+      // repeated resynth passes do not retain stale dbNet pointers.
+      boundary_net->mergeNet(driver_net);
+      merged_nets[driver_net] = boundary_net;
     }
   });
 }

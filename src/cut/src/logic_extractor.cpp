@@ -312,16 +312,19 @@ std::vector<sta::Net*> LogicExtractorFactory::ConvertIoPinsToNets(
       net = network->net(pin);
     }
 
-    if (network->direction(pin)->isInput()
-        && !network->findNet(network->name(net))) {
-      logger_->warn(utl::CUT, 480, "rejecting pin {}", network->name(pin));
-      continue;
-    }
     if (!net) {
       logger_->error(utl::CUT,
                      48,
                      "primary input pin {} connected to null net",
                      network->name(pin));
+    }
+    odb::dbNet* db_net = nullptr;
+    odb::dbModNet* db_mod_net = nullptr;
+    network->staToDb(net, db_net, db_mod_net);
+    if (!db_net) {
+      logger_->warn(
+          utl::CUT, 481, "rejecting non-boundary pin {}", network->name(pin));
+      continue;
     }
 
     primary_input_nets.insert(net);

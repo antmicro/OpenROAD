@@ -108,7 +108,7 @@ LogicCut::BuildMappedMockturtleNetwork(
 
   // Create PIs for primary_inputs_ (CUT boundary inputs)
   for (sta::Net* net : primary_inputs_) {
-    const signal pi = ntk.create_pi(network->name(net));
+    const signal pi = ntk.create_pi(network->pathName(net));
     net_to_signal[net] = pi;
   }
 
@@ -125,14 +125,14 @@ LogicCut::BuildMappedMockturtleNetwork(
       logger->error(utl::CUT,
                     50,
                     "Net driven from outside the cut {}",
-                    network->name(net));
+                    network->pathName(net));
     }
 
     if (drivers->size() != 1) {
       logger->error(utl::CUT,
                     51,
                     "Net {} has {} drivers; CUT expects exactly one.",
-                    network->name(net),
+                    network->pathName(net),
                     drivers->size());
     }
 
@@ -149,9 +149,11 @@ LogicCut::BuildMappedMockturtleNetwork(
     if (!IsCombinational(driver_cell)) {
       return std::nullopt;
     }
+
     if (!cut_instances_set.contains(driver_inst)) {
-      logger->error(
-          utl::CUT, 53, "Invalid driver for: {}", network->name(driver_inst));
+      logger->warn(
+          utl::CUT, 53, "Driver not found for: {}", network->name(driver_inst));
+      return std::nullopt;
     }
 
     const std::string cell_name = driver_cell->name();
@@ -190,6 +192,8 @@ LogicCut::BuildMappedMockturtleNetwork(
           = build_net_signal(fanin_net, depth + 1);
       if (built.has_value()) {
         fanins.push_back(*built);
+      } else {
+        return std::nullopt;
       }
     }
 
@@ -211,7 +215,7 @@ LogicCut::BuildMappedMockturtleNetwork(
   for (sta::Net* net : primary_outputs_) {
     const std::optional<signal> s = build_net_signal(net, 0);
     if (s.has_value()) {
-      ntk.create_po(*s, network->name(net));
+      ntk.create_po(*s, network->pathName(net));
     }
   }
 
